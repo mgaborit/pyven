@@ -3,6 +3,7 @@ import os
 from lxml import etree
 
 from artifact.artifact import Artifact
+from tool.tool import Tool
 
 class Project:
 
@@ -13,24 +14,28 @@ class Project:
 			self.platform = 'linux'
 			
 		self.artifacts = []
+		self.tools = {"preprocessors" : [], "builders" : []}
 
-	def _parse_pym(self):
-		tree = etree.parse('pym.xml')
-		
-		for artifact_node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/artifacts/artifact'):
-			self.artifacts.append(Artifact.factory(artifact_node))
-		
-		for artifact in self.artifacts:
-			print artifact.group + ':' + artifact.id + ':' + artifact.version + ':' + artifact.get()
-	
 	def clean(self):
 		print 'clean'
 	
 	def configure(self):
-		self._parse_pym()
+		tree = etree.parse('pym.xml')
+		for artifact_node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/artifacts/artifact'):
+			self.artifacts.append(Artifact.factory(artifact_node))
+		
+		for preprocessor_node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/build/tools/tool[@scope="preprocess"]'):
+			self.tools['preprocessors'].append(Tool.factory(preprocessor_node))
+		
+		for builder_node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/build/tools/tool[@scope="build"]'):
+			self.tools['builders'].append(Tool.factory(builder_node))
 
 	def build(self):
-		print 'build'
+		for tool in self.tools['preprocessors']:
+			tool.process()
+
+		for tool in self.tools['builders']:
+			tool.process()
 		
 	def test(self):
 		print 'test'

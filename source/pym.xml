@@ -13,23 +13,23 @@
 		</artifacts>
 		<build>
 			<tools>
-				<tool type="cmake" id="Debug-Win64">
+				<tool name="cmake" id="Debug-Win64" scope="preprocess">
 					<generator>Visual Studio 14 2015 Win64</generator>
-					<output-path>project/Debug-x64</output-path>
+					<output-path>project\Debug-x64</output-path>
 				</tool>
-				<tool type="msbuild" id="Debug-Win64">
+				<tool name="msbuild" id="Debug-Win64" scope="build">
 					<configuration>Debug</configuration>
-					<architecture>Win64</architecture>
-					<project-file>project/Debug-x64/example.sln</project-file>
+					<architecture>x64</architecture>
+					<project-file>project\Debug-x64\zip.sln</project-file>
 				</tool>
-				<tool type="cmake" id="Debug-Win32">
+				<tool name="cmake" id="Debug-Win32" scope="preprocess">
 					<generator>Visual Studio 14 2015</generator>
-					<output-path>project/Debug-x86</output-path>
+					<output-path>project\Debug-x86</output-path>
 				</tool>
-				<tool type="msbuild" id="Debug-Win32">
+				<tool name="msbuild" id="Debug-Win32" scope="build">
 					<configuration>Debug</configuration>
 					<architecture>Win32</architecture>
-					<project-file>project/Debug-x86/example.sln</project-file>
+					<project-file>project\Debug-x86\zip.sln</project-file>
 				</tool>
 			</tools>
 		</build>
