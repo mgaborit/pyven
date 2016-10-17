@@ -1,4 +1,6 @@
-import subprocess, os
+import subprocess, os, logging
+
+logger = logging.getLogger('global')
 
 # pym.xml 'tool' node
 class Tool(object):
@@ -24,7 +26,9 @@ class CMakeTool(Tool):
 		self.output_path = node.find('output-path').text
 	
 	def process(self):
-		subprocess.call(['cmake', '-H.', '-B'+self.output_path, '-G'+self.generator+''])
+		logger.info('Preprocessing with : ' + self.name + ':' + self.id)
+		if subprocess.call(['cmake', '-H.', '-B'+self.output_path, '-G'+self.generator+''], stdout=subprocess.PIPE) != 0:
+			logger.error('Preprocessing terminated with errors')
 		
 class MSBuildTool(Tool):
 
@@ -35,4 +39,6 @@ class MSBuildTool(Tool):
 		self.architecture = node.find('architecture').text
 		
 	def process(self):
-		subprocess.call(['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture])
+		logger.info('Building with : ' + self.name + ':' + self.id)
+		if subprocess.call(['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture], stdout=subprocess.PIPE) != 0:
+			logger.error('Build terminated with errors')
