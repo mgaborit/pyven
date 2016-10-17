@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger('global')
+
 # pym.xml 'artifact' node
 class Artifact(object):
 
