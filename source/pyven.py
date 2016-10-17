@@ -10,6 +10,10 @@ def main(step):
 	if step == 'configure':
 		project.configure()
 		
+	elif step == 'build':
+		project.configure()
+		project.build()
+		
 	else:
 		print 'Unknown step'
 	

@@ -21,7 +21,7 @@ class InternalArtifact(Artifact):
 		self.file = node.find('file').text
 		
 	def get(self):
-		return self.file
+		return self.group, self.id, self.version, self.file
 		
 class ExternalArtifact(Artifact):
 
@@ -30,4 +30,4 @@ class ExternalArtifact(Artifact):
 		self.repository = node.find('repository').text
 		
 	def get(self):
-		return self.repository
+		return self.group, self.id, self.version, self.repository
