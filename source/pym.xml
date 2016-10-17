@@ -1,0 +1,95 @@
+<pyven version="0.1.0">
+	<platform id="windows">
+		<artifacts>
+			<artifact group="invoke" id="toto-Debug-Win64" version="4.3.2" scope="intern">
+				<file>build/MSVC-Debug-x64/bin/toto.exe</file>
+			</artifact>
+			<artifact group="invoke" id="toto-Debug-Win32" version="4.3.2" scope="intern">
+				<file>build/MSVC-Debug-x86/bin/toto.exe</file>
+			</artifact>
+			<artifact group="invoke" id="titi-Debug-Win32" version="1.2.2" scope="extern">
+				<repository>build/MSVC-Debug-x86/bin/toto.exe</repository>
+			</artifact>
+		</artifacts>
+		<build>
+			<tools>
+				<tool type="cmake" id="Debug-Win64">
+					<generator>Visual Studio 14 2015 Win64</generator>
+					<output-path>project/Debug-x64</output-path>
+				</tool>
+				<tool type="msbuild" id="Debug-Win64">
+					<configuration>Debug</configuration>
+					<architecture>Win64</architecture>
+					<project-file>project/Debug-x64/example.sln</project-file>
+				</tool>
+				<tool type="cmake" id="Debug-Win32">
+					<generator>Visual Studio 14 2015</generator>
+					<output-path>project/Debug-x86</output-path>
+				</tool>
+				<tool type="msbuild" id="Debug-Win32">
+					<configuration>Debug</configuration>
+					<architecture>Win32</architecture>
+					<project-file>project/Debug-x86/example.sln</project-file>
+				</tool>
+			</tools>
+		</build>
+		<tests>
+		</tests>
+		<packages>
+			<package>
+				<item>invoke:toto-Debug-Win64:4.3.2</item>
+			</package>
+			<package>
+				<item>invoke:toto-Debug-Win32:4.3.2</item>
+			</package>
+		</packages>
+	</platform>
+	<platform id="linux">
+		<artifacts>
+			<internal>
+				<artifact group="invoke" id="toto-Debug-Win64" version="4.3.2">
+					<file>build/MSVC-Debug-x64/bin/toto.exe</file>
+				</artifact>
+				<artifact group="invoke" id="toto-Debug-Win32" version="4.3.2">
+					<file>build/MSVC-Debug-x86/bin/toto.exe</file>
+				</artifact>
+			</internal>
+			<external>
+			</external>
+		</artifacts>
+		<build>
+			<tools>
+				<tool type="cmake" id="Debug-Win64">
+					<generator>Visual Studio 14 2015 Win64</generator>
+					<output-path>project/Debug-x64</output-path>
+				</tool>
+				<tool type="msbuild" id="Debug-Win64">
+					<configuration>Debug</configuration>
+					<architecture>Win64</architecture>
+					<project-file>project/Debug-x64/example.sln</project-file>
+				</tool>
+				<tool type="cmake" id="Debug-Win32">
+					<generator>Visual Studio 14 2015</generator>
+					<output-path>project/Debug-x86</output-path>
+				</tool>
+				<tool type="msbuild" id="Debug-Win32">
+					<configuration>Debug</configuration>
+					<architecture>Win32</architecture>
+					<project-file>project/Debug-x86/example.sln</project-file>
+				</tool>
+			</tools>
+		</build>
+		<tests>
+		</tests>
+		<packages>
+			<package>
+				<item>invoke:toto-Debug-Win64:4.3.2</item>
+			</package>
+			<package>
+				<item>invoke:toto-Debug-Win32:4.3.2</item>
+			</package>
+		</packages>
+	</platform>
+	<repositories>
+	</repositories>
+</pyven>
