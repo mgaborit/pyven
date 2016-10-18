@@ -2,7 +2,7 @@ import subprocess, logging, os
 
 logger = logging.getLogger('global')
 
-# pym.xml 'artifact' node
+# pym.xml 'test' node
 class Test(object):
 
 	def __init__(self, node):
@@ -19,6 +19,8 @@ class Test(object):
 		return call
 	
 	def run(self, verbose=False):
+		FNULL = open(os.devnull, 'w')
+		cwd = os.getcwd()
 		if os.path.isdir(self.path):
 			logger.info('Entering test directory : ' + self.path)
 			os.chdir(self.path)
@@ -26,8 +28,7 @@ class Test(object):
 			if verbose:
 				subprocess.call(self._format_call())
 			else:
-				subprocess.call(self._format_call(), stdout=subprocess.PIPE)
-			
-			os.chdir('../../..')
+				subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
+			os.chdir(cwd)
 		else:
 			logger.error('Unknown directory : ' + self.path)

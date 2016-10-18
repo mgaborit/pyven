@@ -1,14 +1,11 @@
 <pyven version="0.1.0">
 	<platform id="windows">
 		<artifacts>
-			<artifact group="invoke" id="toto-Debug-Win64" version="4.3.2" scope="intern">
-				<file>build/MSVC-Debug-x64/bin/toto.exe</file>
+			<artifact group="invoke" id="ZipTest-Debug-Win64" version="4.3.2" scope="intern">
+				<file>build/MSVC-Debug-x64/test/ZipTest.exe</file>
 			</artifact>
-			<artifact group="invoke" id="toto-Debug-Win32" version="4.3.2" scope="intern">
-				<file>build/MSVC-Debug-x86/bin/toto.exe</file>
-			</artifact>
-			<artifact group="invoke" id="titi-Debug-Win32" version="1.2.2" scope="extern">
-				<repository>build/MSVC-Debug-x86/bin/toto.exe</repository>
+			<artifact group="invoke" id="ZipTest-Debug-Win32" version="4.3.2" scope="intern">
+				<file>build/MSVC-Debug-x86/test/ZipTest.exe</file>
 			</artifact>
 		</artifacts>
 		<build>
@@ -52,16 +49,15 @@
 			</test>
 		</tests>
 		<packages>
-			<package>
-				<item>invoke:toto-Debug-Win64:4.3.2</item>
+			<package group="invoke" id="ZipTest-cross" version="1.2.3">
+				<item>invoke:ZipTest-Debug-Win64:4.3.2</item>
+				<item>invoke:ZipTest-Debug-Win32:4.3.2</item>
 			</package>
-			<package>
-				<item>invoke:toto-Debug-Win32:4.3.2</item>
+			<package group="invoke" id="ZipTest-Win32" version="1.2.3">
+				<item>invoke:ZipTest-Debug-Win32:4.3.2</item>
 			</package>
 		</packages>
 	</platform>
 	<platform id="linux">
 	</platform>
-	<repositories>
-	</repositories>
 </pyven>
