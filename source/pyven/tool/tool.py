@@ -66,4 +66,4 @@ class MSBuildTool(Tool):
 			return_code = subprocess.call(['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture], stdout=FNULL, stderr=subprocess.STDOUT)
 		
 		if return_code != 0:
-			logger.error('Preprocessing terminated with errors')
+			logger.error('Build terminated with errors')

@@ -14,15 +14,15 @@ class Package(object):
 	def format_name(self, separator=':'):
 		return self.group + separator + self.id + separator + self.version
 	
-	def zip(self):
-		zip_name = self.format_name('_') + '.zip'
+	def zip(self, workspace):
+		zip_name = os.path.join(workspace, 'packages', self.format_name('_') + '.zip')
 		logger.info('Creating archive : ' + zip_name)
 		zf = zipfile.ZipFile(zip_name, mode='w')
 		try:
 			for item in self.items:
-				if item.is_internal():
-					zf.write(item.file, os.path.basename(item.file))
-					logger.info('Added artifact ' + item.format_name() + ' to archive ' + zip_name)
+				item_name = os.path.join(workspace, 'artifacts', item.group, item.id, item.version, os.path.basename(item.file))
+				zf.write(item_name, os.path.basename(item_name))
+				logger.info('Added artifact ' + item.format_name() + ' to archive ' + zip_name)
 		finally:
 			logger.info('Created archive : ' + zip_name)
 			zf.close()
