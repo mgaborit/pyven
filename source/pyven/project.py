@@ -1,5 +1,4 @@
-import logging, os
-
+import logging, os, shutil
 from lxml import etree
 
 from artifact.artifact import Artifact
@@ -10,6 +9,8 @@ from package.package import Package
 logger = logging.getLogger('global')
 
 class Project:
+	WORKSPACE = 'pyven_workspace'
+
 	def __init__(self, verbose=False):
 		logger.info('Initializing Pyven project')
 		
@@ -30,7 +31,7 @@ class Project:
 	
 	def _extract_artifacts(self, tree):
 		for node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/artifacts/artifact'):
-			artifact = Artifact.factory(node)
+			artifact = Artifact(node)
 			if artifact.format_name() in self.artifacts.keys():
 				logger.error('Artifact already added : ' + artifact.format_name())
 			else:
@@ -71,6 +72,13 @@ class Project:
 	
 	def configure(self):
 		logger.info('STEP CONFIGURE : STARTING')
+		if not os.path.isdir(Project.WORKSPACE):
+			os.makedirs(Project.WORKSPACE)
+		if not os.path.isdir(os.path.join(Project.WORKSPACE, 'packages')):
+			os.makedirs(os.path.join(Project.WORKSPACE, 'packages'))
+		if not os.path.isdir(os.path.join(Project.WORKSPACE, 'artifacts')):
+			os.makedirs(os.path.join(Project.WORKSPACE, 'artifacts'))
+		logger.info('Created Pyven workspace')
 		logger.info('Starting pym.xml parsing')
 		tree = etree.parse('pym.xml')
 		logger.info('PYM parsing successful')
@@ -91,6 +99,14 @@ class Project:
 		for tool in self.tools['builders']:
 			tool.process(self.verbose)
 		logger.info('build completed')
+		for artifact in self.artifacts.values():
+			if os.path.isfile(artifact.file):
+				artifact_dir = os.path.join(Project.WORKSPACE, 'artifacts', artifact.group, artifact.id, artifact.version)
+				if not os.path.isdir(artifact_dir):
+					os.makedirs(artifact_dir)
+				shutil.copy(artifact.file, artifact_dir)
+			else:
+				logger.error('Missing artifact : ' + artifact.format_name())
 		logger.info('STEP BUILD : COMPLETED')
 		
 		
@@ -104,7 +120,7 @@ class Project:
 	def package(self):
 		logger.info('STEP PACKAGE : STARTING')
 		for package in self.packages.values():
-			package.zip()
+			package.zip(Project.WORKSPACE)
 		logger.info('STEP PACKAGE : COMPLETED')
 		
 		
