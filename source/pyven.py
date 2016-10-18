@@ -30,6 +30,9 @@ def main(step):
 		project.test()
 		
 	elif step == 'package':
+		project.configure()
+		project.build()
+		project.test()
 		project.package()
 		
 	elif step == 'verify':

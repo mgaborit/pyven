@@ -39,11 +39,12 @@ class CMakeTool(Tool):
 		return call
 	
 	def process(self, verbose=False):
+		FNULL = open(os.devnull, 'w')
 		logger.info('Preprocessing with : ' + self.name + ':' + self.id)
 		if verbose:
 			return_code = subprocess.call(self._format_call())
 		else:
-			return_code = subprocess.call(self._format_call(), stdout=subprocess.PIPE)
+			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
 			
 		if return_code != 0:
 			logger.error('Preprocessing terminated with errors')
@@ -57,11 +58,12 @@ class MSBuildTool(Tool):
 		self.architecture = node.find('architecture').text
 		
 	def process(self, verbose=False):
+		FNULL = open(os.devnull, 'w')
 		logger.info('Building with : ' + self.name + ':' + self.id)
 		if verbose:
 			return_code = subprocess.call(['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture])
 		else:
-			return_code = subprocess.call(['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture], stdout=subprocess.PIPE)
+			return_code = subprocess.call(['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture], stdout=FNULL, stderr=subprocess.STDOUT)
 		
 		if return_code != 0:
 			logger.error('Preprocessing terminated with errors')
