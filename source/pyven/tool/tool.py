@@ -10,6 +10,9 @@ class Tool(object):
 		self.id = node.get('id')
 		self.scope = node.get('scope')
 		
+	def _format_call(self):
+		raise NotImplementedError('unimplemented method')
+	
 	def process(self):
 		raise NotImplementedError('Invalid call')
 		
@@ -24,10 +27,25 @@ class CMakeTool(Tool):
 		super(CMakeTool, self).__init__(node)
 		self.generator = node.find('generator').text
 		self.output_path = node.find('output-path').text
+		self.definitions = []
+		for definition in node.xpath('definitions/definition'):
+			self.definitions.append(definition.text)
 	
-	def process(self):
+	def _format_call(self):
+		call = [self.name, '-H.', '-B'+self.output_path, '-G'+self.generator+'']
+		for definition in self.definitions:
+			call.append('-D'+definition)
+			
+		return call
+	
+	def process(self, verbose=False):
 		logger.info('Preprocessing with : ' + self.name + ':' + self.id)
-		if subprocess.call(['cmake', '-H.', '-B'+self.output_path, '-G'+self.generator+''], stdout=subprocess.PIPE) != 0:
+		if verbose:
+			return_code = subprocess.call(self._format_call())
+		else:
+			return_code = subprocess.call(self._format_call(), stdout=subprocess.PIPE)
+			
+		if return_code != 0:
 			logger.error('Preprocessing terminated with errors')
 		
 class MSBuildTool(Tool):
@@ -38,7 +56,12 @@ class MSBuildTool(Tool):
 		self.configuration = node.find('configuration').text
 		self.architecture = node.find('architecture').text
 		
-	def process(self):
+	def process(self, verbose=False):
 		logger.info('Building with : ' + self.name + ':' + self.id)
-		if subprocess.call(['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture], stdout=subprocess.PIPE) != 0:
-			logger.error('Build terminated with errors')
+		if verbose:
+			return_code = subprocess.call(['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture])
+		else:
+			return_code = subprocess.call(['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture], stdout=subprocess.PIPE)
+		
+		if return_code != 0:
+			logger.error('Preprocessing terminated with errors')

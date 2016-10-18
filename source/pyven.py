@@ -21,7 +21,25 @@ def main(step):
 		project.configure()
 		
 	elif step == 'build':
+		project.configure()
 		project.build()
+		
+	elif step == 'test':
+		project.configure()
+		project.build()
+		project.test()
+		
+	elif step == 'package':
+		project.package()
+		
+	elif step == 'verify':
+		project.verify()
+		
+	elif step == 'install':
+		project.install()
+		
+	elif step == 'deploy':
+		project.deploy()
 		
 	else:
 		logger.error('Unknown step : ' + step)

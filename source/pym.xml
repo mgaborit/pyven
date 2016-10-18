@@ -16,6 +16,11 @@
 				<tool name="cmake" id="Debug-Win64" scope="preprocess">
 					<generator>Visual Studio 14 2015 Win64</generator>
 					<output-path>project\Debug-x64</output-path>
+					<definitions>
+						<definition>BUILD_TESTS=TRUE</definition>
+						<definition>X86=FALSE</definition>
+						<definition>RELEASE=FALSE</definition>
+					</definitions>
 				</tool>
 				<tool name="msbuild" id="Debug-Win64" scope="build">
 					<configuration>Debug</configuration>
@@ -25,6 +30,11 @@
 				<tool name="cmake" id="Debug-Win32" scope="preprocess">
 					<generator>Visual Studio 14 2015</generator>
 					<output-path>project\Debug-x86</output-path>
+					<definitions>
+						<definition>BUILD_TESTS=TRUE</definition>
+						<definition>X86=TRUE</definition>
+						<definition>RELEASE=FALSE</definition>
+					</definitions>
 				</tool>
 				<tool name="msbuild" id="Debug-Win32" scope="build">
 					<configuration>Debug</configuration>
@@ -34,6 +44,12 @@
 			</tools>
 		</build>
 		<tests>
+			<test>
+				<file>build\MSVC-Debug-x64\test\ZipTest.exe</file>
+			</test>
+			<test>
+				<file>build\MSVC-Debug-x86\test\ZipTest.exe</file>
+			</test>
 		</tests>
 		<packages>
 			<package>

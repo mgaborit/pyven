@@ -10,8 +10,11 @@ class Artifact(object):
 		self.id = node.get('id')
 		self.version = node.get('version')
 		
-	def get(self):
-		raise NotImplementedError('Invalid call')
+	def is_internal(self):
+		raise NotImplementedError('Invalid call to abstract method "is_internal"')
+		
+	def format_name(self):
+		return self.group + ':' + self.id + ':' + self.version
 		
 	def factory(node):
 		if node.get('scope') == "intern": return InternalArtifact(node)
@@ -24,8 +27,8 @@ class InternalArtifact(Artifact):
 		super(InternalArtifact, self).__init__(node)
 		self.file = node.find('file').text
 		
-	def get(self):
-		return self.group, self.id, self.version, self.file
+	def is_internal(self):
+		return True
 		
 class ExternalArtifact(Artifact):
 
@@ -33,5 +36,6 @@ class ExternalArtifact(Artifact):
 		super(ExternalArtifact, self).__init__(node)
 		self.repository = node.find('repository').text
 		
-	def get(self):
-		return self.group, self.id, self.version, self.repository
+	def is_internal(self):
+		return False
+		
