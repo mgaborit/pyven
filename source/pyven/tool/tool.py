@@ -56,14 +56,24 @@ class MSBuildTool(Tool):
 		self.project_file = node.find('project-file').text
 		self.configuration = node.find('configuration').text
 		self.architecture = node.find('architecture').text
+		self.arguments = []
+		for argument in node.xpath('arguments/argument'):
+			self.arguments.append(argument.text)
 		
+	def _format_call(self):
+		call = ['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture]
+		for argument in self.arguments:
+			call.append(argument)
+			
+		return call
+	
 	def process(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
 		logger.info('Building with : ' + self.name + ':' + self.id)
 		if verbose:
-			return_code = subprocess.call(['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture])
+			return_code = subprocess.call(self._format_call())
 		else:
-			return_code = subprocess.call(['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture], stdout=FNULL, stderr=subprocess.STDOUT)
+			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
 		
 		if return_code != 0:
 			logger.error('Build terminated with errors')
