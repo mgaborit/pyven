@@ -1,13 +1,28 @@
 <pyven version="0.1.0">
 	<platform id="windows">
+		<repositories>
+			<repository id="funky-repo" type="file" url="C:\DEV\funky_repo"/>
+		</repositories>
 		<artifacts>
-			<artifact group="invoke" id="ZipTest-Debug-Win64" version="4.3.2" scope="intern">
-				<file>build/MSVC-Debug-x64/test/ZipTest.exe</file>
-			</artifact>
-			<artifact group="invoke" id="ZipTest-Debug-Win32" version="4.3.2" scope="intern">
-				<file>build/MSVC-Debug-x86/test/ZipTest.exe</file>
-			</artifact>
+			<artifact group="invoke" id="ZipTest-Debug-Win64" version="4.3.2">build/MSVC-Debug-x64/test/ZipTest.exe</artifact>
+			<artifact group="invoke" id="ZipTest-Debug-Win32" version="4.3.2">build/MSVC-Debug-x86/test/ZipTest.exe</artifact>
+			<artifact group="invoke" id="ZipTest-Release-Win64" version="4.3.2">build/MSVC-Release-x64/test/ZipTest.exe</artifact>
+			<artifact group="invoke" id="ZipTest-Release-Win32" version="4.3.2">build/MSVC-Release-x86/test/ZipTest.exe</artifact>
 		</artifacts>
+		<packages>
+			<package group="invoke" id="ZipTest-Debug-Win64" version="1.2.3">
+				<item>invoke:ZipTest-Debug-Win64:4.3.2</item>
+			</package>
+			<package group="invoke" id="ZipTest-Debug-Win32" version="1.2.4">
+				<item>invoke:ZipTest-Debug-Win32:4.3.2</item>
+			</package>
+			<package group="invoke" id="ZipTest-Release-cross" version="2.2.3">
+				<item>invoke:ZipTest-Release-Win64:4.3.2</item>
+			</package>
+			<package group="invoke" id="ZipTest-Release-Win32" version="1.5.3">
+				<item>invoke:ZipTest-Release-Win32:4.3.2</item>
+			</package>
+		</packages>
 		<build>
 			<tools>
 				<tool name="cmake" id="Debug-Win64" scope="preprocess">
@@ -39,6 +54,36 @@
 					<project-file>project\Debug-x86\zip.sln</project-file>
 				</tool>
 			</tools>
+			<tools>
+				<tool name="cmake" id="Release-Win64" scope="preprocess">
+					<generator>Visual Studio 14 2015 Win64</generator>
+					<output-path>project\Release-x64</output-path>
+					<definitions>
+						<definition>BUILD_TESTS=TRUE</definition>
+						<definition>X86=FALSE</definition>
+						<definition>RELEASE=TRUE</definition>
+					</definitions>
+				</tool>
+				<tool name="msbuild" id="Release-Win64" scope="build">
+					<configuration>Release</configuration>
+					<architecture>x64</architecture>
+					<project-file>project\Release-x64\zip.sln</project-file>
+				</tool>
+				<tool name="cmake" id="Release-Win32" scope="preprocess">
+					<generator>Visual Studio 14 2015</generator>
+					<output-path>project\Release-x86</output-path>
+					<definitions>
+						<definition>BUILD_TESTS=TRUE</definition>
+						<definition>X86=TRUE</definition>
+						<definition>RELEASE=TRUE</definition>
+					</definitions>
+				</tool>
+				<tool name="msbuild" id="Release-Win32" scope="build">
+					<configuration>Release</configuration>
+					<architecture>Win32</architecture>
+					<project-file>project\Release-x86\zip.sln</project-file>
+				</tool>
+			</tools>
 		</build>
 		<tests>
 			<test>
@@ -47,16 +92,13 @@
 			<test>
 				<file>build\MSVC-Debug-x86\test\ZipTest.exe</file>
 			</test>
+			<test>
+				<file>build\MSVC-Release-x64\test\ZipTest.exe</file>
+			</test>
+			<test>
+				<file>build\MSVC-Release-x86\test\ZipTest.exe</file>
+			</test>
 		</tests>
-		<packages>
-			<package group="invoke" id="ZipTest-cross" version="1.2.3">
-				<item>invoke:ZipTest-Debug-Win64:4.3.2</item>
-				<item>invoke:ZipTest-Debug-Win32:4.3.2</item>
-			</package>
-			<package group="invoke" id="ZipTest-Win32" version="1.2.3">
-				<item>invoke:ZipTest-Debug-Win32:4.3.2</item>
-			</package>
-		</packages>
 	</platform>
 	<platform id="linux">
 	</platform>

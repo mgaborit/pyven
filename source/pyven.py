@@ -68,7 +68,6 @@ def main(args):
 		project.test()
 		project.package()
 		project.verify()
-		project.install()
 		project.deploy()
 		
 	else:
