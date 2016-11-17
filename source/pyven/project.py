@@ -43,11 +43,11 @@ class Project:
 		for node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/artifacts/artifact'):
 			artifact = Artifact(node)
 			if artifact.format_name() in self.artifacts.keys():
-				logger.error('Artifact already added : ' + artifact.format_name())
+				raise Exception('Artifact already added : ' + artifact.format_name())
 			else:
 				if artifact.file is None:
 					if artifact.repo is None:
-						logger.info('Impossible to retrieve artifact : ' + artifact.format_name())
+						raise Exception('Artifact not found : ' + artifact.format_name())
 					else:
 						self.repositories[artifact.repo].retrieve(artifact, Project.WORKSPACE)
 						logger.info('Retrieved artifact from ' + self.repositories[artifact.repo].id + ' repository : ' + artifact.format_name())
@@ -78,7 +78,7 @@ class Project:
 		for node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/packages/package'):
 			package = Package(node)
 			if package.format_name() in self.packages.keys():
-				logger.error('Package already added : ' + package.format_name())
+				logger.warning('Package already added : ' + package.format_name())
 			else:
 				for item in node.xpath('item'):
 					if item.text in self.artifacts.keys():
@@ -86,7 +86,7 @@ class Project:
 						package.items.append(artifact)
 						logger.info('Added artifact ' + artifact.format_name() + ' to package ' + package.format_name())
 					else:
-						logger.error('Artifact not found : ' + item.text)
+						raise Exception('Artifact not found : ' + item.text)
 				self.packages[package.format_name()] = package
 				logger.info('Added package : ' + package.format_name())
 	
@@ -101,89 +101,123 @@ class Project:
 	
 	def configure(self):
 		logger.info('STEP CONFIGURE : STARTING')
-		if not os.path.isdir(Project.WORKSPACE):
-			os.makedirs(Project.WORKSPACE)
-		if not os.path.isdir(os.path.join(Project.WORKSPACE, 'packages')):
-			os.makedirs(os.path.join(Project.WORKSPACE, 'packages'))
-		if not os.path.isdir(os.path.join(Project.WORKSPACE, 'artifacts')):
-			os.makedirs(os.path.join(Project.WORKSPACE, 'artifacts'))
-		logger.info('Created Pyven workspace')
-		logger.info('Starting pym.xml parsing')
-		tree = etree.parse('pym.xml')
-		logger.info('PYM parsing successful')
-		self._extract_repositories(tree)
-		self._extract_artifacts(tree)
-		self._extract_packages(tree)
-		self._extract_tools(tree)
-		self._extract_tests(tree)
-		logger.info('STEP CONFIGURE : COMPLETED')
-
+		try:
+			if not os.path.isdir(Project.WORKSPACE):
+				os.makedirs(Project.WORKSPACE)
+			if not os.path.isdir(os.path.join(Project.WORKSPACE, 'packages')):
+				os.makedirs(os.path.join(Project.WORKSPACE, 'packages'))
+			if not os.path.isdir(os.path.join(Project.WORKSPACE, 'artifacts')):
+				os.makedirs(os.path.join(Project.WORKSPACE, 'artifacts'))
+			logger.info('Created Pyven workspace')
+			logger.info('Starting pym.xml parsing')
+			tree = etree.parse('pym.xml')
+			logger.info('PYM parsing successful')
+			self._extract_repositories(tree)
+			self._extract_artifacts(tree)
+			self._extract_packages(tree)
+			self._extract_tools(tree)
+			self._extract_tests(tree)
+			logger.info('STEP CONFIGURE : COMPLETED')
+		except Exception as e:
+			logger.error(e)
+			return False
+		return True
 			
 	def build(self):
 		logger.info('STEP BUILD : STARTING')
-		logger.info('Starting preprocessing')
-		for tool in self.tools['preprocessors']:
-			tool.process(self.verbose)
-		logger.info('Preprocessing completed')
-		logger.info('Starting build')
-		for tool in self.tools['builders']:
-			tool.process(self.verbose)
-		logger.info('build completed')
-		for artifact in [a for a in self.artifacts.values() if a.repo is None]:
-			if os.path.isfile(artifact.file):
-				if not os.path.isdir(artifact.workspace_location(Project.WORKSPACE)):
-					os.makedirs(artifact.workspace_location(Project.WORKSPACE))
-				shutil.copy(artifact.file, artifact.workspace_location(Project.WORKSPACE))
-			else:
-				logger.error('Missing artifact : ' + artifact.format_name())
-		logger.info('STEP BUILD : COMPLETED')
+		try:
+			logger.info('Starting preprocessing')
+			for tool in self.tools['preprocessors']:
+				tool.process(self.verbose)
+			logger.info('Preprocessing completed')
+			logger.info('Starting build')
+			for tool in self.tools['builders']:
+				tool.process(self.verbose)
+			logger.info('build completed')
+			for artifact in [a for a in self.artifacts.values() if a.repo is None]:
+				if os.path.isfile(artifact.file):
+					if not os.path.isdir(artifact.workspace_location(Project.WORKSPACE)):
+						os.makedirs(artifact.workspace_location(Project.WORKSPACE))
+					shutil.copy(artifact.file, artifact.workspace_location(Project.WORKSPACE))
+				else:
+					raise Exception('Artifact not found : ' + artifact.format_name())
+			logger.info('STEP BUILD : COMPLETED')
+		except Exception as e:
+			logger.error(e)
+			return False
+		return True
 		
 		
 	def test(self):
 		logger.info('STEP TEST : STARTING')
-		if len(self.unit_tests) == 0:
-			logger.warning('No unit tests found')
-		else:
-			for test in self.unit_tests:
-				test.run(self.verbose)
-		logger.info('STEP TEST : COMPLETED')
+		try:
+			if len(self.unit_tests) == 0:
+				logger.warning('No unit tests found')
+			else:
+				for test in self.unit_tests:
+					test.run(self.verbose)
+			logger.info('STEP TEST : COMPLETED')
+		except Exception as e:
+			logger.error(e)
+			return False
+		return True
 		
 		
 	def package(self):
 		logger.info('STEP PACKAGE : STARTING')
-		for package in self.packages.values():
-			package.pack(Project.WORKSPACE)
-		logger.info('STEP PACKAGE : COMPLETED')
+		try:
+			for package in self.packages.values():
+				package.pack(Project.WORKSPACE)
+			logger.info('STEP PACKAGE : COMPLETED')
+		except Exception as e:
+			logger.error(e)
+			return False
+		return True
 		
 		
 	def verify(self):
 		logger.info('STEP VERIFY : STARTING')
-		if len(self.integration_tests) == 0:
-			logger.warning('No integration tests found')
-		else:
-			for test in self.integration_tests:
-				test.run(self.verbose)
-		logger.info('STEP VERIFY : COMPLETED')
+		try:
+			if len(self.integration_tests) == 0:
+				logger.warning('No integration tests found')
+			else:
+				for test in self.integration_tests:
+					test.run(self.verbose)
+			logger.info('STEP VERIFY : COMPLETED')
+		except Exception as e:
+			logger.error(e)
+			return False
+		return True
 		
 		
 	def install(self, unpack=False):
 		logger.info('STEP INSTALL : STARTING')
-		for artifact in [a for a in self.artifacts.values() if a.repo is None]:
-			self.repositories[Project.LOCAL_REPO_NAME].publish(artifact, Project.WORKSPACE)
-			logger.info('Published artifact to ' + Project.LOCAL_REPO_NAME + ' repository : ' + artifact.format_name())
-		for package in self.packages.values():
-			self.repositories[Project.LOCAL_REPO_NAME].publish(package, Project.WORKSPACE)
-			logger.info('Published package to ' + Project.LOCAL_REPO_NAME + ' repository : ' + artifact.format_name())
-		logger.info('STEP INSTALL : COMPLETED')
+		try:
+			for artifact in [a for a in self.artifacts.values() if a.repo is None]:
+				self.repositories[Project.LOCAL_REPO_NAME].publish(artifact, Project.WORKSPACE)
+				logger.info('Published artifact to ' + Project.LOCAL_REPO_NAME + ' repository : ' + artifact.format_name())
+			for package in self.packages.values():
+				self.repositories[Project.LOCAL_REPO_NAME].publish(package, Project.WORKSPACE)
+				logger.info('Published package to ' + Project.LOCAL_REPO_NAME + ' repository : ' + artifact.format_name())
+			logger.info('STEP INSTALL : COMPLETED')
+		except Exception as e:
+			logger.error(e)
+			return False
+		return True
 		
 		
 	def deploy(self, repo=None, unpack=False):
 		logger.info('STEP DEPLOY : STARTING')
-		for key in [k for k in self.repositories.keys() if k != Project.LOCAL_REPO_NAME]:
-			for artifact in [a for a in self.artifacts.values() if a.repo is None]:
-				self.repositories[key].publish(artifact, Project.WORKSPACE)
-				logger.info('Published artifact to ' + key + ' repository : ' + artifact.format_name())
-			for package in self.packages.values():
-				self.repositories[key].publish(package, Project.WORKSPACE)
-				logger.info('Published package to ' + key + ' repository : ' + artifact.format_name())
-		logger.info('STEP DEPLOY : COMPLETED')
+		try:
+			for key in [k for k in self.repositories.keys() if k != Project.LOCAL_REPO_NAME]:
+				for artifact in [a for a in self.artifacts.values() if a.repo is None]:
+					self.repositories[key].publish(artifact, Project.WORKSPACE)
+					logger.info('Published artifact to ' + key + ' repository : ' + artifact.format_name())
+				for package in self.packages.values():
+					self.repositories[key].publish(package, Project.WORKSPACE)
+					logger.info('Published package to ' + key + ' repository : ' + artifact.format_name())
+			logger.info('STEP DEPLOY : COMPLETED')
+		except Exception as e:
+			logger.error(e)
+			return False
+		return True

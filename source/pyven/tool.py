@@ -11,10 +11,10 @@ class Tool(object):
 		self.scope = node.get('scope')
 		
 	def _format_call(self):
-		raise NotImplementedError('unimplemented method')
+		raise NotImplementedError
 	
 	def process(self):
-		raise NotImplementedError('Invalid call')
+		raise NotImplementedError
 		
 	def factory(node):
 		if node.get('name') == "cmake": return CMakeTool(node)
@@ -47,7 +47,7 @@ class CMakeTool(Tool):
 			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
 			
 		if return_code != 0:
-			logger.error('Preprocessing terminated with errors')
+			raise Exception('Preprocessing ended with errors')
 		
 class MSBuildTool(Tool):
 
@@ -76,4 +76,4 @@ class MSBuildTool(Tool):
 			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
 		
 		if return_code != 0:
-			logger.error('Build terminated with errors')
+			raise Exception('Build ended with errors')

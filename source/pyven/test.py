@@ -30,4 +30,4 @@ class Test(object):
 				subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
 			os.chdir(cwd)
 		else:
-			logger.error('Unknown directory : ' + self.path)
+			raise Exception('Unknown directory : ' + self.path)

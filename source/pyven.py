@@ -30,48 +30,103 @@ def main(args):
 	
 	logger.info('Pyven command called for step ' + step)
 	if step == 'configure':
-		project.configure()
+		if not project.configure():
+			logger.error('configure step ended with errors')
+			sys.exit(1)
 	
 	elif step == 'build':
-		project.configure()
-		project.build()
+		if not project.configure():
+			logger.error('configure step ended with errors')
+			sys.exit(1)
+		if not project.build():
+			logger.error('build step ended with errors')
+			sys.exit(1)
 		
 	elif step == 'test':
-		project.configure()
-		project.build()
-		project.test()
+		if not project.configure():
+			logger.error('configure step ended with errors')
+			sys.exit(1)
+		if not project.build():
+			logger.error('build step ended with errors')
+			sys.exit(1)
+		if not project.test():
+			logger.error('test step ended with errors')
+			sys.exit(1)
 		
 	elif step == 'package':
-		project.configure()
-		project.build()
-		project.test()
-		project.package()
+		if not project.configure():
+			logger.error('configure step ended with errors')
+			sys.exit(1)
+		if not project.build():
+			logger.error('build step ended with errors')
+			sys.exit(1)
+		if not project.test():
+			logger.error('test step ended with errors')
+			sys.exit(1)
+		if not project.package():
+			logger.error('package step ended with errors')
+			sys.exit(1)
 		
 	elif step == 'verify':
-		project.configure()
-		project.build()
-		project.test()
-		project.package()
-		project.verify()
+		if not project.configure():
+			logger.error('configure step ended with errors')
+			sys.exit(1)
+		if not project.build():
+			logger.error('build step ended with errors')
+			sys.exit(1)
+		if not project.test():
+			logger.error('test step ended with errors')
+			sys.exit(1)
+		if not project.package():
+			logger.error('package step ended with errors')
+			sys.exit(1)
+		if not project.verify():
+			logger.error('verify step ended with errors')
+			sys.exit(1)
 		
 	elif step == 'install':
-		project.configure()
-		project.build()
-		project.test()
-		project.package()
-		project.verify()
-		project.install()
+		if not project.configure():
+			logger.error('configure step ended with errors')
+			sys.exit(1)
+		if not project.build():
+			logger.error('build step ended with errors')
+			sys.exit(1)
+		if not project.test():
+			logger.error('test step ended with errors')
+			sys.exit(1)
+		if not project.package():
+			logger.error('package step ended with errors')
+			sys.exit(1)
+		if not project.verify():
+			logger.error('verify step ended with errors')
+			sys.exit(1)
+		if not project.install():
+			logger.error('install step ended with errors')
+			sys.exit(1)
 		
 	elif step == 'deploy':
-		project.configure()
-		project.build()
-		project.test()
-		project.package()
-		project.verify()
-		project.deploy()
+		if not project.configure():
+			logger.error('configure step ended with errors')
+			sys.exit(1)
+		if not project.build():
+			logger.error('build step ended with errors')
+			sys.exit(1)
+		if not project.test():
+			logger.error('test step ended with errors')
+			sys.exit(1)
+		if not project.package():
+			logger.error('package step ended with errors')
+			sys.exit(1)
+		if not project.verify():
+			logger.error('verify step ended with errors')
+			sys.exit(1)
+		if not project.deploy():
+			logger.error('deploy step ended with errors')
+			sys.exit(1)
 		
 	else:
 		logger.error('Unknown step : ' + step)
+		sys.exit(1)
 	
 	
 	

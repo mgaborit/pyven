@@ -28,7 +28,7 @@ class Package(Item):
 		try:
 			for item in self.items:
 				if not os.path.isfile(item.file):
-					logger.error('Missing package item : ' + item.file)
+					raise Exception('Package item not found : ' + item.file)
 				else:
 					item_file = os.path.join(item.workspace_location(workspace), os.path.basename(item.file))
 					zf.write(item_file, os.path.basename(item_file))

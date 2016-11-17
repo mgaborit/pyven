@@ -11,10 +11,10 @@ class Repository(object):
 		self.url = url
 
 	def retrieve(self, artifact):
-		raise NotImplementedError('Invalid call to "retrieve"')
+		raise NotImplementedError
 		
 	def publish(self, artifact):
-		raise NotImplementedError('Invalid call to "publish"')
+		raise NotImplementedError
 		
 	def factory(node):
 		return Repository._factory(node.get('id'), node.get('type'), node.get('url'))
@@ -45,7 +45,7 @@ class FileRepo(Repository):
 	def publish(self, item, workspace):
 		src_file = os.path.join(item.workspace_location(workspace), item.basename())
 		if not os.path.isfile(src_file):
-			logger.error('Wrong artifact location ' + item.format_name() + ' : ' + src_file)
+			raise Exception('Wrong artifact location ' + item.format_name() + ' : ' + src_file)
 		dst_dir = os.path.join(self.url, item.type()+'s', item.publish_location())
 		if not os.path.isdir(dst_dir):
 			os.makedirs(dst_dir)
