@@ -1,11 +1,11 @@
 import logging, os, shutil
 from lxml import etree
 
-from item.artifact import Artifact
-from item.package import Package
-from tool.tool import Tool
-from test.test import Test
-from repository.repository import Repository
+from artifact import Artifact
+from package import Package
+from tool import Tool
+from test import Test
+from repository import Repository
 
 logger = logging.getLogger('global')
 

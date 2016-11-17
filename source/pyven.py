@@ -1,7 +1,7 @@
 import sys
 import logging
 
-from project import Project
+from pyven.project import Project
 
 PYVEN_VERSION = '0.1.0'
 
