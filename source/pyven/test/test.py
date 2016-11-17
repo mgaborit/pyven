@@ -15,7 +15,6 @@ class Test(object):
 		call = [self.filename]
 		for argument in self.arguments:
 			call.append(argument)
-			
 		return call
 	
 	def run(self, verbose=False):
