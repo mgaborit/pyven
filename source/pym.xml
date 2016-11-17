@@ -86,16 +86,16 @@
 			</tools>
 		</build>
 		<tests>
-			<test>
+			<test type="unit">
 				<file>build\MSVC-Debug-x64\test\ZipTest.exe</file>
 			</test>
-			<test>
+			<test type="unit">
 				<file>build\MSVC-Debug-x86\test\ZipTest.exe</file>
 			</test>
-			<test>
+			<test type="unit">
 				<file>build\MSVC-Release-x64\test\ZipTest.exe</file>
 			</test>
-			<test>
+			<test type="unit">
 				<file>build\MSVC-Release-x86\test\ZipTest.exe</file>
 			</test>
 		</tests>
