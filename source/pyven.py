@@ -14,15 +14,15 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 def hint():
-	logger.info('Right syntax : "python pyven.py [-v] <step> [arg]"')
-	logger.info("<step> values : 'configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver'")
+	logger.error('Right syntax : "python pyven.py [-v] <step> [arg]"')
+	logger.error("<step> values : 'configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver'")
 
 def main(args):
 	if len(args) > 4:
 		logger.error('Too many arguments passed to Pyven')
 		hint()
 		sys.exit(1)
-
+	logger.info('Pyven version : ' + PYVEN_VERSION)
 	verbose_arg = '-v'
 	verbose = False
 	if verbose_arg in args:
@@ -51,7 +51,7 @@ def main(args):
 	
 	step = args[step_idx]
 	
-	project = Project(verbose)
+	project = Project(PYVEN_VERSION, verbose)
 	
 	logger.info('Pyven command called for step ' + step)
 	if step == possible_steps[0]:
