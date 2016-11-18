@@ -21,6 +21,4 @@ class Artifact(Item):
 			return os.path.basename(self.file)
 		else:
 			raise Exception('Unknown artifact location : ' + self.format_name())
-		
-	def workspace_location(self, workspace):
-		return os.path.join(workspace, 'artifacts', self.publish_location())
+	
