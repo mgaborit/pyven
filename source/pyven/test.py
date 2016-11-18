@@ -20,8 +20,12 @@ class Test(object):
 		for argument in self.arguments:
 			call.append(argument)
 		return call
+
+	def _copy_resources(self, repo=None, resources=None):
+		raise NotImplementedError
 	
-	def run(self, verbose=False):
+	def run(self, verbose=False, repo=None, resources=None):
+		self._copy_resources(repo, resources)
 		FNULL = open(os.devnull, 'w')
 		cwd = os.getcwd()
 		if os.path.isdir(self.path):
@@ -40,3 +44,37 @@ class Test(object):
 			return True
 		logger.error('Unknown directory : ' + self.path)
 		return False
+		
+	def factory(node):
+		type = node.get('type')
+		if type not in Test.AVAILABLE_TYPES:
+			raise Exception('Wrong test type : ' + type, 'Available test types : ' + str(Test.AVAILABLE_TYPES))
+		if type == "unit": return UnitTest(node)
+		if type == "integration": return IntegrationTest(node)
+	factory = staticmethod(factory)
+	
+class IntegrationTest(Test):
+
+	def __init__(self, node):
+		super(IntegrationTest,self).__init__(node)
+		packages = node.xpath('package')
+		if len(packages) < 1:
+			raise Exception('Missing package for test : ' + os.path.join(self.path, self.filename))
+		if len(packages) > 1:
+			raise Exception('Too many packages specified for test : ' + os.path.join(self.path, self.filename))
+		self.package = packages[0].text
+		
+	def _copy_resources(self, repo=None, resources=None):
+		if self.package in resources.keys():
+			package = resources[self.package]
+			package.unpack(self.path, repo)
+		else:
+			raise Exception('Package not found : ' + self.package)
+		
+class UnitTest(Test):
+
+	def __init__(self):
+		super(UnitTest,self).__init__(node)
+
+	def _copy_resources(self, resources=None):
+		pass

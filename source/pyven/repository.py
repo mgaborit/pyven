@@ -35,12 +35,12 @@ class FileRepo(Repository):
 		super(FileRepo, self, ).__init__(name, type, url)
 		
 	def retrieve(self, item, workspace):
-		src_dir = os.path.join(self.url, item.type()+'s', item.publish_location())
+		src_dir = item.location(self.url)
 		if os.path.isdir(src_dir):
 			src_dir_content = os.listdir(src_dir)
 			if len(src_dir_content) == 1:
-				item.file = os.path.join(item.workspace_location(workspace), src_dir_content[0])
-		dst_dir = item.workspace_location(workspace)
+				item.file = os.path.join(item.location(workspace), src_dir_content[0])
+		dst_dir = item.location(workspace)
 		if not os.path.isdir(dst_dir):
 			os.makedirs(dst_dir)
 		src_file = os.path.join(src_dir, item.basename())
@@ -48,19 +48,12 @@ class FileRepo(Repository):
 		shutil.copy(src_file, dst_file)
 		
 	def publish(self, item, workspace):
-		src_file = os.path.join(item.workspace_location(workspace), item.basename())
+		src_file = os.path.join(item.location(workspace), item.basename())
 		if not os.path.isfile(src_file):
 			raise Exception('Wrong artifact location ' + item.format_name() + ' : ' + src_file)
-		dst_dir = os.path.join(self.url, item.type()+'s', item.publish_location())
+		dst_dir = os.path.join(item.location(self.url))
 		if not os.path.isdir(dst_dir):
 			os.makedirs(dst_dir)
 		dst_file = os.path.join(dst_dir, item.basename())
 		shutil.copy(src_file, dst_file)
-			
-			
-
-			
-			
-			
-			
 			

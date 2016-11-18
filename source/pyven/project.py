@@ -82,7 +82,7 @@ class Project:
 	
 	def _extract_tests(self, tree):
 		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/tests/test'):
-			test = Test(node)
+			test = Test.factory(node)
 			if test.type == 'unit':
 				self.unit_tests.append(test)
 				logger.info('Added unit test : ' + os.path.join(test.path, test.filename))
@@ -169,9 +169,9 @@ class Project:
 		if not artifacts_ok:
 			raise Exception('Artifacts missing')
 		for artifact in [a for a in self.artifacts.values() if not a.to_retrieve]:
-			if not os.path.isdir(artifact.workspace_location(Project.WORKSPACE)):
-				os.makedirs(artifact.workspace_location(Project.WORKSPACE))
-			shutil.copy(artifact.file, artifact.workspace_location(Project.WORKSPACE))
+			if not os.path.isdir(artifact.location(Project.WORKSPACE)):
+				os.makedirs(artifact.location(Project.WORKSPACE))
+			shutil.copy(artifact.file, artifact.location(Project.WORKSPACE))
 		logger.info('STEP BUILD : COMPLETED')
 		
 	@_step
@@ -202,7 +202,7 @@ class Project:
 			logger.warning('No integration tests found')
 		else:
 			for test in self.integration_tests:
-				test.run(self.verbose)
+				test.run(self.verbose, Project.WORKSPACE, self.packages)
 		logger.info('STEP VERIFY : COMPLETED')
 		
 	@_step
