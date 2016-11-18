@@ -67,7 +67,7 @@ class IntegrationTest(Test):
 	def _copy_resources(self, repo=None, resources=None):
 		if self.package in resources.keys():
 			package = resources[self.package]
-			package.unpack(self.path, repo)
+			package.unpack(self.path, repo, flatten=True)
 		else:
 			raise Exception('Package not found : ' + self.package)
 		
