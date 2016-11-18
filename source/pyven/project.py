@@ -10,12 +10,12 @@ from repository import Repository
 logger = logging.getLogger('global')
 
 class Project:
-	WORKSPACE = 'pyven_workspace'
+	WORKSPACE = 'pvn_workspace'
 	LOCAL_REPO_NAME = 'local'
 	if os.name == 'nt':
-		LOCAL_REPO = os.path.join(os.environ.get('USERPROFILE'), 'pyven_local_repo')
+		LOCAL_REPO = os.path.join(os.environ.get('USERPROFILE'), 'pvn_repo')
 	elif os.name == 'posix':
-		LOCAL_REPO = os.path.join(os.environ.get('HOME'), 'pyven_local_repo')
+		LOCAL_REPO = os.path.join(os.environ.get('HOME'), 'pvn_repo')
 
 	def __init__(self, version, verbose=False):
 		logger.info('Initializing Pyven project')
