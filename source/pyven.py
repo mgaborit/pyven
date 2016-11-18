@@ -12,16 +12,23 @@ stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.DEBUG)
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
-	
+
+def hint():
+	logger.info('Right syntax : "python pyven.py [-v] <step> [arg]"')
+	logger.info("<step> values : 'configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver'")
+
 def main(args):
 	if len(args) > 4:
 		logger.error('Too many arguments passed to Pyven')
+		hint()
+		sys.exit(1)
 
 	verbose_arg = '-v'
 	verbose = False
 	if verbose_arg in args:
 		if args.index(verbose_arg) > 1:
 			logger.error('verbose option misplaced')
+			hint()
 			sys.exit(1)
 		logger.info('Verbose mode enabled')
 		verbose = True
@@ -33,11 +40,13 @@ def main(args):
 		
 	if not len(args) > step_idx:
 		logger.error('Missing step call')
+		hint()
 		sys.exit(1)
 	
 	possible_steps = ['configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver']
 	if not args[step_idx] in possible_steps:
 		logger.error('Invalid step call')
+		hint()
 		sys.exit(1)
 	
 	step = args[step_idx]
@@ -48,6 +57,7 @@ def main(args):
 	if step == possible_steps[0]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
+			hint()
 			sys.exit(1)
 		if not project.configure():
 			logger.error('configure step ended with errors')
@@ -56,6 +66,7 @@ def main(args):
 	elif step == possible_steps[1]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
+			hint()
 			sys.exit(1)
 		if not project.configure():
 			logger.error('configure step ended with errors')
@@ -67,6 +78,7 @@ def main(args):
 	elif step == possible_steps[2]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
+			hint()
 			sys.exit(1)
 		if not project.configure():
 			logger.error('configure step ended with errors')
@@ -81,6 +93,7 @@ def main(args):
 	elif step == possible_steps[3]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
+			hint()
 			sys.exit(1)
 		if not project.configure():
 			logger.error('configure step ended with errors')
@@ -98,6 +111,7 @@ def main(args):
 	elif step == possible_steps[4]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
+			hint()
 			sys.exit(1)
 		if not project.configure():
 			logger.error('configure step ended with errors')
@@ -118,6 +132,7 @@ def main(args):
 	elif step == possible_steps[5]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
+			hint()
 			sys.exit(1)
 		if not project.configure():
 			logger.error('configure step ended with errors')
@@ -141,6 +156,7 @@ def main(args):
 	elif step == possible_steps[6]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
+			hint()
 			sys.exit(1)
 		if not project.configure():
 			logger.error('configure step ended with errors')
@@ -164,9 +180,11 @@ def main(args):
 	elif step == possible_steps[7]:
 		if len(args) > step_idx + 2:
 			logger.error('Too many arguments provided')
+			hint()
 			sys.exit(1)
 		if len(args) < step_idx + 2:
 			logger.error('missing path to delivery directory')
+			hint()
 			sys.exit(1)
 		if not project.configure():
 			logger.error('configure step ended with errors')
