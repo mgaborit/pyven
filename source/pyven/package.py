@@ -31,12 +31,17 @@ class Package(Item):
 					raise Exception('Package item not found : ' + item.file)
 				else:
 					item_file = os.path.join(item.workspace_location(workspace), os.path.basename(item.file))
-					zf.write(item_file, os.path.basename(item_file))
+					zf.write(item_file, os.path.join(self.format_name('_'), os.path.basename(item_file)))
 					logger.info('Added artifact ' + item.format_name() + ' to archive ' + zip_name)
 		finally:
 			logger.info('Created archive : ' + zip_name)
 			zf.close()
 			
-	def unpack(self, dir):
-		with zipfile.ZipFile(os.path.join(self.workspace_location(), self.basename()), "r") as z:
+	def unpack(self, dir, workspace):
+		location = os.path.join(self.workspace_location(workspace), self.publish_location(), self.basename())
+		if not os.path.isfile(location):
+			raise Exception('Package not found at ' +  + ' : ' + self.format_name())
+		if not os.path.isdir(dir):
+			os.makedirs(dir)
+		with zipfile.ZipFile(location, "r") as z:
 			z.extractall(dir)

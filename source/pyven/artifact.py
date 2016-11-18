@@ -10,8 +10,7 @@ class Artifact(Item):
 	def __init__(self, node):
 		super(Artifact, self).__init__(node)
 		self.file = None
-		self.repo = node.get('repo')
-		if self.repo is None:
+		if not self.to_retrieve:
 			self.file = node.text
 	
 	def type(self):

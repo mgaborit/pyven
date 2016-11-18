@@ -40,14 +40,16 @@ class CMakeTool(Tool):
 	
 	def process(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
-		logger.info('Preprocessing with : ' + self.name + ':' + self.id)
+		logger.info('Preprocessing : ' + self.name + ':' + self.id)
 		if verbose:
 			return_code = subprocess.call(self._format_call())
 		else:
 			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
 			
 		if return_code != 0:
-			raise Exception('Preprocessing ended with errors')
+			logger.error('Preprocessing ended with errors')
+			return False
+		return True
 		
 class MSBuildTool(Tool):
 
@@ -69,11 +71,13 @@ class MSBuildTool(Tool):
 	
 	def process(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
-		logger.info('Building with : ' + self.name + ':' + self.id)
+		logger.info('Building : ' + self.name + ':' + self.id)
 		if verbose:
 			return_code = subprocess.call(self._format_call())
 		else:
 			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
 		
 		if return_code != 0:
-			raise Exception('Build ended with errors')
+			logger.error('Build failed : ' + self.name + ':' + self.id)
+			return False
+		return True
