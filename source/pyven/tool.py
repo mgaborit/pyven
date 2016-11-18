@@ -8,13 +8,13 @@ class Tool(object):
 	AVAILABLE_SCOPES = ['preprocess', 'build']
 	
 	def __init__(self, node):
+		self.type = node.get('type')
+		if self.type not in Tool.AVAILABLE_TOOLS:
+			raise Exception('Wrong tool type : ' + self.type, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
 		self.name = node.get('name')
-		if self.name not in Tool.AVAILABLE_TOOLS:
-			raise Exception('Wrong tool : ' + self.name, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
-		self.configuration = node.get('configuration')
 		self.scope = node.get('scope')
 		if self.scope not in Tool.AVAILABLE_SCOPES:
-			raise Exception('Wrong tool type : ' + self.scope, 'Available scopes : ' + str(Tool.AVAILABLE_SCOPES))
+			raise Exception('Wrong tool scope : ' + self.scope, 'Available scopes : ' + str(Tool.AVAILABLE_SCOPES))
 		
 	def _format_call(self):
 		raise NotImplementedError
@@ -23,11 +23,11 @@ class Tool(object):
 		raise NotImplementedError
 		
 	def factory(node):
-		name = node.get('name')
-		if name not in Tool.AVAILABLE_TOOLS:
-			raise Exception('Wrong tool : ' + name, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
-		if name == "cmake": return CMakeTool(node)
-		if name == "msbuild": return MSBuildTool(node)
+		type = node.get('type')
+		if type not in Tool.AVAILABLE_TOOLS:
+			raise Exception('Wrong tool type : ' + type, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
+		if type == "cmake": return CMakeTool(node)
+		if type == "msbuild": return MSBuildTool(node)
 	factory = staticmethod(factory)
 	
 class CMakeTool(Tool):
@@ -41,7 +41,7 @@ class CMakeTool(Tool):
 			self.definitions.append(definition.text)
 	
 	def _format_call(self):
-		call = [self.name, '-H.', '-B'+self.output_path, '-G'+self.generator+'']
+		call = [self.type, '-H.', '-B'+self.output_path, '-G'+self.generator+'']
 		for definition in self.definitions:
 			call.append('-D'+definition)
 			
@@ -49,14 +49,14 @@ class CMakeTool(Tool):
 	
 	def process(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
-		logger.info('Preprocessing : ' + self.name + ':' + self.configuration)
+		logger.info('Preprocessing : ' + self.type + ':' + self.name)
 		if verbose:
 			return_code = subprocess.call(self._format_call())
 		else:
 			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
 			
 		if return_code != 0:
-			logger.error('Preprocessing failed : ' + self.name + ':' + self.configuration)
+			logger.error('Preprocessing failed : ' + self.type + ':' + self.name)
 			return False
 		return True
 		
@@ -64,29 +64,31 @@ class MSBuildTool(Tool):
 
 	def __init__(self, node):
 		super(MSBuildTool, self).__init__(node)
-		self.project_file = node.find('project-file').text
 		self.configuration = node.find('configuration').text
 		self.architecture = node.find('architecture').text
-		self.arguments = []
-		for argument in node.xpath('arguments/argument'):
-			self.arguments.append(argument.text)
+		self.projects = []
+		for project in node.xpath('projects/project'):
+			self.projects.append(project.text)
+		self.options = []
+		for option in node.xpath('options/option'):
+			self.arguments.append(option.text)
 		
-	def _format_call(self):
-		call = ['msbuild.exe', self.project_file, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture]
-		for argument in self.arguments:
-			call.append(argument)
+	def _format_call(self, project):
+		call = ['msbuild.exe', project, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture]
+		for option in self.options:
+			call.append(option)
 			
 		return call
 	
 	def process(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
-		logger.info('Building : ' + self.name + ':' + self.configuration)
-		if verbose:
-			return_code = subprocess.call(self._format_call())
-		else:
-			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
-		
+		logger.info('Building : ' + self.type + ':' + self.name)
+		for project in self.projects:
+			if verbose:
+				return_code = subprocess.call(self._format_call(project))
+			else:
+				return_code = subprocess.call(self._format_call(project), stdout=FNULL, stderr=subprocess.STDOUT)
 		if return_code != 0:
-			logger.error('Build failed : ' + self.name + ':' + self.configuration)
+			logger.error('Build failed : ' + self.type + ':' + self.name)
 			return False
 		return True
