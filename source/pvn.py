@@ -15,7 +15,7 @@ logger.addHandler(stream_handler)
 
 def hint():
 	logger.error('Right syntax : "python pvn.py [-v] <step> [arg]"')
-	logger.error("<step> values : 'configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver'")
+	logger.error("<step> values : " + str(Project.POSSIBLE_STEPS))
 
 def main(args):
 	if len(args) > 4:
@@ -43,8 +43,7 @@ def main(args):
 		hint()
 		sys.exit(1)
 	
-	possible_steps = ['configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver']
-	if not args[step_idx] in possible_steps:
+	if not args[step_idx] in Project.POSSIBLE_STEPS:
 		logger.error('Invalid step call')
 		hint()
 		sys.exit(1)
@@ -54,130 +53,130 @@ def main(args):
 	project = Project(PYVEN_VERSION, verbose)
 	
 	logger.info('Pyven command called for step ' + step)
-	if step == possible_steps[0]:
+	if step == Project.POSSIBLE_STEPS[0]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
 			hint()
 			sys.exit(1)
 		if not project.configure():
-			logger.error('configure step ended with errors')
+			logger.error('STEP CONFIGURE : FAILED')
 			sys.exit(1)
 	
-	elif step == possible_steps[1]:
+	elif step == Project.POSSIBLE_STEPS[1]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
 			hint()
 			sys.exit(1)
 		if not project.configure():
-			logger.error('configure step ended with errors')
+			logger.error('STEP CONFIGURE : FAILED')
 			sys.exit(1)
 		if not project.build():
-			logger.error('build step ended with errors')
+			logger.error('STEP BUILD : FAILED')
 			sys.exit(1)
 		
-	elif step == possible_steps[2]:
+	elif step == Project.POSSIBLE_STEPS[2]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
 			hint()
 			sys.exit(1)
 		if not project.configure():
-			logger.error('configure step ended with errors')
+			logger.error('STEP CONFIGURE : FAILED')
 			sys.exit(1)
 		if not project.build():
-			logger.error('build step ended with errors')
+			logger.error('STEP BUILD : FAILED')
 			sys.exit(1)
 		if not project.test():
-			logger.error('test step ended with errors')
+			logger.error('STEP TEST : FAILED')
 			sys.exit(1)
-		
-	elif step == possible_steps[3]:
+
+	elif step == Project.POSSIBLE_STEPS[3]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
 			hint()
 			sys.exit(1)
 		if not project.configure():
-			logger.error('configure step ended with errors')
+			logger.error('STEP CONFIGURE : FAILED')
 			sys.exit(1)
 		if not project.build():
-			logger.error('build step ended with errors')
+			logger.error('STEP BUILD : FAILED')
 			sys.exit(1)
 		if not project.test():
-			logger.error('test step ended with errors')
+			logger.error('STEP TEST : FAILED')
 			sys.exit(1)
 		if not project.package():
-			logger.error('package step ended with errors')
+			logger.error('STEP PACKAGE : FAILED')
 			sys.exit(1)
 		
-	elif step == possible_steps[4]:
+	elif step == Project.POSSIBLE_STEPS[4]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
 			hint()
 			sys.exit(1)
 		if not project.configure():
-			logger.error('configure step ended with errors')
+			logger.error('STEP CONFIGURE : FAILED')
 			sys.exit(1)
 		if not project.build():
-			logger.error('build step ended with errors')
+			logger.error('STEP BUILD : FAILED')
 			sys.exit(1)
 		if not project.test():
-			logger.error('test step ended with errors')
+			logger.error('STEP TEST : FAILED')
 			sys.exit(1)
 		if not project.package():
-			logger.error('package step ended with errors')
+			logger.error('STEP PACKAGE : FAILED')
 			sys.exit(1)
 		if not project.verify():
-			logger.error('verify step ended with errors')
+			logger.error('STEP VERIFY : FAILED')
 			sys.exit(1)
 		
-	elif step == possible_steps[5]:
+	elif step == Project.POSSIBLE_STEPS[5]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
 			hint()
 			sys.exit(1)
 		if not project.configure():
-			logger.error('configure step ended with errors')
+			logger.error('STEP CONFIGURE : FAILED')
 			sys.exit(1)
 		if not project.build():
-			logger.error('build step ended with errors')
+			logger.error('STEP BUILD : FAILED')
 			sys.exit(1)
 		if not project.test():
-			logger.error('test step ended with errors')
+			logger.error('STEP TEST : FAILED')
 			sys.exit(1)
 		if not project.package():
-			logger.error('package step ended with errors')
+			logger.error('STEP PACKAGE : FAILED')
 			sys.exit(1)
 		if not project.verify():
-			logger.error('verify step ended with errors')
+			logger.error('STEP VERIFY : FAILED')
 			sys.exit(1)
 		if not project.install():
-			logger.error('install step ended with errors')
+			logger.error('STEP INSTALL : FAILED')
 			sys.exit(1)
 		
-	elif step == possible_steps[6]:
+	elif step == Project.POSSIBLE_STEPS[6]:
 		if len(args) > step_idx + 1:
 			logger.error('Too many arguments provided')
 			hint()
 			sys.exit(1)
 		if not project.configure():
-			logger.error('configure step ended with errors')
+			logger.error('STEP CONFIGURE : FAILED')
 			sys.exit(1)
 		if not project.build():
-			logger.error('build step ended with errors')
+			logger.error('STEP BUILD : FAILED')
 			sys.exit(1)
 		if not project.test():
-			logger.error('test step ended with errors')
+			logger.error('STEP TEST : FAILED')
 			sys.exit(1)
 		if not project.package():
-			logger.error('package step ended with errors')
+			logger.error('STEP PACKAGE : FAILED')
 			sys.exit(1)
 		if not project.verify():
-			logger.error('verify step ended with errors')
+			logger.error('STEP VERIFY : FAILED')
 			sys.exit(1)
 		if not project.deploy():
-			logger.error('deploy step ended with errors')
+			logger.error('STEP DEPLOY : FAILED')
 			sys.exit(1)
 		
-	elif step == possible_steps[7]:
+	elif step == Project.POSSIBLE_STEPS[7]:
 		if len(args) > step_idx + 2:
 			logger.error('Too many arguments provided')
 			hint()
@@ -187,27 +186,38 @@ def main(args):
 			hint()
 			sys.exit(1)
 		if not project.configure():
-			logger.error('configure step ended with errors')
+			logger.error('STEP CONFIGURE : FAILED')
 			sys.exit(1)
 		if not project.build():
-			logger.error('build step ended with errors')
+			logger.error('STEP BUILD : FAILED')
 			sys.exit(1)
 		if not project.test():
-			logger.error('test step ended with errors')
+			logger.error('STEP TEST : FAILED')
 			sys.exit(1)
 		if not project.package():
-			logger.error('package step ended with errors')
+			logger.error('STEP PACKAGE : FAILED')
 			sys.exit(1)
 		if not project.verify():
-			logger.error('verify step ended with errors')
+			logger.error('STEP VERIFY : FAILED')
 			sys.exit(1)
 		if not project.install():
-			logger.error('install step ended with errors')
+			logger.error('STEP INSTALL : FAILED')
 			sys.exit(1)
 		if not project.deliver(args[step_idx + 1]):
-			logger.error('deliver step ended with errors')
+			logger.error('STEP DELIVER : FAILED')
 			sys.exit(1)
 		
+	elif step == Project.POSSIBLE_STEPS[8]:
+		if len(args) > step_idx + 1:
+			logger.error('Too many arguments provided')
+			hint()
+			sys.exit(1)
+		if not project.configure():
+			logger.error('STEP CONFIGURE : FAILED')
+			sys.exit(1)
+		if not project.clean():
+			logger.error('STEP CLEAN : FAILED')
+			sys.exit(1)
 	else:
 		logger.error('Unknown step : ' + step)
 		sys.exit(1)

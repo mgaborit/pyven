@@ -1,10 +1,10 @@
-import subprocess, os, logging
+import subprocess, os, logging, shutil
 
 logger = logging.getLogger('global')
 
 # pym.xml 'tool' node
 class Tool(object):
-	AVAILABLE_TOOLS = ['cmake', 'msbuild']
+	AVAILABLE_TOOLS = ['cmake', 'msbuild', 'command']
 	AVAILABLE_SCOPES = ['preprocess', 'build']
 	
 	def __init__(self, node):
@@ -22,12 +22,16 @@ class Tool(object):
 	def process(self):
 		raise NotImplementedError
 		
+	def clean(self, verbose=False):
+		raise NotImplementedError
+		
 	def factory(node):
 		type = node.get('type')
 		if type not in Tool.AVAILABLE_TOOLS:
 			raise Exception('Wrong tool type : ' + type, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
 		if type == "cmake": return CMakeTool(node)
 		if type == "msbuild": return MSBuildTool(node)
+		if type == "command": return CommandTool(node)
 	factory = staticmethod(factory)
 	
 class CMakeTool(Tool):
@@ -39,6 +43,8 @@ class CMakeTool(Tool):
 		self.definitions = []
 		for definition in node.xpath('definitions/definition'):
 			self.definitions.append(definition.text)
+		if self.scope == 'build':
+			logger.warning('CMake will be called during build but not preprocessing')
 	
 	def _format_call(self):
 		call = [self.type, '-H.', '-B'+self.output_path, '-G'+self.generator+'']
@@ -59,6 +65,12 @@ class CMakeTool(Tool):
 			logger.error('Preprocessing failed : ' + self.type + ':' + self.name)
 			return False
 		return True
+	
+	def clean(self, verbose=False):
+		logger.info('Cleaning : ' + self.type + ':' + self.name)
+		if os.path.isdir(self.output_path):
+			shutil.rmtree(self.output_path)
+		return True
 		
 class MSBuildTool(Tool):
 
@@ -72,9 +84,13 @@ class MSBuildTool(Tool):
 		self.options = []
 		for option in node.xpath('options/option'):
 			self.arguments.append(option.text)
+		if self.scope == 'preprocess':
+			logger.warning('MSBuild will be called during preprocessing but not build')
 		
-	def _format_call(self, project):
+	def _format_call(self, project, clean=False):
 		call = ['msbuild.exe', project, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture]
+		if clean:
+			call.append('/target:clean')
 		for option in self.options:
 			call.append(option)
 			
@@ -92,3 +108,53 @@ class MSBuildTool(Tool):
 			logger.error('Build failed : ' + self.type + ':' + self.name)
 			return False
 		return True
+		
+	def clean(self, verbose=False):
+		FNULL = open(os.devnull, 'w')
+		logger.info('Cleaning : ' + self.type + ':' + self.name)
+		for project in self.projects:
+			if verbose:
+				return_code = subprocess.call(self._format_call(project, clean=True))
+			else:
+				return_code = subprocess.call(self._format_call(project, clean=True), stdout=FNULL, stderr=subprocess.STDOUT)
+		if return_code != 0:
+			logger.error('Clean failed : ' + self.type + ':' + self.name)
+			return False
+		return True
+			
+class CommandTool(Tool):
+
+	def __init__(self, node):
+		super(CommandTool, self).__init__(node)
+		programs = node.xpath('program')
+		if len(programs) < 1:
+			raise Exception('Missing program')
+		if len(programs) > 1:
+			raise Exception('Too many programs specified')
+		self.program = programs[0]
+		self.arguments = []
+		for argument in node.xpath('arguments/argument'):
+			self.arguments.append(argument.text)
+		
+	def _format_call(self):
+		call = [self.program]
+		for argument in self.arguments:
+			call.append(argument)
+			
+		return call
+	
+	def process(self, verbose=False):
+		FNULL = open(os.devnull, 'w')
+		logger.info('Command called : ' + self.type + ':' + self.name)
+		if verbose:
+			return_code = subprocess.call(self._format_call())
+		else:
+			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
+		if return_code != 0:
+			logger.error('Command failed : ' + self.type + ':' + self.name)
+			return False
+		return True
+		
+	def clean(self, verbose=False):
+		pass
+		

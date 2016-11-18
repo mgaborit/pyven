@@ -10,6 +10,7 @@ from repository import Repository
 logger = logging.getLogger('global')
 
 class Project:
+	POSSIBLE_STEPS = ['configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver', 'clean']
 	WORKSPACE = 'pvn_workspace'
 	LOCAL_REPO_NAME = 'local'
 	if os.name == 'nt':
@@ -140,7 +141,7 @@ class Project:
 		self._extract_packages(tree)
 		self._extract_tools(tree)
 		self._extract_tests(tree)
-		logger.info('STEP CONFIGURE : COMPLETED')
+		logger.info('STEP CONFIGURE : SUCCESSFUL')
 		
 	@_step	
 	def build(self):
@@ -172,7 +173,7 @@ class Project:
 			if not os.path.isdir(artifact.location(Project.WORKSPACE)):
 				os.makedirs(artifact.location(Project.WORKSPACE))
 			shutil.copy(artifact.file, artifact.location(Project.WORKSPACE))
-		logger.info('STEP BUILD : COMPLETED')
+		logger.info('STEP BUILD : SUCCESSFUL')
 		
 	@_step
 	def test(self):
@@ -186,14 +187,14 @@ class Project:
 					tests_ok = False
 			if not tests_ok:
 				raise Exception('Test failures found')
-		logger.info('STEP TEST : COMPLETED')
+		logger.info('STEP TEST : SUCCESSFUL')
 
 	@_step
 	def package(self):
 		logger.info('STEP PACKAGE : STARTING')
 		for package in self.packages.values():
 			package.pack(Project.WORKSPACE)
-		logger.info('STEP PACKAGE : COMPLETED')
+		logger.info('STEP PACKAGE : SUCCESSFUL')
 
 	@_step
 	def verify(self):
@@ -203,7 +204,7 @@ class Project:
 		else:
 			for test in self.integration_tests:
 				test.run(self.verbose, Project.WORKSPACE, self.packages)
-		logger.info('STEP VERIFY : COMPLETED')
+		logger.info('STEP VERIFY : SUCCESSFUL')
 		
 	@_step
 	def install(self):
@@ -214,7 +215,7 @@ class Project:
 		for package in [p for p in self.packages.values() if not p.to_retrieve]:
 			self.repositories[Project.LOCAL_REPO_NAME].publish(package, Project.WORKSPACE)
 			logger.info('Published package to ' + Project.LOCAL_REPO_NAME + ' repository : ' + package.format_name())
-		logger.info('STEP INSTALL : COMPLETED')
+		logger.info('STEP INSTALL : SUCCESSFUL')
 		
 	@_step
 	def deploy(self, repo=None):
@@ -226,17 +227,33 @@ class Project:
 			for package in [p for p in self.packages.values() if not p.to_retrieve]:
 				self.repositories[key].publish(package, Project.WORKSPACE)
 				logger.info('Published package to ' + key + ' repository : ' + package.format_name())
-		logger.info('STEP DEPLOY : COMPLETED')
+		logger.info('STEP DEPLOY : SUCCESSFUL')
 		
-	def deliver(self, path, verbose=False):
+	def deliver(self, path):
 		logger.info('===================================')
 		logger.info('STEP DELIVER : STARTING')
 		try:
 			for package in [p for p in self.packages.values() if p.repo is None]:
 				logger.info('Delivering package : ' + package.format_name())
-				package.unpack(path, Project.LOCAL_REPO)
-			logger.info('STEP DELIVER : COMPLETED')
+				package.unpack(path, Project.LOCAL_REPO, flatten=False)
+			logger.info('STEP DELIVER : SUCCESSFUL')
 		except Exception as e:
 			logger.error(e)
 			return False
 		return True
+		
+	@_step
+	def clean(self, verbose=False):
+		logger.info('STEP CLEAN : STARTING')
+		build_ok = True
+		for tool in self.tools['builders']:
+			if not tool.clean(self.verbose):
+				build_ok = False
+		preprocess_ok = True
+		for tool in self.tools['preprocessors']:
+			if not tool.clean(self.verbose):
+				preprocess_ok = False
+		if not preprocess_ok or not build_ok:
+			raise Exception('Cleaning errors found')
+		logger.info('STEP CLEAN : SUCCESSFUL')
+	

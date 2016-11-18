@@ -29,7 +29,7 @@
 		</packages>
 		<build>
 			<tools>
-				<tool type="cmake" name="debug-win64" scope="preprocess">
+				<!--<tool type="cmake" name="debug-win64" scope="preprocess">
 					<generator>Visual Studio 14 2015 Win64</generator>
 					<output-path>project\Debug-x64</output-path>
 					<definitions>
@@ -71,33 +71,41 @@
 						<project>project\Release-x64\S2_P1_engine.sln</project>
 					</projects>
 				</tool>
+				<tool type="command" name="custom" scope="build">
+					<program>git.exe</program>
+					<arguments>
+						<argument>lg</argument>
+						<argument>-20</argument>
+						<argument>graph</argument>
+					</arguments>
+				</tool>-->
 			</tools>
 		</build>
 		<tests>
 			<!--<test type="integration">
 				<file>build\MSVC-Debug-x64\test\EngineTest.exe</file>
-				<package>pillar1:engine-debug-x64:</package>
-			</test> -->
+				<package>pillar1:engine-debug-x64:0.4.0</package>
+			</test>-->
 			<test type="integration">
 				<file>build\MSVC-Debug-x64\test\SignatureTest.exe</file>
 				<package>pillar1:engine-debug-x64:0.4.0</package>
 			</test>
 			<!--<test type="integration">
 				<file>build\MSVC-Debug-x64\test\FileLoaderTest.exe</file>
-				<package>pillar1:engine-debug-x64:</package>
+				<package>pillar1:engine-debug-x64:0.4.0</package>
 			</test>
 			<test type="integration">
 				<file>build\MSVC-Release-x64\test\EngineTest.exe</file>
-				<package>pillar1:engine-release-x64:</package>
+				<package>pillar1:engine-release-x64:0.4.0</package>
 			</test>-->
 			<test type="integration">
 				<file>build\MSVC-Release-x64\test\SignatureTest.exe</file>
 				<package>pillar1:engine-release-x64:0.4.0</package>
 			</test>
-			<!--<test type="integration">
+			<test type="integration">
 				<file>build\MSVC-Release-x64\test\FileLoaderTest.exe</file>
-				<package>pillar1:engine-release-x64:</package>
-			</test>-->
+				<package>pillar1:engine-release-x64:0.4.0</package>
+			</test>
 		</tests>
 	</platform>
 	<platform name="linux">
