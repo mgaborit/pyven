@@ -16,10 +16,18 @@
 			<package group="invoke" id="ZipTest-Debug-Win32" version="1.2.4">
 				<item>invoke:ZipTest-Debug-Win32:4.3.2</item>
 			</package>
-			<package group="invoke" id="ZipTest-Release-cross" version="2.2.3">
+			<package group="invoke" id="ZipTest-Release-Win64" version="2.2.3">
 				<item>invoke:ZipTest-Release-Win64:4.3.2</item>
 			</package>
 			<package group="invoke" id="ZipTest-Release-Win32" version="1.5.3">
+				<item>invoke:ZipTest-Release-Win32:4.3.2</item>
+			</package>
+			<package group="invoke" id="ZipTest-Win64" version="1.2.3">
+				<item>invoke:ZipTest-Debug-Win64:4.3.2</item>
+				<item>invoke:ZipTest-Release-Win64:4.3.2</item>
+			</package>
+			<package group="invoke" id="ZipTest-Win32" version="1.2.3">
+				<item>invoke:ZipTest-Debug-Win32:4.3.2</item>
 				<item>invoke:ZipTest-Release-Win32:4.3.2</item>
 			</package>
 		</packages>

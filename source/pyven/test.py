@@ -25,9 +25,14 @@ class Test(object):
 			os.chdir(self.path)
 			logger.info('Running test : ' + self.filename)
 			if verbose:
-				subprocess.call(self._format_call())
+				return_code = subprocess.call(self._format_call())
 			else:
-				subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
+				return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
 			os.chdir(cwd)
-		else:
-			raise Exception('Unknown directory : ' + self.path)
+			if return_code != 0:
+				logger.error('Test failed : ' + self.filename)
+				return False
+			logger.info('Test OK : ' + self.filename)
+			return True
+		logger.error('Unknown directory : ' + self.path)
+		return False
