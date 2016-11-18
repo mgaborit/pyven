@@ -22,14 +22,6 @@
 			<package group="invoke" name="ZipTest-Release-Win32" version="1.5.3">
 				<item>invoke:ZipTest-Release-Win32:4.3.2</item>
 			</package>
-			<package group="invoke" name="ZipTest-Win64" version="1.2.3">
-				<item>invoke:ZipTest-Debug-Win64:4.3.2</item>
-				<item>invoke:ZipTest-Release-Win64:4.3.2</item>
-			</package>
-			<package group="invoke" name="ZipTest-Win32" version="1.2.3">
-				<item>invoke:ZipTest-Debug-Win32:4.3.2</item>
-				<item>invoke:ZipTest-Release-Win32:4.3.2</item>
-			</package>
 		</packages>
 		<build>
 			<tools>

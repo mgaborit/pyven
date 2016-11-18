@@ -4,10 +4,13 @@ logger = logging.getLogger('global')
 
 # pym.xml 'repository' node
 class Repository(object):
-
+	AVAILABLE_TYPES = ['file']
+	
 	def __init__(self, name, type, url):
 		self.name = name
 		self.type = type
+		if self.type not in Repository.AVAILABLE_TYPES:
+			raise Exception('Wrong repository type : ' + self.type, 'Available types : ' + str(Repository.AVAILABLE_TYPES))
 		self.url = url
 
 	def retrieve(self, artifact):
@@ -21,6 +24,8 @@ class Repository(object):
 	factory = staticmethod(factory)
 	
 	def _factory(name, type, url):
+		if type not in Repository.AVAILABLE_TYPES:
+			raise Exception('Wrong repository type : ' + type, 'Available types : ' + str(Repository.AVAILABLE_TYPES))
 		if type == 'file': return FileRepo(name, type, url)
 	_factory = staticmethod(_factory)
 
