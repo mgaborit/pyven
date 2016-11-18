@@ -74,11 +74,11 @@ class Project:
 		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/build/tools/tool[@scope="preprocess"]'):
 			preprocessor = Tool.factory(node)
 			self.tools['preprocessors'].append(preprocessor)
-			logger.info('Added preprocessor : ' + preprocessor.name + ':' + preprocessor.configuration)
+			logger.info('Added preprocessor : ' + preprocessor.type + ':' + preprocessor.name)
 		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/build/tools/tool[@scope="build"]'):
 			builder = Tool.factory(node)
 			self.tools['builders'].append(builder)
-			logger.info('Added builder : ' + builder.name + ':' + builder.configuration)
+			logger.info('Added builder : ' + builder.type + ':' + builder.name)
 	
 	def _extract_tests(self, tree):
 		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/tests/test'):

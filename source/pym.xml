@@ -25,7 +25,7 @@
 		</packages>
 		<build>
 			<tools>
-				<tool name="cmake" configuration="Debug-Win64" scope="preprocess">
+				<tool type="cmake" name="Debug-Win64" scope="preprocess">
 					<generator>Visual Studio 14 2015 Win64</generator>
 					<output-path>project\Debug-x64</output-path>
 					<definitions>
@@ -34,12 +34,14 @@
 						<definition>RELEASE=FALSE</definition>
 					</definitions>
 				</tool>
-				<tool name="msbuild" configuration="Debug-Win64" scope="build">
+				<tool type="msbuild" name="Debug-Win64" scope="build">
 					<configuration>Debug</configuration>
 					<architecture>x64</architecture>
-					<project-file>project\Debug-x64\zip.sln</project-file>
+					<projects>
+						<project>project\Debug-x64\zip.sln</project>
+					</projects>
 				</tool>
-				<tool name="cmake" configuration="Debug-Win32" scope="preprocess">
+				<tool type="cmake" name="Debug-Win32" scope="preprocess">
 					<generator>Visual Studio 14 2015</generator>
 					<output-path>project\Debug-x86</output-path>
 					<definitions>
@@ -48,14 +50,16 @@
 						<definition>RELEASE=FALSE</definition>
 					</definitions>
 				</tool>
-				<tool name="msbuild" configuration="Debug-Win32" scope="build">
+				<tool type="msbuild" name="Debug-Win32" scope="build">
 					<configuration>Debug</configuration>
 					<architecture>Win32</architecture>
-					<project-file>project\Debug-x86\zip.sln</project-file>
+					<projects>
+						<project>project\Debug-x86\zip.sln</project>
+					</projects>
 				</tool>
 			</tools>
 			<tools>
-				<tool name="cmake" configuration="Release-Win64" scope="preprocess">
+				<tool type="cmake" name="Release-Win64" scope="preprocess">
 					<generator>Visual Studio 14 2015 Win64</generator>
 					<output-path>project\Release-x64</output-path>
 					<definitions>
@@ -64,12 +68,14 @@
 						<definition>RELEASE=TRUE</definition>
 					</definitions>
 				</tool>
-				<tool name="msbuild" configuration="Release-Win64" scope="build">
+				<tool type="msbuild" name="Release-Win64" scope="build">
 					<configuration>Release</configuration>
 					<architecture>x64</architecture>
-					<project-file>project\Release-x64\zip.sln</project-file>
+					<projects>
+						<project>project\Release-x64\zip.sln</project>
+					</projects>
 				</tool>
-				<tool name="cmake" configuration="Release-Win32" scope="preprocess">
+				<tool type="cmake" name="Release-Win32" scope="preprocess">
 					<generator>Visual Studio 14 2015</generator>
 					<output-path>project\Release-x86</output-path>
 					<definitions>
@@ -78,10 +84,12 @@
 						<definition>RELEASE=TRUE</definition>
 					</definitions>
 				</tool>
-				<tool name="msbuild" configuration="Release-Win32" scope="build">
+				<tool type="msbuild" name="Release-Win32" scope="build">
 					<configuration>Release</configuration>
 					<architecture>Win32</architecture>
-					<project-file>project\Release-x86\zip.sln</project-file>
+					<projects>
+						<project>project\Release-x86\zip.sln</project>
+					</projects>
 				</tool>
 			</tools>
 		</build>
