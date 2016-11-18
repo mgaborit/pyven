@@ -17,9 +17,10 @@ class Project:
 	elif os.name == 'posix':
 		LOCAL_REPO = os.path.join(os.environ.get('HOME'), 'pyven_local_repo')
 
-	def __init__(self, verbose=False):
+	def __init__(self, version, verbose=False):
 		logger.info('Initializing Pyven project')
 		
+		self.version = version
 		self.verbose = verbose
 		if os.name == 'nt':
 			self.platform = 'windows'
@@ -104,7 +105,8 @@ class Project:
 			try:
 				function(self)
 			except Exception as e:
-				logger.error(e)
+				for msg in e.args:
+					logger.error(msg)
 				return False
 			return True
 		return __intern
@@ -121,6 +123,15 @@ class Project:
 		logger.info('Created Pyven workspace')
 		logger.info('Starting pym.xml parsing')
 		tree = etree.parse('pym.xml')
+		doc_element = tree.getroot()
+		if doc_element is None or doc_element.tag == "name":
+			raise Exception('Missing "pyven" markup')
+		expected_pyven_version = doc_element.get('version')
+		if expected_pyven_version is None:
+			raise Exception('Missing pyven version information')
+		logger.info('Expected pyven version : ' + expected_pyven_version)
+		if expected_pyven_version != self.version:
+			raise Exception('Wrong pyven version', 'Expected version : Pyven ' + expected_pyven_version, 'Version in use : ' + self.version)
 		logger.info('PYM parsing successful')
 		self._extract_repositories(tree)
 		self._extract_artifacts(tree)
