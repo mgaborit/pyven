@@ -5,8 +5,8 @@ logger = logging.getLogger('global')
 # pym.xml 'repository' node
 class Repository(object):
 
-	def __init__(self, id, type, url):
-		self.id = id
+	def __init__(self, name, type, url):
+		self.name = name
 		self.type = type
 		self.url = url
 
@@ -17,17 +17,17 @@ class Repository(object):
 		raise NotImplementedError
 		
 	def factory(node):
-		return Repository._factory(node.get('id'), node.get('type'), node.get('url'))
+		return Repository._factory(node.get('name'), node.get('type'), node.get('url'))
 	factory = staticmethod(factory)
 	
-	def _factory(id, type, url):
-		if type == 'file': return FileRepo(id, type, url)
+	def _factory(name, type, url):
+		if type == 'file': return FileRepo(name, type, url)
 	_factory = staticmethod(_factory)
 
 class FileRepo(Repository):
 
-	def __init__(self, id, type, url):
-		super(FileRepo, self, ).__init__(id, type, url)
+	def __init__(self, name, type, url):
+		super(FileRepo, self, ).__init__(name, type, url)
 		
 	def retrieve(self, item, workspace):
 		src_dir = os.path.join(self.url, item.type()+'s', item.publish_location())

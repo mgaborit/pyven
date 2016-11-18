@@ -37,7 +37,7 @@ class Project:
 		self.integration_tests = []
 
 	def _extract_artifacts(self, tree):
-		for node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/artifacts/artifact'):
+		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/artifacts/artifact'):
 			artifact = Artifact(node)
 			if artifact.format_name() in self.artifacts.keys():
 				raise Exception('Artifact already added : ' + artifact.format_name())
@@ -45,19 +45,19 @@ class Project:
 				if artifact.file is None:
 					if artifact.to_retrieve:
 						self.repositories[artifact.repo].retrieve(artifact, Project.WORKSPACE)
-						logger.info('Retrieved artifact from ' + self.repositories[artifact.repo].id + ' repository : ' + artifact.format_name())
+						logger.info('Retrieved artifact from ' + self.repositories[artifact.repo].name + ' repository : ' + artifact.format_name())
 				self.artifacts[artifact.format_name()] = artifact
 				logger.info('Added artifact : ' + artifact.format_name())
 	
 	def _extract_packages(self, tree):
-		for node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/packages/package'):
+		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/packages/package'):
 			package = Package(node)
 			if package.format_name() in self.packages.keys():
 				raise Exception('Package already added : ' + package.format_name())
 			else:
 				if package.to_retrieve:
 					self.repositories[package.repo].retrieve(package, Project.WORKSPACE)
-					logger.info('Retrieved package from ' + self.repositories[package.repo].id + ' repository : ' + package.format_name())
+					logger.info('Retrieved package from ' + self.repositories[package.repo].name + ' repository : ' + package.format_name())
 				else:
 					for item in node.xpath('item'):
 						if item.text in self.artifacts.keys():
@@ -70,33 +70,33 @@ class Project:
 				logger.info('Added package : ' + package.format_name())
 	
 	def _extract_tools(self, tree):
-		for node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/build/tools/tool[@scope="preprocess"]'):
+		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/build/tools/tool[@scope="preprocess"]'):
 			preprocessor = Tool.factory(node)
 			self.tools['preprocessors'].append(preprocessor)
-			logger.info('Added preprocessor : ' + preprocessor.name + ':' + preprocessor.id)
-		for node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/build/tools/tool[@scope="build"]'):
+			logger.info('Added preprocessor : ' + preprocessor.name + ':' + preprocessor.configuration)
+		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/build/tools/tool[@scope="build"]'):
 			builder = Tool.factory(node)
 			self.tools['builders'].append(builder)
-			logger.info('Added builder : ' + builder.name + ':' + builder.id)
+			logger.info('Added builder : ' + builder.name + ':' + builder.configuration)
 	
 	def _extract_tests(self, tree):
-		for node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/tests/test[@type="unit"]'):
+		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/tests/test[@type="unit"]'):
 			test = Test(node)
 			self.unit_tests.append(test)
 			logger.info('Added unit test : ' + os.path.join(test.path, test.filename))
-		for node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/tests/test[@type="integration"]'):
+		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/tests/test[@type="integration"]'):
 			test = Test(node)
 			self.integration_tests.append(test)
 			logger.info('Added unit test : ' + os.path.join(test.path, test.filename))
 	
 	def _extract_repositories(self, tree):
-		for node in tree.xpath('/pyven/platform[@id="'+self.platform+'"]/repositories/repository'):
+		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/repositories/repository'):
 			repository = Repository.factory(node)
-			if repository.id in self.repositories.keys():
-				logger.error('Repository already added : ' + repository.id + ' : ' + repository.url)
+			if repository.name in self.repositories.keys():
+				logger.error('Repository already added : ' + repository.name + ' : ' + repository.url)
 			else:
-				self.repositories[repository.id] = repository
-				logger.info('Added repository : ' + repository.id + ' : ' + repository.url)
+				self.repositories[repository.name] = repository
+				logger.info('Added repository : ' + repository.name + ' : ' + repository.url)
 	
 	def _step(function):
 		def __intern(self=None):

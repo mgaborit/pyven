@@ -7,7 +7,7 @@ class Tool(object):
 
 	def __init__(self, node):
 		self.name = node.get('name')
-		self.id = node.get('id')
+		self.configuration = node.get('configuration')
 		self.scope = node.get('scope')
 		
 	def _format_call(self):
@@ -40,14 +40,14 @@ class CMakeTool(Tool):
 	
 	def process(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
-		logger.info('Preprocessing : ' + self.name + ':' + self.id)
+		logger.info('Preprocessing : ' + self.name + ':' + self.configuration)
 		if verbose:
 			return_code = subprocess.call(self._format_call())
 		else:
 			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
 			
 		if return_code != 0:
-			logger.error('Preprocessing ended with errors')
+			logger.error('Preprocessing failed : ' + self.name + ':' + self.configuration)
 			return False
 		return True
 		
@@ -71,13 +71,13 @@ class MSBuildTool(Tool):
 	
 	def process(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
-		logger.info('Building : ' + self.name + ':' + self.id)
+		logger.info('Building : ' + self.name + ':' + self.configuration)
 		if verbose:
 			return_code = subprocess.call(self._format_call())
 		else:
 			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
 		
 		if return_code != 0:
-			logger.error('Build failed : ' + self.name + ':' + self.id)
+			logger.error('Build failed : ' + self.name + ':' + self.configuration)
 			return False
 		return True
