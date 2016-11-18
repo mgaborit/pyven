@@ -81,14 +81,16 @@ class Project:
 			logger.info('Added builder : ' + builder.name + ':' + builder.configuration)
 	
 	def _extract_tests(self, tree):
-		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/tests/test[@type="unit"]'):
+		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/tests/test'):
 			test = Test(node)
-			self.unit_tests.append(test)
-			logger.info('Added unit test : ' + os.path.join(test.path, test.filename))
-		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/tests/test[@type="integration"]'):
-			test = Test(node)
-			self.integration_tests.append(test)
-			logger.info('Added unit test : ' + os.path.join(test.path, test.filename))
+			if test.type == 'unit':
+				self.unit_tests.append(test)
+				logger.info('Added unit test : ' + os.path.join(test.path, test.filename))
+			elif test.type == 'integration':
+				self.integration_tests.append(test)
+				logger.info('Added integration test : ' + os.path.join(test.path, test.filename))
+			else:
+				raise Exception('Wrong test type : ' + test.name, 'Available types : ' + str(Test.AVAILABLE_TYPES))
 	
 	def _extract_repositories(self, tree):
 		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/repositories/repository'):

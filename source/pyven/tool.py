@@ -4,11 +4,17 @@ logger = logging.getLogger('global')
 
 # pym.xml 'tool' node
 class Tool(object):
-
+	AVAILABLE_TOOLS = ['cmake', 'msbuild']
+	AVAILABLE_SCOPES = ['preprocess', 'build']
+	
 	def __init__(self, node):
 		self.name = node.get('name')
+		if self.name not in Tool.AVAILABLE_TOOLS:
+			raise Exception('Wrong tool : ' + self.name, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
 		self.configuration = node.get('configuration')
 		self.scope = node.get('scope')
+		if self.scope not in Tool.AVAILABLE_SCOPES:
+			raise Exception('Wrong tool type : ' + self.scope, 'Available scopes : ' + str(Tool.AVAILABLE_SCOPES))
 		
 	def _format_call(self):
 		raise NotImplementedError
@@ -17,8 +23,11 @@ class Tool(object):
 		raise NotImplementedError
 		
 	def factory(node):
-		if node.get('name') == "cmake": return CMakeTool(node)
-		if node.get('name') == "msbuild": return MSBuildTool(node)
+		name = node.get('name')
+		if name not in Tool.AVAILABLE_TOOLS:
+			raise Exception('Wrong tool : ' + name, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
+		if name == "cmake": return CMakeTool(node)
+		if name == "msbuild": return MSBuildTool(node)
 	factory = staticmethod(factory)
 	
 class CMakeTool(Tool):
