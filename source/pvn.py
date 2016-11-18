@@ -14,7 +14,7 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 def hint():
-	logger.error('Right syntax : "python pyven.py [-v] <step> [arg]"')
+	logger.error('Right syntax : "python pvn.py [-v] <step> [arg]"')
 	logger.error("<step> values : 'configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver'")
 
 def main(args):
