@@ -56,6 +56,7 @@ class CMakeTool(Tool):
 	def process(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
 		logger.info('Preprocessing : ' + self.type + ':' + self.name)
+		return_code = 0
 		if verbose:
 			return_code = subprocess.call(self._format_call())
 		else:
@@ -63,8 +64,7 @@ class CMakeTool(Tool):
 			
 		if return_code != 0:
 			logger.error('Preprocessing failed : ' + self.type + ':' + self.name)
-			return False
-		return True
+		return return_code == 0
 	
 	def clean(self, verbose=False):
 		logger.info('Cleaning : ' + self.type + ':' + self.name)
@@ -101,28 +101,35 @@ class MSBuildTool(Tool):
 	def process(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
 		logger.info('Building : ' + self.type + ':' + self.name)
+		ok = True
 		for project in self.projects:
+			return_code = 0
 			if verbose:
 				return_code = subprocess.call(self._format_call(project))
 			else:
 				return_code = subprocess.call(self._format_call(project), stdout=FNULL, stderr=subprocess.STDOUT)
-		if return_code != 0:
+			if return_code != 0:
+				ok = False
+		if not ok:
 			logger.error('Build failed : ' + self.type + ':' + self.name)
-			return False
-		return True
+		return ok
 		
 	def clean(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
 		logger.info('Cleaning : ' + self.type + ':' + self.name)
+		ok = True
 		for project in self.projects:
-			if verbose:
-				return_code = subprocess.call(self._format_call(project, clean=True))
-			else:
-				return_code = subprocess.call(self._format_call(project, clean=True), stdout=FNULL, stderr=subprocess.STDOUT)
-		if return_code != 0:
+			return_code = 0
+			if os.path.isfile(project):
+				if verbose:
+					return_code = subprocess.call(self._format_call(project, clean=True))
+				else:
+					return_code = subprocess.call(self._format_call(project, clean=True), stdout=FNULL, stderr=subprocess.STDOUT)
+			if return_code != 0:
+				ok = False
+		if not ok:
 			logger.error('Clean failed : ' + self.type + ':' + self.name)
-			return False
-		return True
+		return ok
 			
 class CommandTool(Tool):
 
