@@ -88,9 +88,11 @@ class MSBuildTool(Tool):
 			logger.warning('MSBuild will be called during preprocessing but not build')
 		
 	def _format_call(self, project, clean=False):
-		call = ['msbuild.exe', project, '/property:Configuration='+self.configuration, '/property:Platform='+self.architecture]
+		call = ['msbuild.exe', project, '/p:config='+self.configuration, '/p:platform='+self.architecture]
 		if clean:
-			call.append('/target:clean')
+			call.append('/t:clean')
+		else:
+			call.append('/t:build')
 		for option in self.options:
 			call.append(option)
 			
