@@ -1,4 +1,4 @@
-import logging, os, shutil
+import logging, os, shutil, time
 from lxml import etree
 
 from artifact import Artifact
@@ -38,6 +38,14 @@ class Project:
 		self.unit_tests = []
 		self.integration_tests = []
 
+	def tic():
+		return time.time()
+	tic = staticmethod(tic)
+		
+	def toc():
+		return Project.tic()
+	toc = staticmethod(toc)
+		
 	def _extract_artifacts(self, tree):
 		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/artifacts/artifact'):
 			artifact = Artifact(node)
@@ -102,11 +110,14 @@ class Project:
 				self.repositories[repository.name] = repository
 				logger.info('Added repository : ' + repository.name + ' : ' + repository.url)
 	
-	def _step(function):
-		def __intern(self=None):
+	def _step(function, arg=None):
+		def __intern(self=None, arg=None):
 			logger.info('===================================')
 			try:
-				function(self)
+				tic = Project.tic()
+				function(self, arg)
+				toc = Project.toc()
+				logger.info('Step time : ' + str(round(toc - tic, 3)) + ' seconds')
 			except Exception as e:
 				for msg in e.args:
 					logger.error(msg)
@@ -115,7 +126,7 @@ class Project:
 		return __intern
 		
 	@_step
-	def configure(self):
+	def configure(self, arg=None):
 		logger.info('STEP CONFIGURE : STARTING')
 		if not os.path.isdir(Project.WORKSPACE):
 			os.makedirs(Project.WORKSPACE)
@@ -144,21 +155,29 @@ class Project:
 		logger.info('STEP CONFIGURE : SUCCESSFUL')
 		
 	@_step	
-	def build(self):
+	def build(self, arg=None):
 		logger.info('STEP BUILD : STARTING')
 		logger.info('Starting preprocessing')
 		preprocess_ok = True
 		for tool in self.tools['preprocessors']:
+			tic = Project.tic()
 			if not tool.process(self.verbose):
 				preprocess_ok = False
+			else:
+				toc = Project.toc()
+				logger.info('Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 		if not preprocess_ok:
 			raise Exception('Preprocessing errors found')
 		logger.info('Preprocessing completed')
 		logger.info('Starting build')
 		build_ok = True
 		for tool in self.tools['builders']:
+			tic = Project.tic()
 			if not tool.process(self.verbose):
 				build_ok = False
+			else:
+				toc = Project.toc()
+				logger.info('Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 		if not build_ok:
 			raise Exception('Build errors found')
 		logger.info('build completed')
@@ -176,38 +195,50 @@ class Project:
 		logger.info('STEP BUILD : SUCCESSFUL')
 		
 	@_step
-	def test(self):
+	def test(self, arg=None):
 		logger.info('STEP TEST : STARTING')
 		if len(self.unit_tests) == 0:
 			logger.warning('No unit tests found')
 		else:
 			tests_ok = True
 			for test in self.unit_tests:
+				tic = Project.tic()
 				if not test.run(self.verbose):
 					tests_ok = False
+				else:
+					toc = Project.toc()
+					logger.info('Time for test ' + test.filename + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 			if not tests_ok:
 				raise Exception('Test failures found')
 		logger.info('STEP TEST : SUCCESSFUL')
 
 	@_step
-	def package(self):
+	def package(self, arg=None):
 		logger.info('STEP PACKAGE : STARTING')
 		for package in self.packages.values():
 			package.pack(Project.WORKSPACE)
 		logger.info('STEP PACKAGE : SUCCESSFUL')
 
 	@_step
-	def verify(self):
+	def verify(self, arg=None):
 		logger.info('STEP VERIFY : STARTING')
 		if len(self.integration_tests) == 0:
 			logger.warning('No integration tests found')
 		else:
+			tests_ok = True
 			for test in self.integration_tests:
-				test.run(self.verbose, Project.WORKSPACE, self.packages)
+				tic = Project.tic()
+				if not test.run(self.verbose, Project.WORKSPACE, self.packages):
+					tests_ok = False
+				else:
+					toc = Project.toc()
+					logger.info('Time for test ' + test.filename + ' : ' + str(round(toc - tic, 3)) + ' seconds')
+			if not tests_ok:
+				raise Exception('Test failures found')
 		logger.info('STEP VERIFY : SUCCESSFUL')
 		
 	@_step
-	def install(self):
+	def install(self, arg=None):
 		logger.info('STEP INSTALL : STARTING')
 		for artifact in [a for a in self.artifacts.values() if a.repo is None]:
 			self.repositories[Project.LOCAL_REPO_NAME].publish(artifact, Project.WORKSPACE)
@@ -229,18 +260,14 @@ class Project:
 				logger.info('Published package to ' + key + ' repository : ' + package.format_name())
 		logger.info('STEP DEPLOY : SUCCESSFUL')
 		
+	@_step
 	def deliver(self, path):
-		logger.info('===================================')
 		logger.info('STEP DELIVER : STARTING')
-		try:
-			for package in [p for p in self.packages.values() if p.repo is None]:
-				logger.info('Delivering package : ' + package.format_name())
-				package.unpack(path, Project.LOCAL_REPO, flatten=False)
-			logger.info('STEP DELIVER : SUCCESSFUL')
-		except Exception as e:
-			logger.error(e)
-			return False
-		return True
+		logger.info('Delivering to directory ' + path)
+		for package in [p for p in self.packages.values() if p.repo is None]:
+			logger.info('Delivering package : ' + package.format_name())
+			package.unpack(path, Project.LOCAL_REPO, flatten=False)
+		logger.info('STEP DELIVER : SUCCESSFUL')
 		
 	@_step
 	def clean(self, verbose=False):
