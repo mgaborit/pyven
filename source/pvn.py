@@ -18,6 +18,7 @@ def hint():
 	logger.error("<step> values : " + str(Project.POSSIBLE_STEPS))
 
 def main(args):
+	tic = Project.tic()
 	if len(args) > 4:
 		logger.error('Too many arguments passed to Pyven')
 		hint()
@@ -222,7 +223,8 @@ def main(args):
 		logger.error('Unknown step : ' + step)
 		sys.exit(1)
 	
-	
+	toc = Project.toc()
+	logger.info('Total process time : ' + str(round(toc - tic, 3)) + ' seconds')
 	
 if __name__ == '__main__':
 	main(sys.argv)
