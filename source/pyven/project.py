@@ -75,9 +75,9 @@ class Project:
 						if item.text in self.artifacts.keys():
 							artifact = self.artifacts[item.text]
 							package.items.append(artifact)
-							logger.info('Added artifact ' + artifact.format_name() + ' to package ' + package.format_name())
+							logger.info('Package ' + package.format_name() + ' : Added artifact ' + artifact.format_name())
 						else:
-							raise PyvenException('Artifact not found : ' + item.text)
+							raise PyvenException('Package ' + package.format_name() + ' : Artifact not found : ' + item.text)
 				self.packages[package.format_name()] = package
 				logger.info('Added package : ' + package.format_name())
 	
@@ -267,8 +267,8 @@ class Project:
 		logger.info('STEP DELIVER : STARTING')
 		logger.info('Delivering to directory ' + path)
 		for package in [p for p in self.packages.values() if p.repo is None]:
-			logger.info('Delivering package : ' + package.format_name())
 			package.unpack(path, Project.LOCAL_REPO, flatten=False)
+			logger.info('Delivered package : ' + package.format_name())
 		logger.info('STEP DELIVER : SUCCESSFUL')
 		
 	@_step
