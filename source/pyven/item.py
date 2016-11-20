@@ -7,14 +7,15 @@ logger = logging.getLogger('global')
 class Item(object):
 
 	def __init__(self, node):
-		self.group = node.get('group')
+		self.company = node.get('company')
 		self.name = node.get('name')
+		self.config = node.get('config')
 		self.version = node.get('version')
 		self.repo = node.get('repo')
 		self.to_retrieve = self.repo is not None
 	
 	def format_name(self, separator=':'):
-		return self.group + separator + self.name + separator + self.version
+		return self.company + separator + self.name + separator + self.config + separator + self.version
 	
 	def type(self):
 		raise NotImplementedError
@@ -23,7 +24,7 @@ class Item(object):
 		raise NotImplementedError
 	
 	def item_specific_location(self):
-		return os.path.join(self.group, self.name, self.version)
+		return os.path.join(self.company, self.name, self.config, self.version)
 	
 	def repo_location(self, repo):
 		return os.path.join(repo, self.type() + 's')
