@@ -1,6 +1,8 @@
 import logging, os, shutil, time
 from lxml import etree
 
+from pyven.exception import PyvenException
+
 from artifact import Artifact
 from package import Package
 from tool import Tool
@@ -50,7 +52,7 @@ class Project:
 		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/artifacts/artifact'):
 			artifact = Artifact(node)
 			if artifact.format_name() in self.artifacts.keys():
-				raise Exception('Artifact already added : ' + artifact.format_name())
+				raise PyvenException('Artifact already added : ' + artifact.format_name())
 			else:
 				if artifact.file is None:
 					if artifact.to_retrieve:
@@ -63,7 +65,7 @@ class Project:
 		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/packages/package'):
 			package = Package(node)
 			if package.format_name() in self.packages.keys():
-				raise Exception('Package already added : ' + package.format_name())
+				raise PyvenException('Package already added : ' + package.format_name())
 			else:
 				if package.to_retrieve:
 					self.repositories[package.repo].retrieve(package, Project.WORKSPACE)
@@ -75,7 +77,7 @@ class Project:
 							package.items.append(artifact)
 							logger.info('Added artifact ' + artifact.format_name() + ' to package ' + package.format_name())
 						else:
-							raise Exception('Artifact not found : ' + item.text)
+							raise PyvenException('Artifact not found : ' + item.text)
 				self.packages[package.format_name()] = package
 				logger.info('Added package : ' + package.format_name())
 	
@@ -99,7 +101,7 @@ class Project:
 				self.integration_tests.append(test)
 				logger.info('Added integration test : ' + os.path.join(test.path, test.filename))
 			else:
-				raise Exception('Wrong test type : ' + test.name, 'Available types : ' + str(Test.AVAILABLE_TYPES))
+				raise PyvenException('Wrong test type : ' + test.name, 'Available types : ' + str(Test.AVAILABLE_TYPES))
 	
 	def _extract_repositories(self, tree):
 		for node in tree.xpath('/pyven/platform[@name="'+self.platform+'"]/repositories/repository'):
@@ -118,7 +120,7 @@ class Project:
 				function(self, arg)
 				toc = Project.toc()
 				logger.info('Step time : ' + str(round(toc - tic, 3)) + ' seconds')
-			except Exception as e:
+			except PyvenException as e:
 				for msg in e.args:
 					logger.error(msg)
 				return False
@@ -139,13 +141,13 @@ class Project:
 		tree = etree.parse('pym.xml')
 		doc_element = tree.getroot()
 		if doc_element is None or doc_element.tag == "name":
-			raise Exception('Missing "pyven" markup')
+			raise PyvenException('Missing "pyven" markup')
 		expected_pyven_version = doc_element.get('version')
 		if expected_pyven_version is None:
-			raise Exception('Missing pyven version information')
+			raise PyvenException('Missing pyven version information')
 		logger.info('Expected pyven version : ' + expected_pyven_version)
 		if expected_pyven_version != self.version:
-			raise Exception('Wrong pyven version', 'Expected version : Pyven ' + expected_pyven_version, 'Version in use : ' + self.version)
+			raise PyvenException('Wrong pyven version', 'Expected version : Pyven ' + expected_pyven_version, 'Version in use : ' + self.version)
 		logger.info('PYM parsing successful')
 		self._extract_repositories(tree)
 		self._extract_artifacts(tree)
@@ -167,7 +169,7 @@ class Project:
 				toc = Project.toc()
 				logger.info('Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 		if not preprocess_ok:
-			raise Exception('Preprocessing errors found')
+			raise PyvenException('Preprocessing errors found')
 		logger.info('Preprocessing completed')
 		logger.info('Starting build')
 		build_ok = True
@@ -179,7 +181,7 @@ class Project:
 				toc = Project.toc()
 				logger.info('Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 		if not build_ok:
-			raise Exception('Build errors found')
+			raise PyvenException('Build errors found')
 		logger.info('build completed')
 		artifacts_ok = True
 		for artifact in [a for a in self.artifacts.values() if not a.to_retrieve]:
@@ -187,7 +189,7 @@ class Project:
 				logger.error('Artifact not found : ' + artifact.format_name())
 				artifacts_ok = False
 		if not artifacts_ok:
-			raise Exception('Artifacts missing')
+			raise PyvenException('Artifacts missing')
 		for artifact in [a for a in self.artifacts.values() if not a.to_retrieve]:
 			if not os.path.isdir(artifact.location(Project.WORKSPACE)):
 				os.makedirs(artifact.location(Project.WORKSPACE))
@@ -209,7 +211,7 @@ class Project:
 					toc = Project.toc()
 					logger.info('Time for test ' + test.filename + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 			if not tests_ok:
-				raise Exception('Test failures found')
+				raise PyvenException('Test failures found')
 		logger.info('STEP TEST : SUCCESSFUL')
 
 	@_step
@@ -234,7 +236,7 @@ class Project:
 					toc = Project.toc()
 					logger.info('Time for test ' + test.filename + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 			if not tests_ok:
-				raise Exception('Test failures found')
+				raise PyvenException('Test failures found')
 		logger.info('STEP VERIFY : SUCCESSFUL')
 		
 	@_step
@@ -281,6 +283,6 @@ class Project:
 			if not tool.clean(self.verbose):
 				preprocess_ok = False
 		if not preprocess_ok or not build_ok:
-			raise Exception('Cleaning errors found')
+			raise PyvenException('Cleaning errors found')
 		logger.info('STEP CLEAN : SUCCESSFUL')
 	

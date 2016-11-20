@@ -1,5 +1,7 @@
 import logging, os
 
+from pyven.exception import PyvenException
+
 logger = logging.getLogger('global')
 
 class Item(object):

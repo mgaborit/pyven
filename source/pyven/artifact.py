@@ -1,5 +1,7 @@
 import logging, os
 
+from pyven.exception import PyvenException
+
 logger = logging.getLogger('global')
 
 from item import Item
@@ -20,5 +22,5 @@ class Artifact(Item):
 		if self.file is not None:
 			return os.path.basename(self.file)
 		else:
-			raise Exception('Unknown artifact location : ' + self.format_name())
+			raise PyvenException('Unknown artifact location : ' + self.format_name())
 	

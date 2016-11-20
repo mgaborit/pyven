@@ -1,6 +1,8 @@
 import sys
 import logging
 
+from pyven.exception import PyvenException
+
 from pyven.project import Project
 
 PYVEN_VERSION = '0.1.0'
@@ -53,174 +55,150 @@ def main(args):
 	
 	project = Project(PYVEN_VERSION, verbose)
 	
-	logger.info('Pyven command called for step ' + step)
-	if step == Project.POSSIBLE_STEPS[0]:
-		if len(args) > step_idx + 1:
-			logger.error('Too many arguments provided')
-			hint()
-			sys.exit(1)
-		if not project.configure():
-			logger.error('STEP CONFIGURE : FAILED')
-			sys.exit(1)
-	
-	elif step == Project.POSSIBLE_STEPS[1]:
-		if len(args) > step_idx + 1:
-			logger.error('Too many arguments provided')
-			hint()
-			sys.exit(1)
-		if not project.configure():
-			logger.error('STEP CONFIGURE : FAILED')
-			sys.exit(1)
-		if not project.build():
-			logger.error('STEP BUILD : FAILED')
-			sys.exit(1)
+	try:
+		logger.info('Pyven command called for step ' + step)
+		if step == Project.POSSIBLE_STEPS[0]:
+			if len(args) > step_idx + 1:
+				logger.error('Too many arguments provided')
+				hint()
+				sys.exit(1)
+			if not project.configure():
+				raise PyvenException('STEP CONFIGURE : FAILED')
 		
-	elif step == Project.POSSIBLE_STEPS[2]:
-		if len(args) > step_idx + 1:
-			logger.error('Too many arguments provided')
-			hint()
-			sys.exit(1)
-		if not project.configure():
-			logger.error('STEP CONFIGURE : FAILED')
-			sys.exit(1)
-		if not project.build():
-			logger.error('STEP BUILD : FAILED')
-			sys.exit(1)
-		if not project.test():
-			logger.error('STEP TEST : FAILED')
-			sys.exit(1)
+		elif step == Project.POSSIBLE_STEPS[1]:
+			if len(args) > step_idx + 1:
+				logger.error('Too many arguments provided')
+				hint()
+				sys.exit(1)
+			if not project.configure():
+				raise PyvenException('STEP CONFIGURE : FAILED')
+			if not project.build():
+				raise PyvenException('STEP BUILD : FAILED')
+			
+		elif step == Project.POSSIBLE_STEPS[2]:
+			if len(args) > step_idx + 1:
+				logger.error('Too many arguments provided')
+				hint()
+				sys.exit(1)
+			if not project.configure():
+				raise PyvenException('STEP CONFIGURE : FAILED')
+			if not project.build():
+				raise PyvenException('STEP BUILD : FAILED')
+			if not project.test():
+				raise PyvenException('STEP TEST : FAILED')
 
-	elif step == Project.POSSIBLE_STEPS[3]:
-		if len(args) > step_idx + 1:
-			logger.error('Too many arguments provided')
+		elif step == Project.POSSIBLE_STEPS[3]:
+			if len(args) > step_idx + 1:
+				logger.error('Too many arguments provided')
+				hint()
+				sys.exit(1)
+			if not project.configure():
+				raise PyvenException('STEP CONFIGURE : FAILED')
+			if not project.build():
+				raise PyvenException('STEP BUILD : FAILED')
+			if not project.test():
+				raise PyvenException('STEP TEST : FAILED')
+			if not project.package():
+				raise PyvenException('STEP PACKAGE : FAILED')
+			
+		elif step == Project.POSSIBLE_STEPS[4]:
+			if len(args) > step_idx + 1:
+				logger.error('Too many arguments provided')
+				hint()
+				sys.exit(1)
+			if not project.configure():
+				raise PyvenException('STEP CONFIGURE : FAILED')
+			if not project.build():
+				raise PyvenException('STEP BUILD : FAILED')
+			if not project.test():
+				raise PyvenException('STEP TEST : FAILED')
+			if not project.package():
+				raise PyvenException('STEP PACKAGE : FAILED')
+			if not project.verify():
+				raise PyvenException('STEP VERIFY : FAILED')
+			
+		elif step == Project.POSSIBLE_STEPS[5]:
+			if len(args) > step_idx + 1:
+				logger.error('Too many arguments provided')
+				hint()
+				sys.exit(1)
+			if not project.configure():
+				raise PyvenException('STEP CONFIGURE : FAILED')
+				sys.exit(1)
+			if not project.build():
+				raise PyvenException('STEP BUILD : FAILED')
+				sys.exit(1)
+			if not project.test():
+				raise PyvenException('STEP TEST : FAILED')
+				sys.exit(1)
+			if not project.package():
+				raise PyvenException('STEP PACKAGE : FAILED')
+				sys.exit(1)
+			if not project.verify():
+				raise PyvenException('STEP VERIFY : FAILED')
+				sys.exit(1)
+			if not project.install():
+				raise PyvenException('STEP INSTALL : FAILED')
+				sys.exit(1)
+			
+		elif step == Project.POSSIBLE_STEPS[6]:
+			if len(args) > step_idx + 1:
+				logger.error('Too many arguments provided')
+				hint()
+				sys.exit(1)
+			if not project.configure():
+				raise PyvenException('STEP CONFIGURE : FAILED')
+			if not project.build():
+				raise PyvenException('STEP BUILD : FAILED')
+			if not project.test():
+				raise PyvenException('STEP TEST : FAILED')
+			if not project.package():
+				raise PyvenException('STEP PACKAGE : FAILED')
+			if not project.verify():
+				raise PyvenException('STEP VERIFY : FAILED')
+			if not project.deploy():
+				raise PyvenException('STEP DEPLOY : FAILED')
+			
+		elif step == Project.POSSIBLE_STEPS[7]:
+			if len(args) > step_idx + 2:
+				logger.error('Too many arguments provided')
+				hint()
+				sys.exit(1)
+			if len(args) < step_idx + 2:
+				logger.error('Missing path to delivery directory')
+				hint()
+				sys.exit(1)
+			if not project.configure():
+				raise PyvenException('STEP CONFIGURE : FAILED')
+			if not project.build():
+				raise PyvenException('STEP BUILD : FAILED')
+			if not project.test():
+				raise PyvenException('STEP TEST : FAILED')
+			if not project.package():
+				raise PyvenException('STEP PACKAGE : FAILED')
+			if not project.verify():
+				raise PyvenException('STEP VERIFY : FAILED')
+			if not project.install():
+				raise PyvenException('STEP INSTALL : FAILED')
+			if not project.deliver(args[step_idx + 1]):
+				raise PyvenException('STEP DELIVER : FAILED')
+			
+		elif step == Project.POSSIBLE_STEPS[8]:
+			if len(args) > step_idx + 1:
+				logger.error('Too many arguments provided')
+				hint()
+				sys.exit(1)
+			if not project.configure():
+				raise PyvenException('STEP CONFIGURE : FAILED')
+			if not project.clean():
+				raise PyvenException('STEP CLEAN : FAILED')
+		else:
+			logger.error('Unknown step : ' + step)
 			hint()
 			sys.exit(1)
-		if not project.configure():
-			logger.error('STEP CONFIGURE : FAILED')
-			sys.exit(1)
-		if not project.build():
-			logger.error('STEP BUILD : FAILED')
-			sys.exit(1)
-		if not project.test():
-			logger.error('STEP TEST : FAILED')
-			sys.exit(1)
-		if not project.package():
-			logger.error('STEP PACKAGE : FAILED')
-			sys.exit(1)
-		
-	elif step == Project.POSSIBLE_STEPS[4]:
-		if len(args) > step_idx + 1:
-			logger.error('Too many arguments provided')
-			hint()
-			sys.exit(1)
-		if not project.configure():
-			logger.error('STEP CONFIGURE : FAILED')
-			sys.exit(1)
-		if not project.build():
-			logger.error('STEP BUILD : FAILED')
-			sys.exit(1)
-		if not project.test():
-			logger.error('STEP TEST : FAILED')
-			sys.exit(1)
-		if not project.package():
-			logger.error('STEP PACKAGE : FAILED')
-			sys.exit(1)
-		if not project.verify():
-			logger.error('STEP VERIFY : FAILED')
-			sys.exit(1)
-		
-	elif step == Project.POSSIBLE_STEPS[5]:
-		if len(args) > step_idx + 1:
-			logger.error('Too many arguments provided')
-			hint()
-			sys.exit(1)
-		if not project.configure():
-			logger.error('STEP CONFIGURE : FAILED')
-			sys.exit(1)
-		if not project.build():
-			logger.error('STEP BUILD : FAILED')
-			sys.exit(1)
-		if not project.test():
-			logger.error('STEP TEST : FAILED')
-			sys.exit(1)
-		if not project.package():
-			logger.error('STEP PACKAGE : FAILED')
-			sys.exit(1)
-		if not project.verify():
-			logger.error('STEP VERIFY : FAILED')
-			sys.exit(1)
-		if not project.install():
-			logger.error('STEP INSTALL : FAILED')
-			sys.exit(1)
-		
-	elif step == Project.POSSIBLE_STEPS[6]:
-		if len(args) > step_idx + 1:
-			logger.error('Too many arguments provided')
-			hint()
-			sys.exit(1)
-		if not project.configure():
-			logger.error('STEP CONFIGURE : FAILED')
-			sys.exit(1)
-		if not project.build():
-			logger.error('STEP BUILD : FAILED')
-			sys.exit(1)
-		if not project.test():
-			logger.error('STEP TEST : FAILED')
-			sys.exit(1)
-		if not project.package():
-			logger.error('STEP PACKAGE : FAILED')
-			sys.exit(1)
-		if not project.verify():
-			logger.error('STEP VERIFY : FAILED')
-			sys.exit(1)
-		if not project.deploy():
-			logger.error('STEP DEPLOY : FAILED')
-			sys.exit(1)
-		
-	elif step == Project.POSSIBLE_STEPS[7]:
-		if len(args) > step_idx + 2:
-			logger.error('Too many arguments provided')
-			hint()
-			sys.exit(1)
-		if len(args) < step_idx + 2:
-			logger.error('missing path to delivery directory')
-			hint()
-			sys.exit(1)
-		if not project.configure():
-			logger.error('STEP CONFIGURE : FAILED')
-			sys.exit(1)
-		if not project.build():
-			logger.error('STEP BUILD : FAILED')
-			sys.exit(1)
-		if not project.test():
-			logger.error('STEP TEST : FAILED')
-			sys.exit(1)
-		if not project.package():
-			logger.error('STEP PACKAGE : FAILED')
-			sys.exit(1)
-		if not project.verify():
-			logger.error('STEP VERIFY : FAILED')
-			sys.exit(1)
-		if not project.install():
-			logger.error('STEP INSTALL : FAILED')
-			sys.exit(1)
-		if not project.deliver(args[step_idx + 1]):
-			logger.error('STEP DELIVER : FAILED')
-			sys.exit(1)
-		
-	elif step == Project.POSSIBLE_STEPS[8]:
-		if len(args) > step_idx + 1:
-			logger.error('Too many arguments provided')
-			hint()
-			sys.exit(1)
-		if not project.configure():
-			logger.error('STEP CONFIGURE : FAILED')
-			sys.exit(1)
-		if not project.clean():
-			logger.error('STEP CLEAN : FAILED')
-			sys.exit(1)
-	else:
-		logger.error('Unknown step : ' + step)
+	except PyvenException as e:
+		for msg in e.args:
+			logger.error(msg)
 		sys.exit(1)
 	
 	toc = Project.toc()

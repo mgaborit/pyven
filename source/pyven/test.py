@@ -1,5 +1,7 @@
 import subprocess, logging, os
 
+from pyven.exception import PyvenException
+
 logger = logging.getLogger('global')
 
 # pym.xml 'test' node
@@ -9,7 +11,7 @@ class Test(object):
 	def __init__(self, node):
 		self.type = node.get('type')
 		if self.type not in Test.AVAILABLE_TYPES:
-			raise Exception('Wrong test type : ' + self.type, 'Available types : ' + str(Test.AVAILABLE_TYPES))
+			raise PyvenException('Wrong test type : ' + self.type, 'Available types : ' + str(Test.AVAILABLE_TYPES))
 		(self.path, self.filename) = os.path.split(node.find('file').text)
 		self.arguments = []
 		for argument in node.xpath('arguments/argument'):
@@ -48,7 +50,7 @@ class Test(object):
 	def factory(node):
 		type = node.get('type')
 		if type not in Test.AVAILABLE_TYPES:
-			raise Exception('Wrong test type : ' + type, 'Available test types : ' + str(Test.AVAILABLE_TYPES))
+			raise PyvenException('Wrong test type : ' + type, 'Available test types : ' + str(Test.AVAILABLE_TYPES))
 		if type == "unit": return UnitTest(node)
 		if type == "integration": return IntegrationTest(node)
 	factory = staticmethod(factory)
@@ -59,9 +61,9 @@ class IntegrationTest(Test):
 		super(IntegrationTest,self).__init__(node)
 		packages = node.xpath('package')
 		if len(packages) < 1:
-			raise Exception('Missing package for test : ' + os.path.join(self.path, self.filename))
+			raise PyvenException('Missing package for test : ' + os.path.join(self.path, self.filename))
 		if len(packages) > 1:
-			raise Exception('Too many packages specified for test : ' + os.path.join(self.path, self.filename))
+			raise PyvenException('Too many packages specified for test : ' + os.path.join(self.path, self.filename))
 		self.package = packages[0].text
 		
 	def _copy_resources(self, repo=None, resources=None):
@@ -69,7 +71,7 @@ class IntegrationTest(Test):
 			package = resources[self.package]
 			package.unpack(self.path, repo, flatten=True)
 		else:
-			raise Exception('Package not found : ' + self.package)
+			raise PyvenException('Package not found : ' + self.package)
 		
 class UnitTest(Test):
 
