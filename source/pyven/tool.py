@@ -1,5 +1,7 @@
 import subprocess, os, logging, shutil
 
+from pyven.exception import PyvenException
+
 logger = logging.getLogger('global')
 
 # pym.xml 'tool' node
@@ -10,11 +12,11 @@ class Tool(object):
 	def __init__(self, node):
 		self.type = node.get('type')
 		if self.type not in Tool.AVAILABLE_TOOLS:
-			raise Exception('Wrong tool type : ' + self.type, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
+			raise PyvenException('Wrong tool type : ' + self.type, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
 		self.name = node.get('name')
 		self.scope = node.get('scope')
 		if self.scope not in Tool.AVAILABLE_SCOPES:
-			raise Exception('Wrong tool scope : ' + self.scope, 'Available scopes : ' + str(Tool.AVAILABLE_SCOPES))
+			raise PyvenException('Wrong tool scope : ' + self.scope, 'Available scopes : ' + str(Tool.AVAILABLE_SCOPES))
 		
 	def _format_call(self):
 		raise NotImplementedError
@@ -28,7 +30,7 @@ class Tool(object):
 	def factory(node):
 		type = node.get('type')
 		if type not in Tool.AVAILABLE_TOOLS:
-			raise Exception('Wrong tool type : ' + type, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
+			raise PyvenException('Wrong tool type : ' + type, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
 		if type == "cmake": return CMakeTool(node)
 		if type == "msbuild": return MSBuildTool(node)
 		if type == "command": return CommandTool(node)
@@ -102,7 +104,7 @@ class MSBuildTool(Tool):
 			else:
 				call.append('/t:build')
 		else:
-			raise Exception('Project format not supported : ' + project, 'Supported formats : *.sln, *.dproj')
+			raise PyvenException('Project format not supported : ' + project, 'Supported formats : *.sln, *.dproj')
 		for option in self.options:
 			call.append(option)
 			
@@ -147,9 +149,9 @@ class CommandTool(Tool):
 		super(CommandTool, self).__init__(node)
 		programs = node.xpath('program')
 		if len(programs) < 1:
-			raise Exception('Missing program')
+			raise PyvenException('Missing program')
 		if len(programs) > 1:
-			raise Exception('Too many programs specified')
+			raise PyvenException('Too many programs specified')
 		self.program = programs[0]
 		self.arguments = []
 		for argument in node.xpath('arguments/argument'):

@@ -1,5 +1,7 @@
 import os, logging, shutil
 
+from pyven.exception import PyvenException
+
 logger = logging.getLogger('global')
 
 # pym.xml 'repository' node
@@ -10,7 +12,7 @@ class Repository(object):
 		self.name = name
 		self.type = type
 		if self.type not in Repository.AVAILABLE_TYPES:
-			raise Exception('Wrong repository type : ' + self.type, 'Available types : ' + str(Repository.AVAILABLE_TYPES))
+			raise PyvenException('Wrong repository type : ' + self.type, 'Available types : ' + str(Repository.AVAILABLE_TYPES))
 		self.url = url
 
 	def retrieve(self, artifact):
@@ -25,7 +27,7 @@ class Repository(object):
 	
 	def _factory(name, type, url):
 		if type not in Repository.AVAILABLE_TYPES:
-			raise Exception('Wrong repository type : ' + type, 'Available types : ' + str(Repository.AVAILABLE_TYPES))
+			raise PyvenException('Wrong repository type : ' + type, 'Available types : ' + str(Repository.AVAILABLE_TYPES))
 		if type == 'file': return FileRepo(name, type, url)
 	_factory = staticmethod(_factory)
 
@@ -50,7 +52,7 @@ class FileRepo(Repository):
 	def publish(self, item, workspace):
 		src_file = os.path.join(item.location(workspace), item.basename())
 		if not os.path.isfile(src_file):
-			raise Exception('Wrong artifact location ' + item.format_name() + ' : ' + src_file)
+			raise PyvenException('Wrong artifact location ' + item.format_name() + ' : ' + src_file)
 		dst_dir = os.path.join(item.location(self.url))
 		if not os.path.isdir(dst_dir):
 			os.makedirs(dst_dir)
