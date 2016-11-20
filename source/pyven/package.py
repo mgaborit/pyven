@@ -21,7 +21,7 @@ class Package(Item):
 		return self.format_name('_') + Package.EXTENSION
 		
 	def pack(self, repo):
-		logger.info('Creating archive : ' + self.basename())
+		logger.info('Package ' + self.format_name() + ' : Creating archive : ' + self.basename())
 		if not os.path.isdir(self.location(repo)):
 			os.makedirs(self.location(repo))
 		if os.path.isfile(os.path.join(self.location(repo), self.basename())):
@@ -33,9 +33,9 @@ class Package(Item):
 					raise PyvenException('Package item not found : ' + item.file)
 				else:
 					zf.write(os.path.join(item.location(repo), item.basename()), item.basename())
-					logger.info('Added artifact ' + item.format_name() + ' to archive ' + self.basename())
+					logger.info('Package ' + self.format_name() + ' : Added artifact ' + item.format_name())
 		finally:
-			logger.info('Created archive : ' + self.basename())
+			logger.info('Package ' + self.format_name() + ' : Created archive : ' + self.basename())
 			zf.close()
 			
 	def unpack(self, dir, repo, flatten=False):
