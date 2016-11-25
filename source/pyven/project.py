@@ -15,6 +15,7 @@ class Project:
 	POSSIBLE_STEPS = ['configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver', 'clean']
 	WORKSPACE = 'pvn_workspace'
 	LOCAL_REPO_NAME = 'local'
+	
 	if os.name == 'nt':
 		LOCAL_REPO = os.path.join(os.environ.get('USERPROFILE'), 'pvn_repo')
 	elif os.name == 'posix':
@@ -29,6 +30,8 @@ class Project:
 			self.platform = 'windows'
 		elif os.name == 'posix':
 			self.platform = 'linux'
+		else:
+			raise PyvenException('Unsupported platform')
 		logger.info('Project set for '+self.platform+' platform')
 		
 		self.artifacts = {}
