@@ -4,7 +4,13 @@ from pyven.exception import PyvenException
 logger = logging.getLogger('global')
 
 class Item(object):
-
+	if os.name == 'nt':
+		PLATFORM = 'windows'
+	elif os.name == 'posix':
+		PLATFORM = 'linux'
+	else:
+		raise PyvenException('Unsupported platform')
+	
 	def __init__(self, node):
 		self.company = node.get('company')
 		if self.company is None:
@@ -22,13 +28,7 @@ class Item(object):
 		self.to_retrieve = self.repo is not None
 	
 	def format_name(self, separator=':'):
-		if os.name == 'nt':
-			platform = 'windows'
-		elif os.name == 'posix':
-			platform = 'linux'
-		else:
-			raise PyvenException('Unsupported platform')
-		return platform + separator + self.company + separator + self.name + separator + self.config + separator + self.version
+		return self.company + separator + self.name + separator + self.config + separator + self.version
 	
 	def type(self):
 		raise NotImplementedError
@@ -37,7 +37,7 @@ class Item(object):
 		raise NotImplementedError
 	
 	def item_specific_location(self):
-		return os.path.join(self.company, self.name, self.config, self.version)
+		return os.path.join(Item.PLATFORM, self.company, self.name, self.config, self.version)
 	
 	def repo_location(self, repo):
 		return os.path.join(repo, self.type() + 's')
