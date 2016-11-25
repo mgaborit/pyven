@@ -1,5 +1,4 @@
 import logging, os
-
 from pyven.exception import PyvenException
 
 logger = logging.getLogger('global')
@@ -23,7 +22,13 @@ class Item(object):
 		self.to_retrieve = self.repo is not None
 	
 	def format_name(self, separator=':'):
-		return self.company + separator + self.name + separator + self.config + separator + self.version
+		if os.name == 'nt':
+			platform = 'windows'
+		elif os.name == 'posix':
+			platform = 'linux'
+		else:
+			raise PyvenException('Unsupported platform')
+		return platform + separator + self.company + separator + self.name + separator + self.config + separator + self.version
 	
 	def type(self):
 		raise NotImplementedError
