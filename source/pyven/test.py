@@ -18,15 +18,20 @@ class Test(object):
 			self.arguments.append(argument.text)
 	
 	def _format_call(self):
-		call = [self.filename]
+		if os.name == 'nt':
+			call = [self.filename]
+		elif os.name == 'posix':
+			call = ['./' + self.filename]
 		for argument in self.arguments:
 			call.append(argument)
 		return call
 
 	def _copy_resources(self, repo=None, resources=None):
-		raise NotImplementedError
-	
+		pass
+		
 	def run(self, verbose=False, repo=None, resources=None):
+		if not os.path.isfile(os.path.join(self.path, self.filename)):
+			raise PyvenException('Test file not found : ' + os.path.join(self.path, self.filename))
 		self._copy_resources(repo, resources)
 		FNULL = open(os.devnull, 'w')
 		cwd = os.getcwd()
@@ -75,8 +80,5 @@ class IntegrationTest(Test):
 		
 class UnitTest(Test):
 
-	def __init__(self):
+	def __init__(self, node):
 		super(UnitTest,self).__init__(node)
-
-	def _copy_resources(self, resources=None):
-		pass
