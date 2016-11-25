@@ -10,10 +10,16 @@ class Repository(object):
 	
 	def __init__(self, name, type, url):
 		self.name = name
+		if self.name is None:
+			raise PyvenException('Missing repository name')
 		self.type = type
+		if self.type is None:
+			raise PyvenException('Missing repository type')
 		if self.type not in Repository.AVAILABLE_TYPES:
 			raise PyvenException('Wrong repository type : ' + self.type, 'Available types : ' + str(Repository.AVAILABLE_TYPES))
 		self.url = url
+		if self.url is None:
+			raise PyvenException('Missing repository url')
 
 	def retrieve(self, artifact):
 		raise NotImplementedError
@@ -26,6 +32,8 @@ class Repository(object):
 	factory = staticmethod(factory)
 	
 	def _factory(name, type, url):
+		if type is None:
+			raise PyvenException('Missing repository type')
 		if type not in Repository.AVAILABLE_TYPES:
 			raise PyvenException('Wrong repository type : ' + type, 'Available types : ' + str(Repository.AVAILABLE_TYPES))
 		if type == 'file': return FileRepo(name, type, url)

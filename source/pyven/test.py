@@ -10,6 +10,8 @@ class Test(object):
 
 	def __init__(self, node):
 		self.type = node.get('type')
+		if self.type is None:
+			raise PyvenException('Missing test type')
 		if self.type not in Test.AVAILABLE_TYPES:
 			raise PyvenException('Wrong test type : ' + self.type, 'Available types : ' + str(Test.AVAILABLE_TYPES))
 		(self.path, self.filename) = os.path.split(node.find('file').text)
@@ -54,6 +56,8 @@ class Test(object):
 		
 	def factory(node):
 		type = node.get('type')
+		if type is None:
+			raise PyvenException('Missing test type')
 		if type not in Test.AVAILABLE_TYPES:
 			raise PyvenException('Wrong test type : ' + type, 'Available test types : ' + str(Test.AVAILABLE_TYPES))
 		if type == "unit": return UnitTest(node)

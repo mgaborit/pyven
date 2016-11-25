@@ -11,10 +11,16 @@ class Tool(object):
 	
 	def __init__(self, node):
 		self.type = node.get('type')
+		if self.type is None:
+			raise PyvenException('Missing tool type')
 		if self.type not in Tool.AVAILABLE_TOOLS:
 			raise PyvenException('Wrong tool type : ' + self.type, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
 		self.name = node.get('name')
+		if self.name is None:
+			raise PyvenException('Missing tool name')
 		self.scope = node.get('scope')
+		if self.scope is None:
+			raise PyvenException('Missing tool scope')
 		if self.scope not in Tool.AVAILABLE_SCOPES:
 			raise PyvenException('Wrong tool scope : ' + self.scope, 'Available scopes : ' + str(Tool.AVAILABLE_SCOPES))
 		
@@ -29,6 +35,8 @@ class Tool(object):
 		
 	def factory(node):
 		type = node.get('type')
+		if type is None:
+			raise PyvenException('Missing tool type')
 		if type not in Tool.AVAILABLE_TOOLS:
 			raise PyvenException('Wrong tool type : ' + type, 'Available tools : ' + str(Tool.AVAILABLE_TOOLS))
 		if type == "cmake": return CMakeTool(node)

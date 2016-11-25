@@ -8,9 +8,17 @@ class Item(object):
 
 	def __init__(self, node):
 		self.company = node.get('company')
+		if self.company is None:
+			raise PyvenException('Missing artifact or package company')
 		self.name = node.get('name')
+		if self.name is None:
+			raise PyvenException('Missing artifact or package name')
 		self.config = node.get('config')
+		if self.config is None:
+			raise PyvenException('Missing artifact or package config')
 		self.version = node.get('version')
+		if self.version is None:
+			raise PyvenException('Missing artifact or package version')
 		self.repo = node.get('repo')
 		self.to_retrieve = self.repo is not None
 	
