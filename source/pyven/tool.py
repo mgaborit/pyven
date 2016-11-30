@@ -1,5 +1,6 @@
 import subprocess, os, logging, shutil
 
+from report import StepReport
 from pyven.exception import PyvenException
 
 logger = logging.getLogger('global')
@@ -27,7 +28,7 @@ class Tool(object):
 	def _format_call(self):
 		raise NotImplementedError
 	
-	def process(self):
+	def process(self, report):
 		raise NotImplementedError
 		
 	def clean(self, verbose=False):
@@ -64,18 +65,26 @@ class CMakeTool(Tool):
 			
 		return call
 	
-	def process(self, verbose=False):
-		FNULL = open(os.devnull, 'w')
+	def process(self, report, verbose=False):
 		logger.info('Preprocessing : ' + self.type + ':' + self.name)
-		return_code = 0
+		
+		sp = subprocess.Popen(self._format_call(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		out, err = sp.communicate()
+		
 		if verbose:
-			return_code = subprocess.call(self._format_call())
-		else:
-			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
-			
-		if return_code != 0:
+			for line in out.splitlines():
+				logger.info(line)
+			for line in err.splitlines():
+				logger.info(line)
+		
+		step_report = StepReport(self.type + ' : ' + self.name)
+		step_report.parse_warnings([out], ['Warning', 'warning'])
+		
+		if sp.returncode != 0:
+			step_report.parse_errors([err], ['Error', 'error'])
 			logger.error('Preprocessing failed : ' + self.type + ':' + self.name)
-		return return_code == 0
+		report.add_step(step_report)
+		return sp.returncode == 0
 	
 	def clean(self, verbose=False):
 		logger.info('Cleaning : ' + self.type + ':' + self.name)
@@ -119,18 +128,26 @@ class MSBuildTool(Tool):
 			
 		return call
 	
-	def process(self, verbose=False):
-		FNULL = open(os.devnull, 'w')
+	def process(self, report, verbose=False):
 		logger.info('Building : ' + self.type + ':' + self.name)
 		ok = True
 		for project in self.projects:
-			return_code = 0
+			sp = subprocess.Popen(self._format_call(project), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			out, err = sp.communicate()
+			
 			if verbose:
-				return_code = subprocess.call(self._format_call(project))
-			else:
-				return_code = subprocess.call(self._format_call(project), stdout=FNULL, stderr=subprocess.STDOUT)
-			if return_code != 0:
+				for line in out.splitlines():
+					logger.info(line)
+				for line in err.splitlines():
+					logger.info(line)
+		
+			step_report = StepReport(self.type + ' : ' + project + ' ' + self.configuration + ' ' + self.architecture)
+			step_report.parse_warnings(out.splitlines(), ['Warning', 'warning', 'Avertissement', 'avertissement'])
+				
+			if sp.returncode != 0:
+				step_report.parse_errors(out.splitlines(), ['Error', 'error', 'Erreur', 'erreur'])
 				ok = False
+			report.add_step(step_report)
 		if not ok:
 			logger.error('Build failed : ' + self.type + ':' + self.name)
 		return ok
@@ -178,7 +195,7 @@ class CommandTool(Tool):
 			
 		return call
 	
-	def process(self, verbose=False):
+	def process(self, report, verbose=False):
 		FNULL = open(os.devnull, 'w')
 		logger.info('Command called : ' + self.type + ':' + self.name)
 		if verbose:
@@ -224,7 +241,7 @@ class MakefileTool(Tool):
 			
 		return call
 	
-	def process(self, verbose=False):
+	def process(self, report, verbose=False):
 		FNULL = open(os.devnull, 'w')
 		cwd = os.getcwd()
 		logger.info('Entering test directory : ' + self.workspace)

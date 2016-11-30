@@ -75,6 +75,7 @@ def main(args):
 				raise PyvenException('STEP CONFIGURE : FAILED')
 			if not project.build():
 				raise PyvenException('STEP BUILD : FAILED')
+			project.write_report()
 			
 		elif step == Project.POSSIBLE_STEPS[2]:
 			if len(args) > step_idx + 1:
@@ -87,6 +88,7 @@ def main(args):
 				raise PyvenException('STEP BUILD : FAILED')
 			if not project.test():
 				raise PyvenException('STEP TEST : FAILED')
+			project.write_report()
 
 		elif step == Project.POSSIBLE_STEPS[3]:
 			if len(args) > step_idx + 1:
@@ -101,6 +103,7 @@ def main(args):
 				raise PyvenException('STEP TEST : FAILED')
 			if not project.package():
 				raise PyvenException('STEP PACKAGE : FAILED')
+			project.write_report()
 			
 		elif step == Project.POSSIBLE_STEPS[4]:
 			if len(args) > step_idx + 1:
@@ -117,6 +120,7 @@ def main(args):
 				raise PyvenException('STEP PACKAGE : FAILED')
 			if not project.verify():
 				raise PyvenException('STEP VERIFY : FAILED')
+			project.write_report()
 			
 		elif step == Project.POSSIBLE_STEPS[5]:
 			if len(args) > step_idx + 1:
@@ -125,22 +129,17 @@ def main(args):
 				sys.exit(1)
 			if not project.configure():
 				raise PyvenException('STEP CONFIGURE : FAILED')
-				sys.exit(1)
 			if not project.build():
 				raise PyvenException('STEP BUILD : FAILED')
-				sys.exit(1)
 			if not project.test():
 				raise PyvenException('STEP TEST : FAILED')
-				sys.exit(1)
 			if not project.package():
 				raise PyvenException('STEP PACKAGE : FAILED')
-				sys.exit(1)
 			if not project.verify():
 				raise PyvenException('STEP VERIFY : FAILED')
-				sys.exit(1)
 			if not project.install():
 				raise PyvenException('STEP INSTALL : FAILED')
-				sys.exit(1)
+			project.write_report()
 			
 		elif step == Project.POSSIBLE_STEPS[6]:
 			if len(args) > step_idx + 1:
@@ -159,6 +158,7 @@ def main(args):
 				raise PyvenException('STEP VERIFY : FAILED')
 			if not project.deploy():
 				raise PyvenException('STEP DEPLOY : FAILED')
+			project.write_report()
 			
 		elif step == Project.POSSIBLE_STEPS[7]:
 			if len(args) > step_idx + 2:
@@ -183,6 +183,7 @@ def main(args):
 				raise PyvenException('STEP INSTALL : FAILED')
 			if not project.deliver(args[step_idx + 1]):
 				raise PyvenException('STEP DELIVER : FAILED')
+			project.write_report()
 			
 		elif step == Project.POSSIBLE_STEPS[8]:
 			if len(args) > step_idx + 1:
