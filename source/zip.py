@@ -12,6 +12,7 @@ def main():
 	zf.write('pyven/test.py')
 	zf.write('pyven/repository.py')
 	zf.write('pyven/exception.py')
+	zf.write('pyven/report.py')
 
 if __name__ == '__main__':
 	main()

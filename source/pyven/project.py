@@ -3,6 +3,8 @@ from lxml import etree
 
 from pyven.exception import PyvenException
 
+from report import Report
+
 from artifact import Artifact
 from package import Package
 from tool import Tool
@@ -23,6 +25,8 @@ class Project:
 
 	def __init__(self, version, verbose=False):
 		logger.info('Initializing Pyven project')
+		
+		self.report = Report()
 		
 		self.version = version
 		self.verbose = verbose
@@ -166,24 +170,26 @@ class Project:
 		preprocess_ok = True
 		for tool in self.tools['preprocessors']:
 			tic = Project.tic()
-			if not tool.process(self.verbose):
+			if not tool.process(self.report, self.verbose):
 				preprocess_ok = False
 			else:
 				toc = Project.toc()
 				logger.info('Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 		if not preprocess_ok:
+			self.write_report()
 			raise PyvenException('Preprocessing errors found')
 		logger.info('Preprocessing completed')
 		logger.info('Starting build')
 		build_ok = True
 		for tool in self.tools['builders']:
 			tic = Project.tic()
-			if not tool.process(self.verbose):
+			if not tool.process(self.report, self.verbose):
 				build_ok = False
 			else:
 				toc = Project.toc()
 				logger.info('Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 		if not build_ok:
+			self.write_report()
 			raise PyvenException('Build errors found')
 		logger.info('build completed')
 		artifacts_ok = True
@@ -289,3 +295,6 @@ class Project:
 			raise PyvenException('Cleaning errors found')
 		logger.info('STEP CLEAN : SUCCESSFUL')
 	
+	def write_report(self):
+		self.report.write(Project.WORKSPACE)
+		self.report.display(Project.WORKSPACE)
