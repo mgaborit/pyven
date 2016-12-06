@@ -31,7 +31,7 @@ class Test(object):
 	def _copy_resources(self, repo=None, resources=None):
 		pass
 		
-	def run(self, verbose=False, repo=None, resources=None):
+	def run(self, report, verbose=False, repo=None, resources=None):
 		if not os.path.isfile(os.path.join(self.path, self.filename)):
 			raise PyvenException('Test file not found : ' + os.path.join(self.path, self.filename))
 		self._copy_resources(repo, resources)
@@ -41,16 +41,24 @@ class Test(object):
 			logger.info('Entering test directory : ' + self.path)
 			os.chdir(self.path)
 			logger.info('Running test : ' + self.filename)
-			if verbose:
-				return_code = subprocess.call(self._format_call())
-			else:
-				return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
+			sp = subprocess.Popen(self._format_call(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 			os.chdir(cwd)
-			if return_code != 0:
+			out, err = sp.communicate()
+			
+			if verbose:
+				for line in out.splitlines():
+					logger.info(line)
+				for line in err.splitlines():
+					logger.info(line)
+				
+			step_report = StepReport(self.type + ' test : ' + os.path.join(self.path, self.filename))
+			if sp.returncode != 0:
+				step_report.parse_errors([out], ['assertion', 'error'])
 				logger.error('Test failed : ' + self.filename)
-				return False
-			logger.info('Test OK : ' + self.filename)
-			return True
+			else:
+				logger.info('Test OK : ' + self.filename)
+			report.add_step(step_report)
+			return sp.returncode == 0
 		logger.error('Unknown directory : ' + self.path)
 		return False
 		
