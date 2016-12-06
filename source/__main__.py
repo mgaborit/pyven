@@ -194,6 +194,15 @@ def main(args):
 				raise PyvenException('STEP CONFIGURE : FAILED')
 			if not project.clean():
 				raise PyvenException('STEP CLEAN : FAILED')
+		elif step == Project.POSSIBLE_STEPS[9]:
+			if len(args) > step_idx + 1:
+				logger.error('Too many arguments provided')
+				hint()
+				sys.exit(1)
+			if not project.configure():
+				raise PyvenException('STEP CONFIGURE : FAILED')
+			if not project.retrieve():
+				raise PyvenException('STEP RETRIEVE : FAILED')
 		else:
 			logger.error('Unknown step : ' + step)
 			hint()

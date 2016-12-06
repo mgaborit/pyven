@@ -14,7 +14,7 @@ from pyven.repository import Repository
 logger = logging.getLogger('global')
 
 class Project:
-	POSSIBLE_STEPS = ['configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver', 'clean']
+	POSSIBLE_STEPS = ['configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver', 'clean', 'retrieve']
 	WORKSPACE = 'pvn_workspace'
 	LOCAL_REPO_NAME = 'local'
 	
@@ -293,6 +293,20 @@ class Project:
 		if not preprocess_ok or not build_ok:
 			raise PyvenException('Cleaning errors found')
 		logger.info('STEP CLEAN : SUCCESSFUL')
+	
+	@_step
+	def retrieve(self, arg=None):
+		logger.info('STEP RETRIEVE : STARTING')
+		for artifact in [a for a in self.artifacts.values() if a.to_retrieve]:
+			for package in self.packages.values():
+				for item in [i for i in package.items if i.to_retrieve]:
+					if artifact.format_name() == item.format_name():
+						for built_artifact in [a for a in self.artifacts.values() if not a.to_retrieve]:
+							dir = os.path.dirname(built_artifact.file)
+							if not os.path.isdir(dir):
+								os.makedirs(dir)
+							shutil.copy(os.path.join(artifact.location(Project.WORKSPACE), artifact.basename()), os.path.join(dir, artifact.basename()))
+		logger.info('STEP RETRIEVE : SUCCESSFUL')
 	
 	def write_report(self):
 		status = 'SUCCESS'
