@@ -81,8 +81,12 @@ class Tool(object):
 			found = False
 			while not found and i < len(error_tokens):
 				if error_tokens[i] in line:
-					step[type].append(line)
-					found = True
+					for exception in except_tokens:
+						if exception in line:
+							found = True
+					if not found:
+						step[type].append(line)
+						found = True
 				else:
 					i += 1
 
@@ -233,11 +237,11 @@ class MSBuildTool(Tool):
 				for line in err.splitlines():
 					logger.info(line)
 
-			self._parse_logs(out.splitlines(), step, 'warnings', ['Warning', 'warning', 'Avertissement', 'avertissement'], [])
+			self._parse_logs(out.splitlines(), step, 'warnings', ['Warning', 'warning', 'Avertissement', 'avertissement'], ['0 Avertissement(s)', '0 Warning(s)'])
 				
 			if sp.returncode != 0:
 				step['status'] = Tool.STATUS[1]
-				self._parse_logs(out.splitlines(), step, 'errors', ['Error', 'error', 'Erreur', 'erreur'], [])
+				self._parse_logs(out.splitlines(), step, 'errors', ['Error', 'error', 'Erreur', 'erreur'], ['0 Erreur(s)', '0 Error(s)'])
 				ok = False
 		if not ok:
 			logger.error('Build failed : ' + self.type + ':' + self.name)

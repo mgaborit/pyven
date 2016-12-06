@@ -237,7 +237,7 @@ class Project:
 			tests_ok = True
 			for test in self.integration_tests:
 				tic = Project.tic()
-				if not test.run(self.report, self.verbose, Project.WORKSPACE, self.packages):
+				if not test.run(self.verbose, Project.WORKSPACE, self.packages):
 					tests_ok = False
 				else:
 					toc = Project.toc()
@@ -325,5 +325,9 @@ class Project:
 			report.steps.append(tool.report())
 		for tool in self.tools['builders']:
 			report.steps.append(tool.report())
+		for test in self.unit_tests:
+			report.steps.append(test.report())
+		for test in self.integration_tests:
+			report.steps.append(test.report())
 		report.write(Project.WORKSPACE)
 		report.display(Project.WORKSPACE)
