@@ -21,6 +21,5 @@ class Artifact(Item):
 	def basename(self):
 		if self.file is not None:
 			return os.path.basename(self.file)
-		else:
-			raise PyvenException('Unknown artifact location : ' + self.format_name())
+		raise PyvenException('Unknown artifact location : ' + self.format_name())
 	
