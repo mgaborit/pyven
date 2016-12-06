@@ -4,7 +4,7 @@ from pyven.exception import PyvenException
 
 logger = logging.getLogger('global')
 
-from item import Item
+from pyven.item import Item
 
 # pym.xml 'artifact' node
 class Artifact(Item):

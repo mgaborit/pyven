@@ -1,6 +1,5 @@
-import subprocess, os, logging, shutil
+import subprocess, os, logging, shutil, time
 
-from report import StepReport
 from pyven.exception import PyvenException
 
 logger = logging.getLogger('global')
@@ -9,8 +8,10 @@ logger = logging.getLogger('global')
 class Tool(object):
 	AVAILABLE_TOOLS = ['cmake', 'msbuild', 'command', 'makefile']
 	AVAILABLE_SCOPES = ['preprocess', 'build']
+	STATUS = ['SUCCESS', 'FAILURE']
 	
 	def __init__(self, node):
+		self.steps = []
 		self.type = node.get('type')
 		if self.type is None:
 			raise PyvenException('Missing tool type')
@@ -25,10 +26,70 @@ class Tool(object):
 		if self.scope not in Tool.AVAILABLE_SCOPES:
 			raise PyvenException('Wrong tool scope : ' + self.scope, 'Available scopes : ' + str(Tool.AVAILABLE_SCOPES))
 		
+	def status(self):
+		i = 0
+		status = Tool.STATUS[0]
+		while status == Tool.STATUS[0] and i < len(self.steps):
+			if self.steps[i]['status'] == Tool.STATUS[1]:
+				status = Tool.STATUS[1]
+			i += 1
+		return status
+		
+	def _report_error(self, error):
+		html_str = '<div class="errorDiv">'
+		html_str += '<span class="error">' + error + '</span>'
+		html_str += '</div>'
+		return html_str
+	
+	def _report_warning(self, warning):
+		html_str = '<div class="warningDiv">'
+		html_str += '<span class="warning">' + warning + '</span>'
+		html_str += '</div>'
+		return html_str
+	
+	def _report_informations(self, step):
+		html_str += '<h2>' + self.name + '</h2>'
+	
+	def _report(self, nb_lines):
+		html_str = ''
+		i = 0
+		for step in self.steps:
+			html_str += self._report_informations(step)
+			for error in step['errors']:
+				if i < nb_lines:
+					html_str += self._report_error(error)
+					i += 1
+			for warning in step['warnings']:
+				if i < nb_lines:
+					html_str += self._report_warning(warning)
+					i += 1
+		return html_str
+	
+	def report(self, nb_lines=10):
+		html_str = '<div class="stepDiv">'
+		html_str += self._report(nb_lines)
+		html_str += '</div>'
+		return html_str
+	
+	def _parse_logs(self, logs, step, type, error_tokens, except_tokens):
+		if os.name == 'nt':
+			encoding = 'windows-1252'
+		else:
+			encoding = 'utf-8'
+		for line in [l.decode(encoding) for l in logs]:
+			i = 0
+			found = False
+			while not found and i < len(error_tokens):
+				if error_tokens[i] in line:
+					step[type].append(line)
+					found = True
+				else:
+					i += 1
+
 	def _format_call(self):
 		raise NotImplementedError
 	
-	def process(self, report):
+	def process(self):
 		raise NotImplementedError
 		
 	def clean(self, verbose=False):
@@ -57,6 +118,7 @@ class CMakeTool(Tool):
 			self.definitions.append(definition.text)
 		if self.scope == 'build':
 			logger.warning('CMake will be called during build but not preprocessing')
+		self.steps.append({'status' : Tool.STATUS[0], 'duration' : 0, 'warnings' : [], 'errors' : []})
 	
 	def _format_call(self):
 		call = [self.type, '-H.', '-B'+self.output_path, '-G'+self.generator+'']
@@ -65,10 +127,25 @@ class CMakeTool(Tool):
 			
 		return call
 	
-	def process(self, report, verbose=False):
+	def _report_informations(self, step):
+		html_str = '<h2>' + self.type + ' ' + self.name + '</h2>'
+		html_str += '<div class="propertiesDiv">'
+		html_str += '<p class="property">Generator : ' + self.generator + '</p>'
+		if step['status'] == Tool.STATUS[0]:
+			html_str += '<p class="property">Status : <span class="success">' + step['status'] + '</span></p>'
+		elif step['status'] == Tool.STATUS[1]:
+			html_str += '<p class="property">Status : <span class="failure">' + step['status'] + '</span></p>'
+		html_str += '<p class="property">Duration : ' + str(step['duration']) + ' seconds</p>'
+		html_str += '</div>'
+		return html_str
+	
+	def process(self, verbose=False):
 		logger.info('Preprocessing : ' + self.type + ':' + self.name)
 		
+		tic = time.time()
 		sp = subprocess.Popen(self._format_call(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		toc = time.time()
+		self.steps[0]['duration'] = round(toc - tic, 3)
 		out, err = sp.communicate()
 		
 		if verbose:
@@ -77,13 +154,12 @@ class CMakeTool(Tool):
 			for line in err.splitlines():
 				logger.info(line)
 		
-		step_report = StepReport(self.type + ' : ' + self.name)
-		step_report.parse_warnings([out], ['Warning', 'warning'])
+		self._parse_logs([out], self.steps[0], 'warnings', ['Warning', 'warning'], [])
 		
 		if sp.returncode != 0:
-			step_report.parse_errors([err], ['Error', 'error'])
+			self.steps[0]['status'] = Tool.STATUS[1]
+			self._parse_logs([err], self.steps[0], 'errors', ['Error', 'error'], [])
 			logger.error('Preprocessing failed : ' + self.type + ':' + self.name)
-		report.add_step(step_report)
 		return sp.returncode == 0
 	
 	def clean(self, verbose=False):
@@ -98,9 +174,8 @@ class MSBuildTool(Tool):
 		super(MSBuildTool, self).__init__(node)
 		self.configuration = node.find('configuration').text
 		self.architecture = node.find('architecture').text
-		self.projects = []
 		for project in node.xpath('projects/project'):
-			self.projects.append(project.text)
+			self.steps.append({'project' : project.text, 'status' : Tool.STATUS[0], 'duration' : 0, 'warnings' : [], 'errors' : []})
 		self.options = []
 		for option in node.xpath('options/option'):
 			self.arguments.append(option.text)
@@ -128,11 +203,28 @@ class MSBuildTool(Tool):
 			
 		return call
 	
-	def process(self, report, verbose=False):
+	def _report_informations(self, step):
+		html_str = '<h2>' + self.type + ' ' + self.name + ' : ' + step['project'] + '</h2>'
+		html_str += '<div class="propertiesDiv">'
+		html_str += '<p class="property">Configuration : ' + self.configuration + '</p>'
+		html_str += '<p class="property">Platform : ' + self.architecture + '</p>'
+		if step['status'] == Tool.STATUS[0]:
+			html_str += '<p class="property">Status : <span class="success">' + step['status'] + '</span></p>'
+		elif step['status'] == Tool.STATUS[1]:
+			html_str += '<p class="property">Status : <span class="failure">' + step['status'] + '</span></p>'
+		html_str += '<p class="property">Duration : ' + str(step['duration']) + ' seconds</p>'
+		html_str += '</div>'
+		return html_str
+	
+	def process(self, verbose=False):
 		logger.info('Building : ' + self.type + ':' + self.name)
 		ok = True
-		for project in self.projects:
+		for step in self.steps:
+			project = step['project']
+			tic = time.time()
 			sp = subprocess.Popen(self._format_call(project), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			toc = time.time()
+			self.steps[0]['duration'] = round(toc - tic, 3)
 			out, err = sp.communicate()
 			
 			if verbose:
@@ -140,14 +232,13 @@ class MSBuildTool(Tool):
 					logger.info(line)
 				for line in err.splitlines():
 					logger.info(line)
-		
-			step_report = StepReport(self.type + ' : ' + project + ' ' + self.configuration + ' ' + self.architecture)
-			step_report.parse_warnings(out.splitlines(), ['Warning', 'warning', 'Avertissement', 'avertissement'])
+
+			self._parse_logs(out.splitlines(), step, 'warnings', ['Warning', 'warning', 'Avertissement', 'avertissement'], [])
 				
 			if sp.returncode != 0:
-				step_report.parse_errors(out.splitlines(), ['Error', 'error', 'Erreur', 'erreur'])
+				step['status'] = Tool.STATUS[1]
+				self._parse_logs(out.splitlines(), step, 'errors', ['Error', 'error', 'Erreur', 'erreur'], [])
 				ok = False
-			report.add_step(step_report)
 		if not ok:
 			logger.error('Build failed : ' + self.type + ':' + self.name)
 		return ok
@@ -156,7 +247,8 @@ class MSBuildTool(Tool):
 		FNULL = open(os.devnull, 'w')
 		logger.info('Cleaning : ' + self.type + ':' + self.name)
 		ok = True
-		for project in self.projects:
+		for step in self.steps:
+			project = step['project']
 			return_code = 0
 			if os.path.isfile(project):
 				if verbose:
@@ -195,7 +287,7 @@ class CommandTool(Tool):
 			
 		return call
 	
-	def process(self, report, verbose=False):
+	def process(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
 		logger.info('Command called : ' + self.type + ':' + self.name)
 		if verbose:
@@ -241,7 +333,7 @@ class MakefileTool(Tool):
 			
 		return call
 	
-	def process(self, report, verbose=False):
+	def process(self, verbose=False):
 		FNULL = open(os.devnull, 'w')
 		cwd = os.getcwd()
 		logger.info('Entering test directory : ' + self.workspace)

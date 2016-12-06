@@ -3,13 +3,13 @@ from lxml import etree
 
 from pyven.exception import PyvenException
 
-from report import Report
+from pyven.report import Report
 
-from artifact import Artifact
-from package import Package
-from tool import Tool
-from test import Test
-from repository import Repository
+from pyven.artifact import Artifact
+from pyven.package import Package
+from pyven.tool import Tool
+from pyven.test import Test
+from pyven.repository import Repository
 
 logger = logging.getLogger('global')
 
@@ -25,8 +25,6 @@ class Project:
 
 	def __init__(self, version, verbose=False):
 		logger.info('Initializing Pyven project')
-		
-		self.report = Report()
 		
 		self.version = version
 		self.verbose = verbose
@@ -170,7 +168,7 @@ class Project:
 		preprocess_ok = True
 		for tool in self.tools['preprocessors']:
 			tic = Project.tic()
-			if not tool.process(self.report, self.verbose):
+			if not tool.process(self.verbose):
 				preprocess_ok = False
 			else:
 				toc = Project.toc()
@@ -183,7 +181,7 @@ class Project:
 		build_ok = True
 		for tool in self.tools['builders']:
 			tic = Project.tic()
-			if not tool.process(self.report, self.verbose):
+			if not tool.process(self.verbose):
 				build_ok = False
 			else:
 				toc = Project.toc()
@@ -214,7 +212,7 @@ class Project:
 			tests_ok = True
 			for test in self.unit_tests:
 				tic = Project.tic()
-				if not test.run(self.verbose):
+				if not test.run(self.report, self.verbose):
 					tests_ok = False
 				else:
 					toc = Project.toc()
@@ -239,12 +237,13 @@ class Project:
 			tests_ok = True
 			for test in self.integration_tests:
 				tic = Project.tic()
-				if not test.run(self.verbose, Project.WORKSPACE, self.packages):
+				if not test.run(self.report, self.verbose, Project.WORKSPACE, self.packages):
 					tests_ok = False
 				else:
 					toc = Project.toc()
 					logger.info('Time for test ' + test.filename + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 			if not tests_ok:
+				self.write_report()
 				raise PyvenException('Test failures found')
 		logger.info('STEP VERIFY : SUCCESSFUL')
 		
@@ -296,5 +295,21 @@ class Project:
 		logger.info('STEP CLEAN : SUCCESSFUL')
 	
 	def write_report(self):
-		self.report.write(Project.WORKSPACE)
-		self.report.display(Project.WORKSPACE)
+		status = 'SUCCESS'
+		i = 0
+		while status == 'SUCCESS' and i < len(self.tools['preprocessors']):
+			if self.tools['preprocessors'][i].status() == 'FAILURE':
+				status = self.tools['preprocessors'][i].status
+			i += 1
+		i = 0
+		while status == 'SUCCESS' and i < len(self.tools['builders']):
+			if self.tools['builders'][i].status() == 'FAILURE':
+				status = self.tools['builders'][i].status
+			i += 1
+		report = Report(status)
+		for tool in self.tools['preprocessors']:
+			report.steps.append(tool.report())
+		for tool in self.tools['builders']:
+			report.steps.append(tool.report())
+		report.write(Project.WORKSPACE)
+		report.display(Project.WORKSPACE)
