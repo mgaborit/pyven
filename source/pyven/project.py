@@ -309,25 +309,53 @@ class Project:
 		logger.info('STEP RETRIEVE : SUCCESSFUL')
 	
 	def write_report(self):
-		status = 'SUCCESS'
 		i = 0
-		while status == 'SUCCESS' and i < len(self.tools['preprocessors']):
+		build_ok = True
+		while build_ok and i < len(self.tools['preprocessors']):
 			if self.tools['preprocessors'][i].status() == 'FAILURE':
-				status = self.tools['preprocessors'][i].status
+				build_ok = False
 			i += 1
 		i = 0
-		while status == 'SUCCESS' and i < len(self.tools['builders']):
+		while build_ok and i < len(self.tools['builders']):
 			if self.tools['builders'][i].status() == 'FAILURE':
-				status = self.tools['builders'][i].status
+				build_ok = False
 			i += 1
+			
+		i = 0
+		unit_ok = True
+		if build_ok:
+			while unit_ok and i < len(self.unit_tests):
+				if self.unit_tests[i].status == 'FAILURE':
+					unit_ok = False
+				i += 1
+		
+		i = 0
+		integration_ok = True
+		if build_ok and unit_ok:
+			while integration_ok and i < len(self.integration_tests):
+				if self.integration_tests[i].status == 'FAILURE':
+					integration_ok = False
+				i += 1
+				
+		if build_ok and unit_ok and integration_ok:
+			status = 'SUCCESS'
+		else:
+			status = 'FAILURE'
 		report = Report(status)
+		if build_ok and unit_ok:
+			report.prepare_summary(self.tools['preprocessors'], self.tools['builders'], self.unit_tests, self.integration_tests)
+		elif build_ok:
+			report.prepare_summary(self.tools['preprocessors'], self.tools['builders'], self.unit_tests)
+		else:
+			report.prepare_summary(self.tools['preprocessors'], self.tools['builders'])
 		for tool in self.tools['preprocessors']:
 			report.steps.append(tool.report())
 		for tool in self.tools['builders']:
 			report.steps.append(tool.report())
-		for test in self.unit_tests:
-			report.steps.append(test.report())
-		for test in self.integration_tests:
-			report.steps.append(test.report())
+		if build_ok:
+			for test in self.unit_tests:
+				report.steps.append(test.report())
+		if build_ok and unit_ok:
+			for test in self.integration_tests:
+				report.steps.append(test.report())
 		report.write(Project.WORKSPACE)
-		report.display(Project.WORKSPACE)

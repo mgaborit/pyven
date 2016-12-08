@@ -8,6 +8,7 @@ class Report(object):
 		self.html_str = ''
 		self.steps = []
 		self.status = status
+		self.summary = ''
 	
 	def _write_style(self):
 		css_str = """
@@ -65,11 +66,15 @@ class Report(object):
 				margin-right : 20px;
 				padding : 4px;
 			}
-			.summaryDiv {
-				margin-bottom : 2px;
-				margin-left : 20px;
-				margin-right : 20px;
-				padding : 4px;
+			.summaryStepDiv {
+				margin-bottom : 15px;
+				padding-left : 10px;
+			}
+			.summaryStep {
+				margin : 2px;
+				font-size : 16px;
+				color : #66a3ff;
+				font-family: Arial;
 			}
 			.errorDiv {
 				margin-bottom : 2px;
@@ -99,19 +104,6 @@ class Report(object):
 		"""
 		return css_str
 	
-	def _write_summary(self):
-		self.html_str = ''
-		self.html_str += '<div class="stepDiv">'
-		self.html_str += '<h2>Summary</h2>'
-		self.html_str += '<div class="summaryDiv">'
-		if self.status == 'FAILURE':
-			self.html_str += '<span class="failure">FAILURE</span>'
-		else:
-			self.html_str += '<span class="success">SUCCESS</span>'
-		self.html_str += '</div>'
-		self.html_str += '</div>'
-		return self.html_str
-	
 	def _write_head(self):
 		self.html_str = '<html xmlns="http://www.w3.org/1999/xhtml" lang="fr-FR" xml:lang="fr-FR">'
 		self.html_str += '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
@@ -124,12 +116,43 @@ class Report(object):
 		
 	def _write_body(self):
 		self.html_str = '<body>'
-		self.html_str += '<h1>Pyven build report</h1>'
-		self.html_str += self._write_summary()
+		self.html_str += '<h1>Build report</h1>'
+		self.html_str += self.summary
 		for step in self.steps:
 			self.html_str += step
 		self.html_str += '</body>'
 		return self.html_str
+	
+	def prepare_summary(self, preprocessors, builders, unit=[], integration=[]):
+		self.html_str = ''
+		self.html_str += '<div class="stepDiv">'
+		self.html_str += '<h2>Summary</h2>'
+		self.html_str += '<div class="summaryDiv">'
+		if self.status == 'FAILURE':
+			self.html_str += '<div class="summaryStepDiv">'
+			self.html_str += '<p class="summaryStep">Build :</p>'
+			for tool in preprocessors:
+				if tool.status() == 'FAILURE':
+					self.html_str += tool.report_error(tool.report_summary_description() + ' <a href="#' + tool.report_id() + '">Details</a>')
+			for tool in builders:
+				if tool.status() == 'FAILURE':
+					self.html_str += tool.report_error(tool.report_summary_description() + ' <a href="#' + tool.report_id() + '">Details</a>')
+			if len(unit) > 0:
+				self.html_str += '<p class="summaryStep">Unit tests :</p>'
+				for test in unit:
+					if test.status() == 'FAILURE':
+						self.html_str += test.report_error(tool.report_summary_description() + ' <a href="#' + test.report_id() + '">Details</a>')
+			if len(integration) > 0:
+				self.html_str += '<p class="summaryStep">Integration tests :</p>'
+				for test in integration:
+					if test.status() == 'FAILURE':
+						self.html_str += test.report_error(tool.report_summary_description() + ' <a href="#' + test.report_id() + '">Details</a>')
+			self.html_str += '</div>'
+		else:
+			self.html_str += '<span class="success">SUCCESS</span>'
+		self.html_str += '</div>'
+		self.html_str += '</div>'
+		self.summary = self.html_str
 	
 	def write(self, workspace):
 		self.html_str = '<html>'
