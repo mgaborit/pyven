@@ -23,7 +23,13 @@ class Test(object):
 		self.status = Test.STATUS[0]
 		self.duration = 0
 	
-	def _report_error(self, error):
+	def report_id(self):
+		return self.type + ':' + self.filename
+	
+	def report_summary_description(self):
+		return os.path.join(self.path, self.filename)
+		
+	def report_error(self, error):
 		html_str = '<div class="errorDiv">'
 		html_str += '<span class="error">' + error + '</span>'
 		html_str += '</div>'
@@ -46,12 +52,12 @@ class Test(object):
 		html_str += self._report_informations()
 		for error in self.errors:
 			if i < nb_lines:
-				html_str += self._report_error(error)
+				html_str += self.report_error(error)
 				i += 1
 		return html_str
 	
 	def report(self, nb_lines=10):
-		html_str = '<div class="stepDiv">'
+		html_str = '<div id="' + self.report_id() + '" class="stepDiv">'
 		html_str += self._report(nb_lines)
 		html_str += '</div>'
 		return html_str
@@ -149,3 +155,5 @@ class UnitTest(Test):
 
 	def __init__(self, node):
 		super(UnitTest,self).__init__(node)
+
+	

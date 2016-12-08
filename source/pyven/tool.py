@@ -26,6 +26,12 @@ class Tool(object):
 		if self.scope not in Tool.AVAILABLE_SCOPES:
 			raise PyvenException('Wrong tool scope : ' + self.scope, 'Available scopes : ' + str(Tool.AVAILABLE_SCOPES))
 		
+	def report_id(self):
+		return self.type + ':' + self.name
+	
+	def report_summary_description(self):
+		pass
+	
 	def status(self):
 		i = 0
 		status = Tool.STATUS[0]
@@ -35,7 +41,7 @@ class Tool(object):
 			i += 1
 		return status
 		
-	def _report_error(self, error):
+	def report_error(self, error):
 		html_str = '<div class="errorDiv">'
 		html_str += '<span class="error">' + error + '</span>'
 		html_str += '</div>'
@@ -52,31 +58,38 @@ class Tool(object):
 	
 	def _report(self, nb_lines):
 		html_str = ''
-		i = 0
 		for step in self.steps:
+			displayed_errors = 0
+			nb_errors = 0
 			html_str += self._report_informations(step)
 			for error in step['errors']:
-				if i < nb_lines:
-					html_str += self._report_error(error)
-					i += 1
+				if displayed_errors < nb_lines:
+					html_str += self.report_error(error)
+					displayed_errors += 1
+				nb_errors += 1
+			if nb_errors > displayed_errors:
+				html_str += self.report_error(str(nb_errors - displayed_errors) + ' more errors...')
+			displayed_warnings = 0
+			nb_warnings = 0
 			for warning in step['warnings']:
-				if i < nb_lines:
+				if displayed_warnings < nb_lines - displayed_errors:
 					html_str += self._report_warning(warning)
-					i += 1
+					displayed += 1
+				nb_warnings += 1
+				
+			if nb_warnings > displayed_warnings:
+				html_str += self._report_warning(str(nb_warnings - displayed_warnings) + ' more warnings...')
+		
 		return html_str
 	
 	def report(self, nb_lines=10):
-		html_str = '<div class="stepDiv">'
+		html_str = '<div id="' + self.report_id() + '" class="stepDiv">'
 		html_str += self._report(nb_lines)
 		html_str += '</div>'
 		return html_str
 	
 	def _parse_logs(self, logs, step, type, error_tokens, except_tokens):
-		if os.name == 'nt':
-			encoding = 'windows-1252'
-		else:
-			encoding = 'utf-8'
-		for line in [l.decode(encoding) for l in logs]:
+		for line in [l for l in logs]:
 			i = 0
 			found = False
 			while not found and i < len(error_tokens):
@@ -124,6 +137,9 @@ class CMakeTool(Tool):
 			logger.warning('CMake will be called during build but not preprocessing')
 		self.steps.append({'status' : Tool.STATUS[0], 'duration' : 0, 'warnings' : [], 'errors' : []})
 	
+	def report_summary_description(self):
+		return self.type + ' ' + self.name + ' : ' + self.generator
+	
 	def _format_call(self):
 		call = [self.type, '-H.', '-B'+self.output_path, '-G'+self.generator+'']
 		for definition in self.definitions:
@@ -147,22 +163,22 @@ class CMakeTool(Tool):
 		logger.info('Preprocessing : ' + self.type + ':' + self.name)
 		
 		tic = time.time()
-		sp = subprocess.Popen(self._format_call(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		sp = subprocess.Popen(self._format_call(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+		out, err = sp.communicate()
 		toc = time.time()
 		self.steps[0]['duration'] = round(toc - tic, 3)
-		out, err = sp.communicate()
 		
 		if verbose:
 			for line in out.splitlines():
-				logger.info(line)
+				logger.info('[' + self.type + ']' + line)
 			for line in err.splitlines():
-				logger.info(line)
+				logger.info('[' + self.type + ']' + line)
 		
-		self._parse_logs([out], self.steps[0], 'warnings', ['Warning', 'warning'], [])
+		self._parse_logs(out.splitlines(), self.steps[0], 'warnings', ['Warning', 'warning'], [])
 		
 		if sp.returncode != 0:
 			self.steps[0]['status'] = Tool.STATUS[1]
-			self._parse_logs([err], self.steps[0], 'errors', ['Error', 'error'], [])
+			self._parse_logs(err.splitlines(), self.steps[0], 'errors', ['Error', 'error'], [])
 			logger.error('Preprocessing failed : ' + self.type + ':' + self.name)
 		return sp.returncode == 0
 	
@@ -186,9 +202,31 @@ class MSBuildTool(Tool):
 		if self.scope == 'preprocess':
 			logger.warning('MSBuild will be called during preprocessing but not build')
 		
+	def _parse_logs(self, logs, step, type, error_tokens, except_tokens):
+		for line in [l for l in logs]:
+			if len(line.split()) > 0:
+				line = line.replace(line.split()[-1], '')
+				i = 0
+				found = False
+				while not found and i < len(error_tokens):
+					if error_tokens[i] in line:
+						for exception in except_tokens:
+							if exception in line:
+								found = True
+						if not found:
+							step[type].append(line)
+							found = True
+					else:
+						i += 1
+				
+	def report_summary_description(self):
+		return self.type + ' : ' + self.configuration + ' ' + self.architecture
+			
 	def _format_call(self, project, clean=False):
 		call = ['msbuild.exe', project]
+		call.append('/consoleLoggerParameters:NoSummary;ErrorsOnly;WarningsOnly')
 		if project.endswith('.sln'):
+			call.append('/m')
 			call.append('/property:Configuration='+self.configuration)
 			call.append('/property:Platform='+self.architecture)
 			if clean:
@@ -225,17 +263,18 @@ class MSBuildTool(Tool):
 		ok = True
 		for step in self.steps:
 			project = step['project']
+			
 			tic = time.time()
-			sp = subprocess.Popen(self._format_call(project), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			sp = subprocess.Popen(self._format_call(project), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+			out, err = sp.communicate()
 			toc = time.time()
 			self.steps[0]['duration'] = round(toc - tic, 3)
-			out, err = sp.communicate()
-			
+		
 			if verbose:
-				for line in out.splitlines():
-					logger.info(line)
-				for line in err.splitlines():
-					logger.info(line)
+				for line in [l for l in out.splitlines()]:
+					logger.info('[' + self.type + ']' + line)
+				for line in [l for l in err.splitlines()]:
+					logger.info('[' + self.type + ']' + line)
 
 			self._parse_logs(out.splitlines(), step, 'warnings', ['Warning', 'warning', 'Avertissement', 'avertissement'], ['0 Avertissement(s)', '0 Warning(s)'])
 				
@@ -264,48 +303,7 @@ class MSBuildTool(Tool):
 		if not ok:
 			logger.error('Clean failed : ' + self.type + ':' + self.name)
 		return ok
-			
-class CommandTool(Tool):
-
-	def __init__(self, node):
-		super(CommandTool, self).__init__(node)
-		programs = node.xpath('program')
-		if len(programs) < 1:
-			raise PyvenException('Missing program')
-		if len(programs) > 1:
-			raise PyvenException('Too many programs specified')
-		self.program = programs[0]
-		self.options = []
-		for option in node.xpath('options/option'):
-			self.options.append(option.text)
-		self.arguments = []
-		for argument in node.xpath('arguments/argument'):
-			self.arguments.append(argument.text)
 		
-	def _format_call(self):
-		call = [self.program]
-		for option in self.options:
-			call.append(option)
-		for argument in self.arguments:
-			call.append(argument)
-			
-		return call
-	
-	def process(self, verbose=False):
-		FNULL = open(os.devnull, 'w')
-		logger.info('Command called : ' + self.type + ':' + self.name)
-		if verbose:
-			return_code = subprocess.call(self._format_call())
-		else:
-			return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
-		if return_code != 0:
-			logger.error('Command failed : ' + self.type + ':' + self.name)
-			return False
-		return True
-		
-	def clean(self, verbose=False):
-		pass
-					
 class MakefileTool(Tool):
 
 	def __init__(self, node):
