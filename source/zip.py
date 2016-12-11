@@ -37,6 +37,7 @@ def main():
 	zf.write('pyven/reporting/__init__.py')
 	zf.write('pyven/reporting/report.py')
 	zf.write('pyven/reporting/reportable.py')
+	zf.write('pyven/reporting/style.py')
 
 	zf.write('pyven/utils/__init__.py')
 	zf.write('pyven/utils/factory.py')
