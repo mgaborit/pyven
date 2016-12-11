@@ -7,7 +7,7 @@ from pyven.utils.factory import Factory
 
 logger = logging.getLogger('global')
 
-class Parser(object):
+class PymParser(object):
 	
 	def __init__(self, pym='pym.xml'):
 		self.pym = pym

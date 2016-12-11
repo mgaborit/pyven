@@ -41,7 +41,7 @@ def main():
 
 	zf.write('pyven/utils/__init__.py')
 	zf.write('pyven/utils/factory.py')
-	zf.write('pyven/utils/parser.py')
+	zf.write('pyven/utils/pym_parser.py')
 
 if __name__ == '__main__':
 	main()

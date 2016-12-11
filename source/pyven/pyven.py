@@ -12,14 +12,12 @@ from pyven.repositories.directory import DirectoryRepo
 from pyven.processing.tools.tool import Tool
 from pyven.processing.tests.test import Test
 
-from pyven.utils.parser import Parser
+from pyven.utils.pym_parser import PymParser
 from pyven.utils.factory import Factory
 
 logger = logging.getLogger('global')
 
 class Pyven:
-	POSSIBLE_STEPS = ['configure', 'build', 'test', 'package', 'verify', 'install', 'deploy', 'deliver', 'clean', 'retrieve']
-	
 	WORKSPACE = Factory.create_repo('workspace', 'workspace', 'pvn_workspace')
 	if not os.path.isdir(WORKSPACE.url):
 		os.makedirs(WORKSPACE.url)
@@ -40,8 +38,8 @@ class Pyven:
 		self.step = step
 		self.verbose = verbose
 		self.pym = pym
-		self.parser = Parser(self.pym)
-		self.objects = {}
+		self.parser = PymParser(self.pym)
+		self.objects = {'preprocessors': [], 'builders': [], 'unit_tests': [], 'integration_tests': []}
 		
 	def reportables(self):
 		reportables = []
@@ -59,9 +57,12 @@ class Pyven:
 			reportables.extend(self.objects['builders'])
 		return reportables
 	
+	@staticmethod
+	def _log_step_delimiter():
+		logger.info('===================================')
+	
 	def _step(function, arg=None):
 		def __intern(self=None, arg=None):
-			logger.info('===================================')
 			try:
 				tic = time.time()
 				function(self, arg)
@@ -70,6 +71,7 @@ class Pyven:
 			except PyvenException as e:
 				for msg in e.args:
 					logger.error(msg)
+				logger.error('STEP FAILED')
 				return False
 			return True
 		return __intern
@@ -162,6 +164,7 @@ class Pyven:
 		
 	@_step
 	def configure(self, arg=None):
+		Pyven._log_step_delimiter()
 		logger.info('STEP CONFIGURE : STARTING')
 		if Pyven.WORKSPACE.is_available():
 			logger.info('Created Pyven workspace')
@@ -200,6 +203,9 @@ class Pyven:
 	
 	@_step	
 	def build(self, arg=None):
+		self.configure()
+	
+		Pyven._log_step_delimiter()
 		logger.info('STEP BUILD : STARTING')
 		self._build('preprocessors')
 		self._build('builders')
@@ -230,6 +236,9 @@ class Pyven:
 
 	@_step
 	def test(self, arg=None):
+		self.build()
+		
+		Pyven._log_step_delimiter()
 		logger.info('STEP TEST : STARTING')
 		if len(self.objects['unit_tests']) == 0:
 			logger.warning('No unit tests found')
@@ -242,6 +251,9 @@ class Pyven:
 
 	@_step
 	def package(self, arg=None):
+		self.test()
+		
+		Pyven._log_step_delimiter()
 		logger.info('STEP PACKAGE : STARTING')
 		ok = True
 		for package in [p for p in self.objects['packages'].values() if not p.to_retrieve]:
@@ -266,6 +278,9 @@ class Pyven:
 
 	@_step
 	def verify(self, arg=None):
+		self.package()
+		
+		Pyven._log_step_delimiter()
 		logger.info('STEP VERIFY : STARTING')
 		if len(self.objects['integration_tests']) == 0:
 			logger.warning('No integration tests found')
@@ -278,6 +293,9 @@ class Pyven:
 
 	@_step
 	def install(self, arg=None):
+		self.verify()
+		
+		Pyven._log_step_delimiter()
 		logger.info('STEP INSTALL : STARTING')
 		for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
 			self.LOCAL_REPO.publish(artifact, Pyven.WORKSPACE)
@@ -291,6 +309,9 @@ class Pyven:
 
 	@_step
 	def deploy(self, repo=None):
+		self.verify()
+		
+		Pyven._log_step_delimiter()
 		logger.info('STEP DEPLOY : STARTING')
 		for repo in self.objects['repositories'].values():
 			for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
@@ -305,6 +326,9 @@ class Pyven:
 
 	@_step
 	def deliver(self, path):
+		self.install()
+		
+		Pyven._log_step_delimiter()
 		logger.info('STEP DELIVER : STARTING')
 		logger.info('Delivering to directory ' + path)
 		for package in self.objects['packages'].values():
@@ -316,6 +340,9 @@ class Pyven:
 
 	@_step
 	def clean(self, verbose=False):
+		self.configure()
+		
+		Pyven._log_step_delimiter()
 		logger.info('STEP CLEAN : STARTING')
 		build_ok = True
 		for tool in self.objects['builders']:
@@ -333,6 +360,9 @@ class Pyven:
 
 	@_step
 	def retrieve(self, arg=None):
+		self.configure()
+		
+		Pyven._log_step_delimiter()
 		logger.info('STEP RETRIEVE : STARTING')
 		for artifact in [a for a in self.objects['artifacts'].values() if a.to_retrieve]:
 			if self.objects['repositories'][artifact.repo].is_available():
