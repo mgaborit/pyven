@@ -19,6 +19,7 @@ def main(args):
 	
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--version', action='version', version='1.0.0')
+	parser.add_argument('--display', '-d', action='store_true', help='Displays build report in the webbrowser right after build')
 	parser.add_argument('--verbose', '-v', action='store_true', help='Increases verbosity level')
 	parser.add_argument('step', choices=pyven.constants.STEPS)
 	parser.add_argument('path', nargs='?')
@@ -69,7 +70,8 @@ def main(args):
 		sys.exit(1)
 	finally:
 		report.write()
-		report.display()
+		if args.display:
+			report.display()
 	
 	toc = time.time()
 	logger.info('Total process time : ' + str(round(toc - tic, 3)) + ' seconds')
