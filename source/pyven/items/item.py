@@ -1,5 +1,5 @@
 import logging, os
-from pyven.exception import PyvenException
+from pyven.exceptions.exception import PyvenException
 
 logger = logging.getLogger('global')
 
