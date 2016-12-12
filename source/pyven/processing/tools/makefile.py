@@ -3,6 +3,7 @@ import subprocess, os, logging, shutil, time
 from pyven.exceptions.exception import PyvenException
 
 from pyven.processing.processible import Processible
+from pyven.reporting.reportable import Reportable
 from pyven.processing.tools.tool import Tool
 
 logger = logging.getLogger('global')
@@ -26,6 +27,17 @@ class MakefileTool(Tool):
 		if self.scope == 'preprocess':
 			logger.warning('Makefile will be called during preprocessing but not build')
 		
+	def report_summary(self):
+		return ['Makefile', self.name]
+
+	def report_identifiers(self):
+		return ['Makefile', self.name]
+	
+	def report_properties(self):
+		properties = []
+		properties.append(('Rules', str(self.rules)))
+		return properties
+	
 	def _format_call(self, clean=False):
 		call = ['make']
 		if clean:
@@ -35,26 +47,37 @@ class MakefileTool(Tool):
 				call.append(option)
 			for rule in self.rules:
 				call.append(rule)
-			
 		return call
 	
 	def process(self, verbose=False):
-		FNULL = open(os.devnull, 'w')
+		logger.info('Building : ' + self.type + ':' + self.name)
 		cwd = os.getcwd()
-		logger.info('Entering test directory : ' + self.workspace)
 		if os.path.isdir(self.workspace):
+			logger.info('Entering test directory : ' + self.workspace)
 			os.chdir(self.workspace)
 			logger.info('Building : ' + self.type + ':' + self.name)
-			if verbose:
-				return_code = subprocess.call(self._format_call())
-			else:
-				return_code = subprocess.call(self._format_call(), stdout=FNULL, stderr=subprocess.STDOUT)
+			self.duration, out, err, returncode = self._call_command(self._format_call())
 			os.chdir(cwd)
-			if return_code != 0:
+			
+			if verbose:
+				for line in out.splitlines():
+					logger.info('[' + self.type + ']' + line)
+				for line in err.splitlines():
+					logger.info('[' + self.type + ']' + line)
+			
+			warnings = Reportable.parse_logs(out.splitlines(), ['Warning', 'warning', 'WARNING', 'Avertissement', 'avertissement', 'AVERTISSEMENT'], [])
+			for w in warnings:
+				self.warnings.append(w.replace(w.split()[-1], ''))
+			
+			if returncode != 0:
+				self.status = Processible.STATUS['failure']
+				errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'], [])
+				for e in errors:
+					self.errors.append(e.replace(e.split()[-1], ''))
 				logger.error('Build failed : ' + self.type + ':' + self.name)
-				return False
-			self.steps[0]['status'] = Tool.STATUS['success']
-			return True
+			else:
+				self.status = Processible.STATUS['success']
+			return returncode == 0
 		logger.error('Unknown directory : ' + self.workspace)
 		return False
 		

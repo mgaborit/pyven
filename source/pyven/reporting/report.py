@@ -63,7 +63,7 @@ class Report(object):
 		for warning in step.warnings:
 			if displayed_warnings < self.nb_lines - displayed_errors:
 				html_str += self._write_warning(warning)
-				displayed += 1
+				displayed_warnings += 1
 			nb_warnings += 1
 		if nb_warnings > displayed_warnings:
 			html_str += self._write_warning(str(nb_warnings - displayed_warnings) + ' more warnings...')

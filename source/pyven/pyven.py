@@ -167,7 +167,7 @@ class Pyven:
 		return checked
 		
 	@_step
-	def configure(self, arg=None):
+	def _configure(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP CONFIGURE : STARTING')
 		if Pyven.WORKSPACE.is_available():
@@ -183,10 +183,13 @@ class Pyven:
 		self.objects['unit_tests'] = self._check_unit_tests(self.objects['unit_tests'])
 		self.objects['integration_tests'] = self._check_integration_tests(self.objects['integration_tests'], self.objects['packages'])
 		logger.info('STEP CONFIGURE : SUCCESSFUL')
+		
+	def configure(self, arg=None):
+		return self._configure(arg)
 	
 # ============================================================================================================		
 
-	def _build(self, scope):
+	def __build(self, scope):
 		if scope == 'preprocessors':
 			sub_step = ('preprocessing', 'Preprocessing')
 		elif scope == 'builders':
@@ -206,13 +209,11 @@ class Pyven:
 		logger.info(sub_step[1] + ' completed')
 	
 	@_step	
-	def build(self, arg=None):
-		self.configure()
-	
+	def _build(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP BUILD : STARTING')
-		self._build('preprocessors')
-		self._build('builders')
+		self.__build('preprocessors')
+		self.__build('builders')
 		ok = True
 		for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
 			if not os.path.isfile(artifact.file):
@@ -224,10 +225,14 @@ class Pyven:
 			Pyven.WORKSPACE.publish(artifact, artifact.file)
 		logger.info('STEP BUILD : SUCCESSFUL')
 		
+	def build(self, arg=None):
+		if self.configure():
+			return self._build(arg)
+			
 # ============================================================================================================		
 
 	@staticmethod
-	def _test(tests, verbose=False):
+	def __test(tests, verbose=False):
 		ok = True
 		for test in tests:
 			tic = time.time()
@@ -239,24 +244,24 @@ class Pyven:
 		return ok
 
 	@_step
-	def test(self, arg=None):
-		self.build()
-		
+	def _test(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP TEST : STARTING')
 		if len(self.objects['unit_tests']) == 0:
 			logger.warning('No unit tests found')
 		else:
-			if not Pyven._test(self.objects['unit_tests'], self.verbose):
+			if not Pyven.__test(self.objects['unit_tests'], self.verbose):
 				raise PyvenException('Unit test failures found')
 		logger.info('STEP TEST : SUCCESSFUL')
 
+	def test(self, arg=None):
+		if self.build():
+			return self._test(arg)
+			
 # ============================================================================================================		
 
 	@_step
-	def package(self, arg=None):
-		self.test()
-		
+	def _package(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP PACKAGE : STARTING')
 		ok = True
@@ -279,27 +284,31 @@ class Pyven:
 			raise PyvenException('Some packages were not built')
 		logger.info('STEP PACKAGE : SUCCESSFUL')
 
+	def package(self, arg=None):
+		if self.test():
+			return self._package(arg)
+			
 # ============================================================================================================		
 
 	@_step
-	def verify(self, arg=None):
-		self.package()
-		
+	def _verify(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP VERIFY : STARTING')
 		if len(self.objects['integration_tests']) == 0:
 			logger.warning('No integration tests found')
 		else:
-			if not Pyven._test(self.objects['integration_tests'], self.verbose):
+			if not Pyven.__test(self.objects['integration_tests'], self.verbose):
 				raise PyvenException('Integration test failures found')
 		logger.info('STEP VERIFY : SUCCESSFUL')
 		
+	def verify(self, arg=None):
+		if self.package():
+			return self._verify(arg)
+			
 # ============================================================================================================		
 
 	@_step
-	def install(self, arg=None):
-		self.verify()
-		
+	def _install(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP INSTALL : STARTING')
 		for artifact in [a for a in self.objects['artifacts'].values() if a.publish]:
@@ -310,12 +319,14 @@ class Pyven:
 			logger.info('Repository ' + Pyven.LOCAL_REPO.name + ' --> Published package ' + package.format_name())
 		logger.info('STEP INSTALL : SUCCESSFUL')
 		
+	def install(self, arg=None):
+		if self.verify():
+			return self._install(arg)
+			
 # ============================================================================================================		
 
 	@_step
-	def deploy(self, repo=None):
-		self.verify()
-		
+	def _deploy(self, repo=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP DEPLOY : STARTING')
 		for repo in self.objects['repositories'].values():
@@ -327,12 +338,14 @@ class Pyven:
 				logger.info('Repository ' + repo.name + ' --> Published package ' + package.format_name())
 		logger.info('STEP DEPLOY : SUCCESSFUL')
 		
+	def deploy(self, arg=None):
+		if self.verify():
+			return self._deploy(arg)
+			
 # ============================================================================================================		
 
 	@_step
-	def deliver(self, path):
-		self.install()
-		
+	def _deliver(self, path):
 		Pyven._log_step_delimiter()
 		logger.info('STEP DELIVER : STARTING')
 		logger.info('Delivering to directory ' + path)
@@ -341,12 +354,14 @@ class Pyven:
 			logger.info('Delivered package : ' + package.format_name())
 		logger.info('STEP DELIVER : SUCCESSFUL')
 		
+	def deliver(self, arg=None):
+		if self.install():
+			return self._deliver(arg)
+			
 # ============================================================================================================		
 
 	@_step
-	def clean(self, verbose=False):
-		self.configure()
-		
+	def _clean(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP CLEAN : STARTING')
 		build_ok = True
@@ -361,12 +376,14 @@ class Pyven:
 			raise PyvenException('Cleaning errors found')
 		logger.info('STEP CLEAN : SUCCESSFUL')
 	
+	def clean(self, arg=None):
+		if self.configure():
+			return self._clean(arg)
+			
 # ============================================================================================================		
 
 	@_step
-	def retrieve(self, arg=None):
-		self.configure()
-		
+	def _retrieve(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP RETRIEVE : STARTING')
 		for artifact in [a for a in self.objects['artifacts'].values() if a.to_retrieve]:
@@ -384,3 +401,8 @@ class Pyven:
 				logger.error('Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
 							'Unable to retrieve artifact --> ' + artifact.format_name())
 		logger.info('STEP RETRIEVE : SUCCESSFUL')
+
+	def retrieve(self, arg=None):
+		if self.configure():
+			return self._retrieve(arg)
+			
