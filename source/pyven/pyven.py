@@ -104,6 +104,8 @@ class Pyven:
 			else:
 				checked[artifact.format_name()] = artifact
 				logger.info('Artifact added --> ' + artifact.format_name())
+				if not artifact.publish:
+					logger.info('Artifact ' + artifact.format_name() + ' --> publishment disabled')
 		return checked
 		
 	@staticmethod
@@ -121,6 +123,8 @@ class Pyven:
 						logger.info('Package ' + package['package'].format_name() + ' : Artifact added --> ' + item)
 				checked[package['package'].format_name()] = package['package']
 				logger.info('Package added --> ' + package['package'].format_name())
+				if not package['package'].publish:
+					logger.info('Package ' + package['package'].format_name() + ' --> publishment disabled')
 		return checked
 		
 	@staticmethod
@@ -261,6 +265,7 @@ class Pyven:
 			for artifact in [a for a in package.items if a.to_retrieve]:
 				if self.objects['repositories'][artifact.repo].is_available():
 					self.objects['repositories'][artifact.repo].retrieve(artifact, Pyven.WORKSPACE)
+					logger.info('Repository ' + artifact.repo + ' --> Retrieved artifact ' + artifact.format_name())
 				else:
 					logger.error('Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
 								'Unable to retrieve artifact --> ' + artifact.format_name(),\
@@ -297,12 +302,12 @@ class Pyven:
 		
 		Pyven._log_step_delimiter()
 		logger.info('STEP INSTALL : STARTING')
-		for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
+		for artifact in [a for a in self.objects['artifacts'].values() if a.publish]:
 			self.LOCAL_REPO.publish(artifact, Pyven.WORKSPACE)
-			logger.info('Published artifact to ' + Pyven.LOCAL_REPO.name + ' repository : ' + artifact.format_name())
-		for package in [p for p in self.objects['packages'].values() if not p.to_retrieve]:
+			logger.info('Repository ' + Pyven.LOCAL_REPO.name + ' --> Published artifact ' + artifact.format_name())
+		for package in [p for p in self.objects['packages'].values() if p.publish]:
 			self.LOCAL_REPO.publish(package, Pyven.WORKSPACE)
-			logger.info('Published package to ' + Pyven.LOCAL_REPO.name + ' repository : ' + artifact.format_name())
+			logger.info('Repository ' + Pyven.LOCAL_REPO.name + ' --> Published package ' + package.format_name())
 		logger.info('STEP INSTALL : SUCCESSFUL')
 		
 # ============================================================================================================		
@@ -314,12 +319,12 @@ class Pyven:
 		Pyven._log_step_delimiter()
 		logger.info('STEP DEPLOY : STARTING')
 		for repo in self.objects['repositories'].values():
-			for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
+			for artifact in [a for a in self.objects['artifacts'].values() if a.publish]:
 				repo.publish(artifact, Pyven.WORKSPACE)
-				logger.info('Published artifact to ' + repo.name + ' repository : ' + artifact.format_name())
-			for package in [p for p in self.objects['packages'].values() if not p.to_retrieve]:
+				logger.info('Repository ' + repo.name + ' --> Published artifact ' + artifact.format_name())
+			for package in [p for p in self.objects['packages'].values() if p.publish]:
 				repo.publish(package, Pyven.WORKSPACE)
-				logger.info('Published package to ' + repo.name + ' repository : ' + package.format_name())
+				logger.info('Repository ' + repo.name + ' --> Published package ' + package.format_name())
 		logger.info('STEP DEPLOY : SUCCESSFUL')
 		
 # ============================================================================================================		

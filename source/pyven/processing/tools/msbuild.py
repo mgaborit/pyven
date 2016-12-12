@@ -22,10 +22,10 @@ class MSBuildTool(Tool):
 			logger.warning('MSBuild will be called during preprocessing but not build')
 		
 	def report_summary(self):
-		return ['MSBuild', self.project, self.configuration, self.architecture]
+		return ['MSBuild', os.path.basename(self.project), self.configuration, self.architecture]
 
 	def report_identifiers(self):
-		return ['MSBuild', self.project]
+		return ['MSBuild', os.path.basename(self.project)]
 	
 	def report_properties(self):
 		properties = []
