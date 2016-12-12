@@ -26,6 +26,16 @@ class Item(object):
 			raise PyvenException('Missing artifact or package version')
 		self.repo = node.get('repo')
 		self.to_retrieve = self.repo is not None
+		if self.to_retrieve:
+			self.publish = False
+		else:
+			publish = node.get('publish')
+			if publish is None or publish == 'true':
+				self.publish = True
+			elif publish == 'false':
+				self.publish = False
+			else:
+				raise PyvenException('Invalid value for "publish" attribute')
 	
 	def format_name(self, separator=':'):
 		return self.company + separator + self.name + separator + self.config + separator + self.version
