@@ -36,6 +36,7 @@ class MakefileTool(Tool):
 	def report_properties(self):
 		properties = []
 		properties.append(('Rules', str(self.rules)))
+		properties.append(('Duration', str(self.duration) + ' seconds'))
 		return properties
 	
 	def _format_call(self, clean=False):
