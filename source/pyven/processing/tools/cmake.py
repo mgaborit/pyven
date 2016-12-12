@@ -1,5 +1,6 @@
 import subprocess, os, logging, shutil, time
 
+import pyven.constants
 from pyven.exceptions.exception import PyvenException
 
 from pyven.processing.processible import Processible
@@ -33,14 +34,19 @@ class CMakeTool(Tool):
 		return properties
 	
 	def _format_call(self):
-		call = [self.type, '-H.', '-B'+self.output_path, '-G'+self.generator+'']
+		call = [self.type, '-H.', '-B'+self.output_path, '-G']
+		if pyven.constants.PLATFORM == 'windows':
+			call.append(self.generator)
+		elif pyven.constants.PLATFORM == 'linux':
+			call.append('"'+self.generator+'"')
 		for definition in self.definitions:
 			call.append('-D'+definition)
+		if pyven.constants.PLATFORM == 'linux':
+			call = [' '.join(call)]
 		return call
 	
 	def process(self, verbose=False):
 		logger.info('Preprocessing : ' + self.type + ':' + self.name)
-		
 		self.duration, out, err, returncode = self._call_command(self._format_call())
 		
 		if verbose:

@@ -69,7 +69,7 @@ class PymParser(object):
 				for project in descendant.xpath('projects/project'):
 					objects.append(Factory.create('builder', descendant, project.text))
 			else:
-				objects.append('builder', Factory.create(descendant))
+				objects.append(Factory.create('builder', descendant))
 		return objects
 	
 	def _parse_packages(self, node, query):
