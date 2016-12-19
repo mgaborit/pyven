@@ -355,7 +355,7 @@ class Pyven:
 		logger.info('STEP DELIVER : SUCCESSFUL')
 		
 	def deliver(self, arg=None):
-		if self.install():
+		if self.configure():
 			return self._deliver(arg)
 			
 # ============================================================================================================		
