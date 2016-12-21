@@ -27,47 +27,52 @@ def main(args):
 	project = Pyven(args.step, pyven.constants.VERSION, args.verbose)
 	report = Report(project)
 	try:
+		ok = True
 		if project.step != 'deliver' and args.path is not None:
 			parser.error('Too many arguments provided')
 	
 		if project.step == 'configure':
-			project.configure()
+			ok = project.configure()
 	
 		if project.step == 'build':
-			project.build()
+			ok = project.build()
 			report.write()
 	
 		if project.step == 'test':
-			project.test()
+			ok = project.test()
 			report.write()
 	
 		if project.step == 'package':
-			project.package()
+			ok = project.package()
 			report.write()
 	
 		if project.step == 'verify':
-			project.verify()
+			ok = project.verify()
 			report.write()
 	
 		if project.step == 'install':
-			project.install()
+			ok = project.install()
 			report.write()
 	
 		if project.step == 'deploy':
-			project.deploy()
+			ok = project.deploy()
 			report.write()
 	
 		if project.step == 'deliver':
 			if args.path is not None:
-				project.deliver(args.path)
+				ok = project.deliver(args.path)
 			else:
 				parser.error('Missing path to delivery directory')
+				ok = False
 	
 		if project.step == 'clean':
-			project.clean()
+			ok = project.clean()
 	
 		if project.step == 'retrieve':
-			project.retrieve()
+			ok = project.retrieve()
+	
+		if not ok:
+			raise PyvenException('Pyven build failed')
 	
 	except PyvenException as e:
 		for msg in e.args:
@@ -77,8 +82,8 @@ def main(args):
 		if args.display:
 			report.display()
 	
-	toc = time.time()
-	logger.info('Total process time : ' + str(round(toc - tic, 3)) + ' seconds')
+		toc = time.time()
+		logger.info('Total process time : ' + str(round(toc - tic, 3)) + ' seconds')
 	
 if __name__ == '__main__':
 	main(sys.argv)
