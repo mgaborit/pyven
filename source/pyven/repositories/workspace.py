@@ -31,5 +31,5 @@ class Workspace(DirectoryRepo):
 		if not os.path.isdir(dst_dir):
 			os.makedirs(dst_dir)
 		dst_file = os.path.join(dst_dir, item.basename())
-		shutil.copy(src_file, dst_file)
+		shutil.copy2(src_file, dst_file)
 			
