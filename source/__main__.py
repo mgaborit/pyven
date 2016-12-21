@@ -35,21 +35,27 @@ def main(args):
 	
 		if project.step == 'build':
 			project.build()
+			report.write()
 	
 		if project.step == 'test':
 			project.test()
+			report.write()
 	
 		if project.step == 'package':
 			project.package()
+			report.write()
 	
 		if project.step == 'verify':
 			project.verify()
+			report.write()
 	
 		if project.step == 'install':
 			project.install()
+			report.write()
 	
 		if project.step == 'deploy':
 			project.deploy()
+			report.write()
 	
 		if project.step == 'deliver':
 			if args.path is not None:
@@ -68,7 +74,6 @@ def main(args):
 			logger.error(msg)
 		sys.exit(1)
 	finally:
-		report.write()
 		if args.display:
 			report.display()
 	

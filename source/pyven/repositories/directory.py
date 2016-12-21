@@ -29,7 +29,7 @@ class DirectoryRepo(Repository):
 			os.makedirs(dst_dir)
 		src_file = os.path.join(src_dir, item.basename())
 		dst_file = os.path.join(dst_dir, item.basename())
-		shutil.copy(src_file, dst_file)
+		shutil.copy2(src_file, dst_file)
 		
 	def publish(self, item, source):
 		src_file = os.path.join(item.location(source.url), item.basename())
@@ -39,5 +39,5 @@ class DirectoryRepo(Repository):
 		if not os.path.isdir(dst_dir):
 			os.makedirs(dst_dir)
 		dst_file = os.path.join(dst_dir, item.basename())
-		shutil.copy(src_file, dst_file)
+		shutil.copy2(src_file, dst_file)
 			
