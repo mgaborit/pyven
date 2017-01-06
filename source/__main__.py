@@ -34,6 +34,9 @@ def main(args):
 		if project.step == 'configure':
 			ok = project.configure()
 	
+		if project.step == 'aggregate' and not args.display:
+			report.aggregate()
+			
 		if project.step == 'build':
 			ok = project.build()
 			report.write()
@@ -80,6 +83,7 @@ def main(args):
 		sys.exit(1)
 	finally:
 		if args.display:
+			report.aggregate()
 			report.display()
 	
 		toc = time.time()
