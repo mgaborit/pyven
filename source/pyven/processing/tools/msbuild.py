@@ -75,23 +75,26 @@ class MSBuildTool(Tool):
 			self.status = Processible.STATUS['failure']
 			errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error', 'Erreur', 'erreur'], ['0 Erreur(s)', '0 Error(s)'])
 			for e in errors:
-				self.errors.append(e.replace(e.split()[-1], ''))
+				self.errors.append([e[0].replace(e[0].split()[-1], '')])
 			logger.error('Build failed : ' + self.type + ':' + self.name)
 		else:
 			self.status = Processible.STATUS['success']
 		return returncode == 0
 
 	def clean(self, verbose=False):
-		FNULL = open(os.devnull, 'w')
 		logger.info('Cleaning : ' + self.type + ':' + self.name)
-		project = self.project
-		return_code = 0
-		if os.path.isfile(project):
+		if os.path.isfile(self.project):
+			self.duration, out, err, returncode = self._call_command(self._format_call(self.project, clean=True))
+			
 			if verbose:
-				return_code = subprocess.call(self._format_call(project, clean=True))
-			else:
-				return_code = subprocess.call(self._format_call(project, clean=True), stdout=FNULL, stderr=subprocess.STDOUT)
-		if return_code != 0:
-			logger.error('Clean failed : ' + self.type + ':' + self.name)
-		return return_code == 0
+				for line in out.splitlines():
+					logger.info('[' + self.type + ']' + line)
+				for line in err.splitlines():
+					logger.info('[' + self.type + ']' + line)
+					
+			if returncode != 0:
+				logger.error('Clean failed : ' + self.type + ':' + self.name)
+			return returncode == 0
+		logger.info('No project to be cleaned : ' + self.project)
+		return True
 		

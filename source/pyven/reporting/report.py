@@ -1,4 +1,4 @@
-import os, webbrowser, logging
+import os, webbrowser, logging, codecs
 
 from pyven.exceptions.exception import PyvenException
 from pyven.pyven import Pyven
@@ -20,13 +20,13 @@ class Report(object):
 	
 	def _write_error(self, error):
 		html_str = '<div class="' + self.style.error['div'] + '">'
-		html_str += '<span class="' + self.style.error['error'] + '">' + error + '</span>'
+		html_str += '<span class="' + self.style.error['error'] + '"><p>' + '</p><p>'.join(error) + '</p></span>'
 		html_str += '</div>'
 		return html_str
 	
 	def _write_warning(self, warning):
 		html_str = '<div class="' + self.style.warning['div'] + '">'
-		html_str += '<span class="' + self.style.warning['warning'] + '">' + warning + '</span>'
+		html_str += '<span class="' + self.style.warning['warning'] + '"><p>' + '</p><p>'.join(warning) + '</p></span>'
 		html_str += '</div>'
 		return html_str
 	
@@ -94,7 +94,7 @@ class Report(object):
 		if status == 'FAILURE':
 			for step in self.pyven.reportables():
 				if step.report_status() != 'SUCCESS':
-					html_str += self._write_error(' '.join(step.report_summary()) + ' <a href="#' + pyven.constants.PLATFORM + '_' + '_'.join(step.report_identifiers()) + '">Details</a>')
+					html_str += self._write_error([' '.join(step.report_summary()) + ' <a href="#' + pyven.constants.PLATFORM + '_' + '_'.join(step.report_identifiers()) + '">Details</a>'])
 		else:
 			html_str += '<span class="' + self.style.status['success'] + '">SUCCESS</span>'
 		html_str += '</div>'
@@ -105,7 +105,7 @@ class Report(object):
 		report_dir = os.path.join(Pyven.WORKSPACE.url, 'report')
 		if not os.path.isdir(report_dir):
 			os.makedirs(report_dir)
-		html_file = open(os.path.join(report_dir, self.platform_report),"w")
+		html_file = codecs.open(os.path.join(report_dir, self.platform_report), 'w', 'utf-8')
 		html_file.write(html_str)
 		html_file.close()
 	
@@ -121,7 +121,7 @@ class Report(object):
 				if os.path.splitext(fragment)[1] == '.html' and os.path.splitext(fragment)[0] != 'index':
 					html_str += '<div class="' + self.style.step['div'] + '">'
 					html_str += '<h2>'+os.path.splitext(fragment)[0]+'</h2>'
-					f = open(os.path.join(report_dir, fragment), 'r')
+					f = codecs.open(os.path.join(report_dir, fragment), 'r', 'utf-8')
 					html_str += f.read()
 					f.close()
 					html_str += '</div>'
@@ -129,7 +129,7 @@ class Report(object):
 			html_str += '</body>'
 			html_str += '</html>'
 			
-			html_file = open(os.path.join(report_dir, self.index),"w")
+			html_file = codecs.open(os.path.join(report_dir, self.index), 'w', 'utf-8')
 			html_file.write(html_str)
 			html_file.close()
 			logger.info('Report generated')

@@ -1,3 +1,5 @@
+from lxml import etree
+
 class Reportable(object):
 	
 	def __init__(self):
@@ -16,11 +18,32 @@ class Reportable(object):
 						if exception in line:
 							found = True
 					if not found:
-						result.append(line)
+						result.append([line])
 						found = True
 				else:
 					i += 1
 		return result
+
+	@staticmethod
+	def _parse_xml_cppunit(node):
+		result = []
+		query = '/TestRun/FailedTests/FailedTest'
+		for failed_test in node.xpath(query):
+			msg = ['Test ' + failed_test.find('Name').text,\
+					'Failure type : ' + failed_test.find('FailureType').text,\
+					'Message : ' + failed_test.find('Message').text]
+			result.append(msg)
+		return result
+
+	@staticmethod
+	def parse_xml(format, file):
+		result = []
+		tree = etree.parse(file)
+		doc_element = tree.getroot()
+		if format == 'cppunit':
+			result = Reportable._parse_xml_cppunit(doc_element)
+		return result
+			
 
 	def report_summary(self):
 		raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "report_summary"')
