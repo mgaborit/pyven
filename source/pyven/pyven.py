@@ -47,11 +47,13 @@ class Pyven:
 			reportables.extend(self.objects['preprocessors'])
 			reportables.extend(self.objects['builders'])
 			reportables.extend(self.objects['unit_tests'])
+			reportables.extend(self.objects['valgrind_tests'])
 			reportables.extend(self.objects['integration_tests'])
 		elif self.step in ['test', 'package']:
 			reportables.extend(self.objects['preprocessors'])
 			reportables.extend(self.objects['builders'])
 			reportables.extend(self.objects['unit_tests'])
+			reportables.extend(self.objects['valgrind_tests'])
 		elif self.step in ['build']:
 			reportables.extend(self.objects['preprocessors'])
 			reportables.extend(self.objects['builders'])
@@ -152,6 +154,14 @@ class Pyven:
 		return checked
 		
 	@staticmethod
+	def _check_valgrind_tests(valgrind_tests):
+		checked = []
+		for valgrind_test in valgrind_tests:
+			checked.append(valgrind_test)
+			logger.info('Valgrind test added --> ' + os.path.join(valgrind_test.path, valgrind_test.filename))
+		return checked
+		
+	@staticmethod
 	def _check_integration_tests(integration_tests, packages):
 		checked = []
 		for integration_test in integration_tests:
@@ -181,6 +191,7 @@ class Pyven:
 		self.objects['preprocessors'] = self._check_preprocessors(self.objects['preprocessors'])
 		self.objects['builders'] = self._check_builders(self.objects['builders'])
 		self.objects['unit_tests'] = self._check_unit_tests(self.objects['unit_tests'])
+		self.objects['valgrind_tests'] = self._check_valgrind_tests(self.objects['valgrind_tests'])
 		self.objects['integration_tests'] = self._check_integration_tests(self.objects['integration_tests'], self.objects['packages'])
 		logger.info('STEP CONFIGURE : SUCCESSFUL')
 		
@@ -252,6 +263,8 @@ class Pyven:
 		else:
 			if not Pyven.__test(self.objects['unit_tests'], self.verbose):
 				raise PyvenException('Unit test failures found')
+			if not Pyven.__test(self.objects['valgrind_tests'], self.verbose):
+				raise PyvenException('Valgrind test failures found')
 		logger.info('STEP TEST : SUCCESSFUL')
 
 	def test(self, arg=None):

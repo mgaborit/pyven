@@ -9,7 +9,7 @@ logger = logging.getLogger('global')
 
 # pym.xml 'test' node
 class Test(Processible, Reportable):
-	AVAILABLE_TYPES = ['unit', 'integration']
+	AVAILABLE_TYPES = ['unit', 'integration', 'valgrind']
 
 	def __init__(self, node):
 		Processible.__init__(self)
@@ -36,14 +36,18 @@ class Test(Processible, Reportable):
 		properties.append(('Duration', str(self.duration) + ' seconds'))
 		return properties
 	
+	def _format_report_name(self):
+		return self.filename+'-'+self.type+'.xml'
+	
 	def _format_call(self):
 		if os.name == 'nt':
 			call = [self.filename]
+			call.append(self._format_report_name())
 		elif os.name == 'posix':
-			call = ['./' + self.filename]
-		call.append(self.filename+'.xml')
+			call = ['./'+self.filename+' '+self._format_report_name()]
 		for argument in self.arguments:
 			call.append(argument)
+		logger.info(call)
 		return call
 
 	def _copy_resources(self, repo=None):
@@ -72,10 +76,10 @@ class Test(Processible, Reportable):
 				
 			if returncode != 0:
 				self.status = Processible.STATUS['failure']
-				if os.path.isfile(os.path.join(self.path, self.filename+'.xml')):
-					self.errors = Reportable.parse_xml(self.format, os.path.join(self.path, self.filename+'.xml'))
+				if os.path.isfile(os.path.join(self.path, self._format_report_name())):
+					self.errors = Reportable.parse_xml(self.format, os.path.join(self.path, self._format_report_name()))
 				else:
-					logger.error('Could not find XML test report')
+					logger.error('Could not find XML test report = '+os.path.join(self.path, self._format_report_name()))
 				logger.error('Test failed : ' + self.filename)
 			else:
 				self.status = Processible.STATUS['success']

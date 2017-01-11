@@ -24,6 +24,7 @@ def main():
 	zf.write('pyven/processing/tests/__init__.py')
 	zf.write('pyven/processing/tests/test.py')
 	zf.write('pyven/processing/tests/unit.py')
+	zf.write('pyven/processing/tests/valgrind.py')
 	zf.write('pyven/processing/tests/integration.py')
 	
 	zf.write('pyven/repositories/__init__.py')

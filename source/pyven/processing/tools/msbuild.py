@@ -69,7 +69,7 @@ class MSBuildTool(Tool):
 		
 		warnings = Reportable.parse_logs(out.splitlines(), ['Warning', 'warning', 'Avertissement', 'avertissement'], ['0 Avertissement(s)', '0 Warning(s)'])
 		for w in warnings:
-			self.warnings.append(w.replace(w.split()[-1], ''))
+			self.warnings.append([w[0].replace(w[0].split()[-1], '')])
 		
 		if returncode != 0:
 			self.status = Processible.STATUS['failure']
