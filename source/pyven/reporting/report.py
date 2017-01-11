@@ -63,7 +63,7 @@ class Report(object):
 					displayed_errors += 1
 				nb_errors += 1
 			if nb_errors > displayed_errors:
-				html_str += self._write_error(str(nb_errors - displayed_errors) + ' more errors...')
+				html_str += self._write_error([str(nb_errors - displayed_errors) + ' more errors...'])
 			displayed_warnings = 0
 			nb_warnings = 0
 			for warning in step.warnings:
@@ -72,7 +72,7 @@ class Report(object):
 					displayed_warnings += 1
 				nb_warnings += 1
 			if nb_warnings > displayed_warnings:
-				html_str += self._write_warning(str(nb_warnings - displayed_warnings) + ' more warnings...')
+				html_str += self._write_warning([str(nb_warnings - displayed_warnings) + ' more warnings...'])
 		finally:
 			html_str += '</div></a>'
 		return html_str

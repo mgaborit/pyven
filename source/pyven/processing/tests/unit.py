@@ -12,5 +12,5 @@ class UnitTest(Test):
 		super(UnitTest,self).__init__(node)
 
 	def report_identifiers(self):
-		return ['Unit', 'test', self.filename]
+		return ['Unit', 'test', os.path.join(self.path, self.filename)]
 	

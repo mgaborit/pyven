@@ -4,6 +4,7 @@ from pyven.repositories.workspace import Workspace
 from pyven.items.artifact import Artifact
 from pyven.items.package import Package
 from pyven.processing.tests.unit import UnitTest
+from pyven.processing.tests.valgrind import ValgrindTest
 from pyven.processing.tests.integration import IntegrationTest
 from pyven.processing.tools.tool import Tool
 from pyven.processing.tools.cmake import CMakeTool
@@ -11,7 +12,7 @@ from pyven.processing.tools.msbuild import MSBuildTool
 from pyven.processing.tools.makefile import MakefileTool
 
 class Factory:
-	OBJECT_TYPES = ['repository', 'artifact', 'package', 'preprocessor', 'builder', 'unit_test', 'integration_test']
+	OBJECT_TYPES = ['repository', 'artifact', 'package', 'preprocessor', 'builder', 'unit_test', 'integration_test', 'valgrind_test']
 	
 	@staticmethod
 	def _create_tool(node, project=None):
@@ -56,6 +57,9 @@ class Factory:
 		elif type == Factory.OBJECT_TYPES[6] and project is None:
 			return IntegrationTest(node)
 			
+		elif type == Factory.OBJECT_TYPES[7] and project is None:
+			return ValgrindTest(node)
+		
 	@staticmethod
 	def create_repo(name, type, url):
 		if type == 'workspace':

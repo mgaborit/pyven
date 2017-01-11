@@ -36,12 +36,19 @@ class Reportable(object):
 		return result
 
 	@staticmethod
+	def _parse_xml_valgrind(node):
+		result = []
+		return result
+
+	@staticmethod
 	def parse_xml(format, file):
 		result = []
 		tree = etree.parse(file)
 		doc_element = tree.getroot()
 		if format == 'cppunit':
 			result = Reportable._parse_xml_cppunit(doc_element)
+		if format == 'valgrind':
+			result = Reportable._parse_xml_valgrind(doc_element)
 		return result
 			
 

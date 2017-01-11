@@ -67,10 +67,12 @@ class MakefileTool(Tool):
 					logger.info('[' + self.type + ']' + line)
 			
 			warnings = Reportable.parse_logs(out.splitlines(), ['Warning', 'warning', 'WARNING', 'Avertissement', 'avertissement', 'AVERTISSEMENT'], [])
+			warnings.extend(Reportable.parse_logs(err.splitlines(), ['Warning', 'warning', 'WARNING', 'Avertissement', 'avertissement', 'AVERTISSEMENT'], []))
 			
 			if returncode != 0:
 				self.status = Processible.STATUS['failure']
 				errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'], [])
+				errors.extend(Reportable.parse_logs(err.splitlines(), ['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'], []))
 				logger.error('Build failed : ' + self.type + ':' + self.name)
 			else:
 				self.status = Processible.STATUS['success']
@@ -83,19 +85,20 @@ class MakefileTool(Tool):
 		logger.info('Entering directory : ' + self.workspace)
 		if os.path.isdir(self.workspace):
 			os.chdir(self.workspace)
-			logger.info('Cleaning : ' + self.type + ':' + self.name)
-			self.duration, out, err, returncode = self._call_command(self._format_call(self.project, clean=True))
-			os.chdir(cwd)
-			
-			if verbose:
-				for line in out.splitlines():
-					logger.info('[' + self.type + ']' + line)
-				for line in err.splitlines():
-					logger.info('[' + self.type + ']' + line)
-					
-			if returncode != 0:
-				logger.error('Clean failed : ' + self.type + ':' + self.name)
-			return return_code == 0
-		logger.info('No makefile workspace : ' + self.workspace)
+			if os.path.isfile('Makefile') or os.path.isfile('makefile'):
+				logger.info('Cleaning : ' + self.type + ':' + self.name)
+				self.duration, out, err, returncode = self._call_command(self._format_call(clean=True))
+				os.chdir(cwd)
+				
+				if verbose:
+					for line in out.splitlines():
+						logger.info('[' + self.type + ']' + line)
+					for line in err.splitlines():
+						logger.info('[' + self.type + ']' + line)
+						
+				if returncode != 0:
+					logger.error('Clean failed : ' + self.type + ':' + self.name)
+				return returncode == 0
+		logger.info('No makefile found')
 		return True
 		

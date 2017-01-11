@@ -44,6 +44,9 @@ class PymParser(object):
 		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="unit"]'
 		unit_tests = self._parse(tree, 'unit_test', query)
 		
+		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="valgrind"]'
+		valgrind_tests = self._parse(tree, 'valgrind_test', query)
+		
 		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="integration"]'
 		integration_tests = self._parse_integration_tests(tree, query)
 		
@@ -54,6 +57,7 @@ class PymParser(object):
 				'preprocessors' : preprocessors,\
 				'builders' : builders,\
 				'unit_tests' : unit_tests,\
+				'valgrind_tests' : valgrind_tests,\
 				'integration_tests' : integration_tests}
 	
 	def _parse(self, node, type, query):
