@@ -23,6 +23,7 @@ class Test(Processible, Reportable):
 		self.arguments = []
 		for argument in node.xpath('arguments/argument'):
 			self.arguments.append(argument.text)
+		self.format = 'cppunit'
 	
 	def report_summary(self):
 		return self.report_identifiers()
@@ -40,6 +41,7 @@ class Test(Processible, Reportable):
 			call = [self.filename]
 		elif os.name == 'posix':
 			call = ['./' + self.filename]
+		call.append(self.filename+'.xml')
 		for argument in self.arguments:
 			call.append(argument)
 		return call
@@ -70,7 +72,10 @@ class Test(Processible, Reportable):
 				
 			if returncode != 0:
 				self.status = Processible.STATUS['failure']
-				self.errors = Reportable.parse_logs(out.splitlines(), ['assertion', 'error'], [])
+				if os.path.isfile(os.path.join(self.path, self.filename+'.xml')):
+					self.errors = Reportable.parse_xml(self.format, os.path.join(self.path, self.filename+'.xml'))
+				else:
+					logger.error('Could not find XML test report')
 				logger.error('Test failed : ' + self.filename)
 			else:
 				self.status = Processible.STATUS['success']

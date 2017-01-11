@@ -79,22 +79,23 @@ class MakefileTool(Tool):
 		return False
 		
 	def clean(self, verbose=False):
-		FNULL = open(os.devnull, 'w')
 		cwd = os.getcwd()
 		logger.info('Entering directory : ' + self.workspace)
 		if os.path.isdir(self.workspace):
 			os.chdir(self.workspace)
 			logger.info('Cleaning : ' + self.type + ':' + self.name)
-			if verbose:
-				return_code = subprocess.call(self._format_call(clean=True))
-			else:
-				return_code = subprocess.call(self._format_call(clean=True), stdout=FNULL, stderr=subprocess.STDOUT)
-			if return_code != 0:
-				logger.error('Clean failed : ' + self.type + ':' + self.name)
-				s.chdir(cwd)
-				return False
+			self.duration, out, err, returncode = self._call_command(self._format_call(self.project, clean=True))
 			os.chdir(cwd)
-			return True
-		logger.error('Unknown directory : ' + self.workspace)
-		return False
+			
+			if verbose:
+				for line in out.splitlines():
+					logger.info('[' + self.type + ']' + line)
+				for line in err.splitlines():
+					logger.info('[' + self.type + ']' + line)
+					
+			if returncode != 0:
+				logger.error('Clean failed : ' + self.type + ':' + self.name)
+			return return_code == 0
+		logger.info('No makefile workspace : ' + self.workspace)
+		return True
 		
