@@ -55,6 +55,7 @@ class MSBuildTool(Tool):
 		for option in self.options:
 			call.append(option)
 			
+		logger.info(' '.join(call))
 		return call
 	
 	def process(self, verbose=False):

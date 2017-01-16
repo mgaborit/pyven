@@ -48,6 +48,7 @@ class MakefileTool(Tool):
 				call.append(option)
 			for rule in self.rules:
 				call.append(rule)
+		logger.info(' '.join(call))
 		return call
 	
 	def process(self, verbose=False):

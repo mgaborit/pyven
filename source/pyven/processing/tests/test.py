@@ -47,7 +47,7 @@ class Test(Processible, Reportable):
 			call = ['./'+self.filename+' '+self._format_report_name()]
 		for argument in self.arguments:
 			call.append(argument)
-		logger.info(call)
+		logger.info(' '.join(call))
 		return call
 
 	def _copy_resources(self, repo=None):
@@ -73,7 +73,7 @@ class Test(Processible, Reportable):
 					logger.info(line)
 				for line in err.splitlines():
 					logger.info(line)
-				
+			
 			if returncode != 0:
 				self.status = Processible.STATUS['failure']
 				if os.path.isfile(os.path.join(self.path, self._format_report_name())):

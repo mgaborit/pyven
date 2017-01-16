@@ -90,8 +90,8 @@ class Pyven:
 				if repo.name in checked.keys():
 					logger.error('Repository already added --> ' + repo.name + ' : ' + repo.url)
 				else:
+					checked[repo.name] = repo
 					if repo.is_available():
-						checked[repo.name] = repo
 						logger.info('Repository added --> ' + repo.name + ' : ' + repo.url)
 					else:
 						logger.warning('Repository not accessible --> ' + repo.name + ' : ' + repo.url)
@@ -284,8 +284,12 @@ class Pyven:
 				if self.objects['repositories'][artifact.repo].is_available():
 					self.objects['repositories'][artifact.repo].retrieve(artifact, Pyven.WORKSPACE)
 					logger.info('Repository ' + artifact.repo + ' --> Retrieved artifact ' + artifact.format_name())
+				elif Pyven.LOCAL_REPO.is_available():
+					logger.warning('Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url)
+					Pyven.LOCAL_REPO.retrieve(artifact, Pyven.WORKSPACE)
+					logger.warning('Local repository --> Retrieved artifact ' + artifact.format_name())
 				else:
-					logger.error('Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
+					logger.error('Local repository not accessible --> ' + Pyven.LOCAL_REPO.name + ' : ' + Pyven.LOCAL_REPO.url,\
 								'Unable to retrieve artifact --> ' + artifact.format_name(),\
 								'Unable to build package --> ' + package.format_name())
 					package_ok = False
