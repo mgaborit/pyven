@@ -402,17 +402,17 @@ class Pyven:
 		for artifact in [a for a in self.objects['artifacts'].values() if a.to_retrieve]:
 			if self.objects['repositories'][artifact.repo].is_available():
 				self.objects['repositories'][artifact.repo].retrieve(artifact, Pyven.WORKSPACE)
-				for package in self.objects['packages'].values():
-					for item in [i for i in package.items if i.to_retrieve]:
-						if artifact.format_name() == item.format_name():
-							for built_artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
-								dir = os.path.dirname(built_artifact.file)
-								if not os.path.isdir(dir):
-									os.makedirs(dir)
-								shutil.copy(os.path.join(artifact.location(Pyven.WORKSPACE), artifact.basename()), os.path.join(dir, artifact.basename()))
 			else:
 				logger.error('Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
 							'Unable to retrieve artifact --> ' + artifact.format_name())
+		for package in self.objects['packages'].values():
+			for item in [i for i in package.items if i.to_retrieve]:
+				for built_item in [i for i in package.items if not i.to_retrieve]:
+					dir = os.path.dirname(built_item.file)
+					if not os.path.isdir(dir):
+						os.makedirs(dir)
+					logger.info('Copying artifact ' + item.format_name() + ' to directory ' + dir)
+					shutil.copy(os.path.join(item.location(Pyven.WORKSPACE.url), item.basename()), os.path.join(dir, item.basename()))
 		logger.info('STEP RETRIEVE : SUCCESSFUL')
 
 	def retrieve(self, arg=None):
