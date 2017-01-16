@@ -43,6 +43,7 @@ class CMakeTool(Tool):
 			call.append('-D'+definition)
 		if pyven.constants.PLATFORM == 'linux':
 			call = [' '.join(call)]
+		logger.info(' '.join(call))
 		return call
 	
 	def process(self, verbose=False):
