@@ -84,8 +84,7 @@ class Report(object):
 		return html_str
 	
 	def _write_summary(self):
-		html_str = ''
-		html_str += '<div class="' + self.style.step['div'] + '">'
+		html_str = '<div class="' + self.style.step['div'] + '">'
 		html_str += '<h2>Summary</h2>'
 		status = 'SUCCESS'
 		for step in self.pyven.reportables():
@@ -109,6 +108,15 @@ class Report(object):
 		html_file.write(html_str)
 		html_file.close()
 	
+	def _write_platforms(self, platforms):
+		html_str = '<div class="' + self.style.step['div'] + '">'
+		html_str += '<h2>Platforms</h2>'
+		html_str += '<div class="' + self.style.step['properties']['div'] + '">'
+		for platform in platforms:
+			html_str += '<p class="' + self.style.step['properties']['property'] + '"><a href="#' + platform + '">' + platform + '</a><p>'
+		html_str += '</div></div>'
+		return html_str
+	
 	def aggregate(self):
 		logger.info('Aggregating build reports')
 		report_dir = os.path.join(Pyven.WORKSPACE.url, 'report')
@@ -117,14 +125,17 @@ class Report(object):
 			html_str += self._write_head()
 			html_str += '<body>'
 			html_str += '<h1>Build report</h1>'
+			platforms = [os.path.splitext(p)[0] for p in os.listdir(report_dir) if os.path.splitext(p)[1] == '.html' and os.path.splitext(p)[0] != 'index']
+			html_str += self._write_platforms(platforms)
 			for fragment in os.listdir(report_dir):
 				if os.path.splitext(fragment)[1] == '.html' and os.path.splitext(fragment)[0] != 'index':
+					html_str += '<a name="' + os.path.splitext(fragment)[0] + '">'
 					html_str += '<div class="' + self.style.step['div'] + '">'
 					html_str += '<h2>'+os.path.splitext(fragment)[0]+'</h2>'
 					f = codecs.open(os.path.join(report_dir, fragment), 'r', 'utf-8')
 					html_str += f.read()
 					f.close()
-					html_str += '</div>'
+					html_str += '</div></a>'
 					logger.info(os.path.splitext(fragment)[0]+' report added')
 			html_str += '</body>'
 			html_str += '</html>'
