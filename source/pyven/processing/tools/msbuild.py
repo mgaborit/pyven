@@ -58,7 +58,7 @@ class MSBuildTool(Tool):
 		logger.info(' '.join(call))
 		return call
 	
-	def process(self, verbose=False):
+	def process(self, verbose=False, warning_as_error=False):
 		logger.info('Building : ' + self.type + ':' + self.name)
 		self.duration, out, err, returncode = self._call_command(self._format_call(self.project))
 		
@@ -78,9 +78,12 @@ class MSBuildTool(Tool):
 			for e in errors:
 				self.errors.append([e[0].replace(e[0].split()[-1], '')])
 			logger.error('Build failed : ' + self.type + ':' + self.name)
+		elif warning_as_error and len(warnings) > 0:
+			self.status = Processible.STATUS['failure']
+			logger.error('Build failed : ' + self.type + ':' + self.name)
 		else:
 			self.status = Processible.STATUS['success']
-		return returncode == 0
+		return returncode == 0 and (not warning_as_error or len(warnings) == 0)
 
 	def clean(self, verbose=False):
 		logger.info('Cleaning : ' + self.type + ':' + self.name)

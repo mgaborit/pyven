@@ -46,7 +46,7 @@ class CMakeTool(Tool):
 		logger.info(' '.join(call))
 		return call
 	
-	def process(self, verbose=False):
+	def process(self, verbose=False, warning_as_error=False):
 		logger.info('Preprocessing : ' + self.type + ':' + self.name)
 		self.duration, out, err, returncode = self._call_command(self._format_call())
 		

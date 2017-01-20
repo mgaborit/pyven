@@ -29,7 +29,7 @@ class Pyven:
 	if not os.path.isdir(LOCAL_REPO.url):
 		os.makedirs(LOCAL_REPO.url)
 
-	def __init__(self, step, version, verbose=False, pym='pym.xml'):
+	def __init__(self, step, version, verbose=False, warning_as_error=False, pym='pym.xml'):
 		logger.info('Initializing Pyven project')
 		logger.info('Pyven set for '+pyven.constants.PLATFORM+' platform')
 		logger.info('Workspace set at : ' + Pyven.WORKSPACE.url)
@@ -37,6 +37,11 @@ class Pyven:
 		
 		self.step = step
 		self.verbose = verbose
+		if self.verbose:
+			logger.info('Verbose mode enabled')
+		self.warning_as_error = warning_as_error
+		if self.warning_as_error:
+			logger.info('Warnings will be considered as errors')
 		self.pym = pym
 		self.parser = PymParser(self.pym)
 		self.objects = {'preprocessors': [], 'builders': [], 'unit_tests': [], 'integration_tests': []}
@@ -210,7 +215,7 @@ class Pyven:
 		ok = True
 		for tool in self.objects[scope]:
 			tic = time.time()
-			if not tool.process(self.verbose):
+			if not tool.process(self.verbose, self.warning_as_error):
 				ok = False
 			else:
 				toc = time.time()

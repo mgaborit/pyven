@@ -51,7 +51,7 @@ class MakefileTool(Tool):
 		logger.info(' '.join(call))
 		return call
 	
-	def process(self, verbose=False):
+	def process(self, verbose=False, warning_as_error=False):
 		logger.info('Building : ' + self.type + ':' + self.name)
 		cwd = os.getcwd()
 		if os.path.isdir(self.workspace):
@@ -75,9 +75,12 @@ class MakefileTool(Tool):
 				errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'], [])
 				errors.extend(Reportable.parse_logs(err.splitlines(), ['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'], []))
 				logger.error('Build failed : ' + self.type + ':' + self.name)
+			elif warning_as_error and len(warnings) > 0:
+				self.status = Processible.STATUS['failure']
+				logger.error('Build failed : ' + self.type + ':' + self.name)
 			else:
 				self.status = Processible.STATUS['success']
-			return returncode == 0
+			return returncode == 0 and (not warning_as_error or len(warnings) == 0)
 		logger.error('Unknown directory : ' + self.workspace)
 		return False
 		
