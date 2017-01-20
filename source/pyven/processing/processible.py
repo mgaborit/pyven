@@ -8,7 +8,7 @@ class Processible(object):
 		self.status = Processible.STATUS['default']
 		self.duration = 0
 	
-	def process(self, mode, verbose=False):
+	def process(self, mode, verbose=False, warning_as_error=False):
 		raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "process"')
 	
 	def status(self):
