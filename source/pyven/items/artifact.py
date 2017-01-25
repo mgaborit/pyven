@@ -24,7 +24,7 @@ class Artifact(Item):
 			return os.path.basename(self.file)
 		raise PyvenException('Unknown artifact location : ' + self.format_name())
 	
-	def check(self):
+	def check(self, version_checking):
 		if pyven.constants.PLATFORM == 'windows' and not self.to_retrieve:
 			from win32api import GetFileVersionInfo, LOWORD, HIWORD
 			expected_version = self.version.split('.')
@@ -37,20 +37,30 @@ class Artifact(Item):
 				ls = info['FileVersionLS']
 				actual_version = [str(i) for i in [HIWORD(ms), LOWORD(ms), HIWORD(ls), LOWORD(ls)]]
 				if len(expected_version) > len(actual_version):
-					logger.error('Artifact version too short : ' + self.format_name())
-					logger.error('Expected version : ' + self.version)
-					logger.error('Found version    : ' + '.'.join(actual_version))
+					msg = ['Artifact version too short : ' + self.format_name(),\
+							'Expected version : ' + self.version,\
+							'Found version    : ' + '.'.join(actual_version)]
+					version_checking.errors.append(msg)
+					logger.error(msg[0])
+					logger.error(msg[1])
+					logger.error(msg[2])
 					return False
 				for idx, expected in enumerate(expected_version):
 					if actual_version[idx] != expected:
-						logger.error('Invalid artifact version : ' + self.format_name())
-						logger.error('Expected version : ' + self.version)
-						logger.error('Found version    : ' + '.'.join(actual_version))
+						msg = ['Invalid artifact version : ' + self.format_name(),\
+								'Expected version : ' + self.version,\
+								'Found version    : ' + '.'.join(actual_version)]
+						version_checking.errors.append(msg)
+						logger.error(msg[0])
+						logger.error(msg[1])
+						logger.error(msg[2])
 						return False
 				return True
 			except:
-				logger.error('Artifact version not found : ' + self.format_name())
-				logger.error('Expected version : ' + self.version)
+				msg = ['Artifact version not found : ' + self.format_name(), 'Expected version : ' + self.version]
+				version_checking.errors.append(msg)
+				logger.error(msg[0])
+				logger.error(msg[1])
 				return False
 		else:
 			return True

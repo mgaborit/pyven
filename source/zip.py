@@ -43,6 +43,7 @@ def main():
 	zf.write('pyven/utils/__init__.py')
 	zf.write('pyven/utils/factory.py')
 	zf.write('pyven/utils/pym_parser.py')
+	zf.write('pyven/utils/version_checking.py')
 
 if __name__ == '__main__':
 	main()
