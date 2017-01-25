@@ -40,8 +40,11 @@ class Report(object):
 		html_str += '</head>'
 		return html_str
 		
-	def _write_step(self, step):
-		html_str = '<a name="' + pyven.constants.PLATFORM + '_' + '_'.join(step.report_identifiers()) + '"><div class="stepDiv">'
+	def _write_ref(self, idx):
+		return pyven.constants.PLATFORM + '_' + str(idx)
+
+	def _write_step(self, step, idx):
+		html_str = '<a name="' + self._write_ref(idx) + '"><div class="stepDiv">'
 		try:
 			html_str += '<h2>' + ' '.join(step.report_identifiers()) + '</h2>'
 			html_str += '<div class="' + self.style.step['properties']['div'] + '">'
@@ -79,10 +82,12 @@ class Report(object):
 		
 	def _write_body(self):
 		html_str = self._write_summary()
+		count = 0
 		for step in self.pyven.reportables():
-			html_str += self._write_step(step)
+			html_str += self._write_step(step, count)
+			count += 1
 		return html_str
-	
+
 	def _write_summary(self):
 		html_str = '<div class="' + self.style.step['div'] + '">'
 		html_str += '<h2>Summary</h2>'
@@ -91,9 +96,11 @@ class Report(object):
 			if step.report_status() != 'SUCCESS':
 				status = 'FAILURE'
 		if status == 'FAILURE':
+			count = 0
 			for step in self.pyven.reportables():
 				if step.report_status() != 'SUCCESS':
-					html_str += self._write_error([' '.join(step.report_summary()) + ' <a href="#' + pyven.constants.PLATFORM + '_' + '_'.join(step.report_identifiers()) + '">Details</a>'])
+					html_str += self._write_error([' '.join(step.report_summary()) + ' <a href="#' + self._write_ref(count) + '">Details</a>'])
+					count += 1
 		else:
 			html_str += '<span class="' + self.style.status['success'] + '">SUCCESS</span>'
 		html_str += '</div>'
