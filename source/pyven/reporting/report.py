@@ -31,9 +31,9 @@ class Report(object):
 		return html_str
 	
 	def _write_head(self):
-		html_str = '<html xmlns="http://www.w3.org/1999/xhtml" lang="fr-FR" xml:lang="fr-FR">'
+		html_str = '<head>'
 		html_str += '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
-		html_str += "<title>Build report</title>"
+		html_str += '<title>Build report</title>'
 		html_str += '<style type="text/css">'
 		html_str += self.style.write()
 		html_str += '</style>'
@@ -128,7 +128,7 @@ class Report(object):
 		logger.info('Aggregating build reports')
 		report_dir = os.path.join(Pyven.WORKSPACE.url, 'report')
 		if os.path.isdir(report_dir):
-			html_str = '<html>'
+			html_str = '<html xmlns="http://www.w3.org/1999/xhtml" lang="en-EN" xml:lang="en-EN">'
 			html_str += self._write_head()
 			html_str += '<body>'
 			html_str += '<h1>Build report</h1>'
