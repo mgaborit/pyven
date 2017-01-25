@@ -100,7 +100,7 @@ class Report(object):
 			for step in self.pyven.reportables():
 				if step.report_status() != 'SUCCESS':
 					html_str += self._write_error([' '.join(step.report_summary()) + ' <a href="#' + self._write_ref(count) + '">Details</a>'])
-					count += 1
+				count += 1
 		else:
 			html_str += '<span class="' + self.style.status['success'] + '">SUCCESS</span>'
 		html_str += '</div>'
