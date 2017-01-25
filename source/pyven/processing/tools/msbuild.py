@@ -17,7 +17,7 @@ class MSBuildTool(Tool):
 		self.project = project
 		self.options = []
 		for option in node.xpath('options/option'):
-			self.arguments.append(option.text)
+			self.options.append(option.text)
 		if self.scope == 'preprocess':
 			logger.warning('MSBuild will be called during preprocessing but not build')
 		
@@ -76,7 +76,10 @@ class MSBuildTool(Tool):
 			self.status = Processible.STATUS['failure']
 			errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error', 'Erreur', 'erreur'], ['0 Erreur(s)', '0 Error(s)'])
 			for e in errors:
-				self.errors.append([e[0].replace(e[0].split()[-1], '')])
+				if e[0].split()[-1].startswith('[') and e[0].split()[-1].endswith(']'):
+					self.errors.append([e[0].replace(e[0].split()[-1], '')])
+				else:
+					self.errors.append([e[0]])
 			logger.error('Build failed : ' + self.type + ':' + self.name)
 		elif warning_as_error and len(warnings) > 0:
 			self.status = Processible.STATUS['failure']
