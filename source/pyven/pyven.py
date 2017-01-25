@@ -232,8 +232,7 @@ class Pyven:
 		self.__build('builders')
 		ok = True
 		for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
-			if not os.path.isfile(artifact.file):
-				logger.error('Artifact not found : ' + artifact.format_name())
+			if not artifact.check():
 				ok = False
 		if not ok:
 			raise PyvenException('Artifacts missing')
