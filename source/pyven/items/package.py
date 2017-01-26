@@ -13,7 +13,19 @@ class Package(Item):
 	def __init__(self, node):
 		super(Package, self).__init__(node)
 		self.items = []
-		
+		delivery = ''
+		if node.find('delivery') is not None:
+			delivery = node.find('delivery').text
+		if '$company' in delivery:
+			delivery = delivery.replace('$company', self.company)
+		if '$name' in delivery:
+			delivery = delivery.replace('$name', self.name)
+		if '$config' in delivery:
+			delivery = delivery.replace('$config', self.config)
+		if '$version' in delivery:
+			delivery = delivery.replace('$version', self.version)
+		self.delivery = delivery
+
 	def type(self):
 		return 'package'
 	
@@ -51,3 +63,9 @@ class Package(Item):
 		else:
 			with zipfile.ZipFile(os.path.join(self.location(repo.url), self.basename()), "r") as z:
 				z.extractall(os.path.join(dir, self.format_name('_')))
+	
+	def deliver(self, dir, repo):
+		if self.delivery == '':
+			self.unpack(dir, repo, flatten=False)
+		else:
+			self.unpack(os.path.join(dir, self.delivery), repo, flatten=True)
