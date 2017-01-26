@@ -32,22 +32,13 @@ class Artifact(Item):
 				if not os.path.isfile(self.file):
 					logger.error('Artifact not found : ' + self.format_name())
 					return False
-				info = GetFileVersionInfo(self.file, '\\')
-				ms = info['FileVersionMS']
-				ls = info['FileVersionLS']
-				actual_version = [str(i) for i in [HIWORD(ms), LOWORD(ms), HIWORD(ls), LOWORD(ls)]]
-				if len(expected_version) > len(actual_version):
-					msg = ['Artifact version too short : ' + self.format_name(),\
-							'Expected version : ' + self.version,\
-							'Found version    : ' + '.'.join(actual_version)]
-					version_checking.errors.append(msg)
-					logger.error(msg[0])
-					logger.error(msg[1])
-					logger.error(msg[2])
-					return False
-				for idx, expected in enumerate(expected_version):
-					if actual_version[idx] != expected:
-						msg = ['Invalid artifact version : ' + self.format_name(),\
+				if self.file.endswith('.exe') or self.file.endswith('.dll'):
+					info = GetFileVersionInfo(self.file, '\\')
+					ms = info['FileVersionMS']
+					ls = info['FileVersionLS']
+					actual_version = [str(i) for i in [HIWORD(ms), LOWORD(ms), HIWORD(ls), LOWORD(ls)]]
+					if len(expected_version) > len(actual_version):
+						msg = ['Artifact version too short : ' + self.format_name(),\
 								'Expected version : ' + self.version,\
 								'Found version    : ' + '.'.join(actual_version)]
 						version_checking.errors.append(msg)
@@ -55,6 +46,16 @@ class Artifact(Item):
 						logger.error(msg[1])
 						logger.error(msg[2])
 						return False
+					for idx, expected in enumerate(expected_version):
+						if actual_version[idx] != expected:
+							msg = ['Invalid artifact version : ' + self.format_name(),\
+									'Expected version : ' + self.version,\
+									'Found version    : ' + '.'.join(actual_version)]
+							version_checking.errors.append(msg)
+							logger.error(msg[0])
+							logger.error(msg[1])
+							logger.error(msg[2])
+							return False
 				return True
 			except:
 				msg = ['Artifact version not found : ' + self.format_name(), 'Expected version : ' + self.version]
