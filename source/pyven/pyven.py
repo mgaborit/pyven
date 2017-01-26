@@ -413,13 +413,19 @@ class Pyven:
 	def _retrieve(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP RETRIEVE : STARTING')
+		for package in [p for p in self.objects['packages'].values() if package.to_retrieve]:
+			if self.objects['repositories'][package.repo].is_available():
+				self.objects['repositories'][package.repo].retrieve(package, Pyven.WORKSPACE)
+			else:
+				logger.error('Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
+							'Unable to retrieve package --> ' + package.format_name())
 		for artifact in [a for a in self.objects['artifacts'].values() if a.to_retrieve]:
 			if self.objects['repositories'][artifact.repo].is_available():
 				self.objects['repositories'][artifact.repo].retrieve(artifact, Pyven.WORKSPACE)
 			else:
 				logger.error('Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
 							'Unable to retrieve artifact --> ' + artifact.format_name())
-		for package in self.objects['packages'].values():
+		for package in [p for p in self.objects['packages'].values() if not package.to_retrieve]:
 			for item in [i for i in package.items if i.to_retrieve]:
 				for built_item in [i for i in package.items if not i.to_retrieve]:
 					dir = os.path.dirname(built_item.file)
