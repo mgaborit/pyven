@@ -377,7 +377,7 @@ class Pyven:
 		logger.info('STEP DELIVER : STARTING')
 		logger.info('Delivering to directory ' + path)
 		for package in [p for p in self.objects['packages'].values() if p.publish]:
-			package.unpack(path, Pyven.WORKSPACE, flatten=False)
+			package.deliver(path, Pyven.WORKSPACE)
 			logger.info('Delivered package : ' + package.format_name())
 		logger.info('STEP DELIVER : SUCCESSFUL')
 		
