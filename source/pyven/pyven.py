@@ -20,10 +20,7 @@ from pyven.utils.version_checking import VersionChecking
 logger = logging.getLogger('global')
 
 class Pyven:
-	WORKSPACE = Factory.create_repo('workspace', 'workspace', 'pvn_workspace')
-	if not os.path.isdir(WORKSPACE.url):
-		os.makedirs(WORKSPACE.url)
-		
+	WORKSPACE = None
 	if pyven.constants.PLATFORM == 'windows':
 		LOCAL_REPO = Factory.create_repo('local', 'file', os.path.join(os.environ.get('USERPROFILE'), 'pvn_repo'))
 	elif pyven.constants.PLATFORM == 'linux':
@@ -34,7 +31,6 @@ class Pyven:
 	def __init__(self, step, version, verbose=False, warning_as_error=False, pym='pym.xml'):
 		logger.info('Initializing Pyven project')
 		logger.info('Pyven set for '+pyven.constants.PLATFORM+' platform')
-		logger.info('Workspace set at : ' + Pyven.WORKSPACE.url)
 		logger.info('Local repository set at : ' + Pyven.LOCAL_REPO.url)
 		
 		self.step = step
@@ -74,6 +70,13 @@ class Pyven:
 	def _log_step_delimiter():
 		logger.info('===================================')
 	
+	@staticmethod
+	def _set_workspace():
+		Pyven.WORKSPACE = Factory.create_repo('workspace', 'workspace', 'pvn_workspace')
+		if not os.path.isdir(Pyven.WORKSPACE.url):
+			os.makedirs(Pyven.WORKSPACE.url)
+		logger.info('Workspace set at : ' + Pyven.WORKSPACE.url)
+	
 	def _step(function, arg=None):
 		def __intern(self=None, arg=None):
 			try:
@@ -95,7 +98,7 @@ class Pyven:
 	def _check_repositories(repositories):
 		checked = {}
 		for repo in repositories:
-			if repo.name == Pyven.WORKSPACE.name or repo.name == Pyven.LOCAL_REPO.name:
+			if repo.name == 'workspace' or repo.name == Pyven.LOCAL_REPO.name:
 				logger.error('Repository name reserved --> ' + repo.name + ' : ' + repo.url)
 			else:
 				if repo.name in checked.keys():
@@ -191,10 +194,6 @@ class Pyven:
 	def _configure(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP CONFIGURE : STARTING')
-		if Pyven.WORKSPACE.is_available():
-			logger.info('Created Pyven workspace')
-		else:
-			raise PyvenException('Could not create workspace')
 		self.objects = self.parser.parse()
 		self.objects['repositories'] = self._check_repositories(self.objects['repositories'])
 		self.objects['artifacts'] = self._check_artifacts(self.objects['artifacts'])
@@ -248,6 +247,7 @@ class Pyven:
 		
 	def build(self, arg=None):
 		if self.configure():
+			Pyven._set_workspace()
 			return self._build(arg)
 			
 # ============================================================================================================		
@@ -377,7 +377,15 @@ class Pyven:
 		logger.info('STEP DELIVER : STARTING')
 		logger.info('Delivering to directory ' + path)
 		for package in [p for p in self.objects['packages'].values() if p.publish]:
-			package.deliver(path, Pyven.WORKSPACE)
+			if package.to_retrieve:
+				if self.objects['repositories'][package.repo].is_available():
+					package.deliver(path, self.objects['repositories'][package.repo])
+				else:
+					logger.error('Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
+							'Unable to retrieve package --> ' + package.format_name())
+			else:
+				Pyven._set_workspace()
+				package.deliver(path, Pyven.WORKSPACE)
 			logger.info('Delivered package : ' + package.format_name())
 		logger.info('STEP DELIVER : SUCCESSFUL')
 		
@@ -413,7 +421,7 @@ class Pyven:
 	def _retrieve(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP RETRIEVE : STARTING')
-		for package in [p for p in self.objects['packages'].values() if package.to_retrieve]:
+		for package in [p for p in self.objects['packages'].values() if p.to_retrieve]:
 			if self.objects['repositories'][package.repo].is_available():
 				self.objects['repositories'][package.repo].retrieve(package, Pyven.WORKSPACE)
 			else:
@@ -425,7 +433,7 @@ class Pyven:
 			else:
 				logger.error('Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
 							'Unable to retrieve artifact --> ' + artifact.format_name())
-		for package in [p for p in self.objects['packages'].values() if not package.to_retrieve]:
+		for package in [p for p in self.objects['packages'].values() if not p.to_retrieve]:
 			for item in [i for i in package.items if i.to_retrieve]:
 				for built_item in [i for i in package.items if not i.to_retrieve]:
 					dir = os.path.dirname(built_item.file)
@@ -437,5 +445,6 @@ class Pyven:
 
 	def retrieve(self, arg=None):
 		if self.configure():
+			Pyven._set_workspace()
 			return self._retrieve(arg)
 			

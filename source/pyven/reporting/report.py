@@ -120,7 +120,7 @@ class Report(object):
 		html_str += '<h2>Platforms</h2>'
 		html_str += '<div class="' + self.style.step['properties']['div'] + '">'
 		for platform in platforms:
-			html_str += '<p class="' + self.style.step['properties']['property'] + '"><a href="#' + platform + '">' + platform + '</a><p>'
+			html_str += '<p class="' + self.style.step['properties']['property'] + '"><a href="#' + platform + '">' + platform + '</a></p>'
 		html_str += '</div></div>'
 		return html_str
 	
