@@ -29,8 +29,10 @@ class Item(object):
 		if self.to_retrieve:
 			self.publish = False
 		else:
-			publish = node.get('publish')
-			if publish is None or publish == 'true':
+			self.publish = True
+		publish = node.get('publish')
+		if publish is not None:
+			if publish == 'true':
 				self.publish = True
 			elif publish == 'false':
 				self.publish = False
