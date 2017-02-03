@@ -15,7 +15,7 @@ from pyven.processing.tests.test import Test
 from pyven.utils.pym_parser import PymParser
 from pyven.utils.factory import Factory
 
-from pyven.utils.version_checking import VersionChecking
+from pyven.utils.artifacts_checker import ArtifactsChecker
 
 logger = logging.getLogger('global')
 
@@ -43,27 +43,27 @@ class Pyven:
 		self.pym = pym
 		self.parser = PymParser(self.pym)
 		self.objects = {'preprocessors': [], 'builders': [], 'unit_tests': [], 'integration_tests': []}
-		self.version_checking = VersionChecking()
+		self.artifacts_checker = ArtifactsChecker()
 		
 	def reportables(self):
 		reportables = []
 		if self.step in ['verify', 'install', 'deploy', 'deliver']:
 			reportables.extend(self.objects['preprocessors'])
 			reportables.extend(self.objects['builders'])
-			reportables.append(self.version_checking)
+			reportables.append(self.artifacts_checker)
 			reportables.extend(self.objects['unit_tests'])
 			reportables.extend(self.objects['valgrind_tests'])
 			reportables.extend(self.objects['integration_tests'])
 		elif self.step in ['test', 'package']:
 			reportables.extend(self.objects['preprocessors'])
 			reportables.extend(self.objects['builders'])
-			reportables.append(self.version_checking)
+			reportables.append(self.artifacts_checker)
 			reportables.extend(self.objects['unit_tests'])
 			reportables.extend(self.objects['valgrind_tests'])
 		elif self.step in ['build']:
 			reportables.extend(self.objects['preprocessors'])
 			reportables.extend(self.objects['builders'])
-			reportables.append(self.version_checking)
+			reportables.append(self.artifacts_checker)
 		return reportables
 	
 	@staticmethod
@@ -237,7 +237,7 @@ class Pyven:
 		self.__build('builders')
 		ok = True
 		for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
-			if not artifact.check(self.version_checking):
+			if not artifact.check(self.artifacts_checker):
 				ok = False
 		if not ok:
 			raise PyvenException('Artifacts missing')

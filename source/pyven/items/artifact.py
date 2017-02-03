@@ -24,14 +24,21 @@ class Artifact(Item):
 			return os.path.basename(self.file)
 		raise PyvenException('Unknown artifact location : ' + self.format_name())
 	
-	def check(self, version_checking):
+	def check_generation(self, artifacts_checker):
+		if not os.path.isfile(self.file):
+			msg = ['Artifact not found : ' + self.format_name(),\
+					'Expected location : ' + self.file]
+			artifacts_checker.errors.append(msg)
+			logger.error(msg[0])
+			logger.error(msg[1])
+			return False
+		return True
+		
+	def check_version(self, artifacts_checker):
 		if pyven.constants.PLATFORM == 'windows' and not self.to_retrieve:
 			from win32api import GetFileVersionInfo, LOWORD, HIWORD
 			expected_version = self.version.split('.')
 			try:
-				if not os.path.isfile(self.file):
-					logger.error('Artifact not found : ' + self.format_name())
-					return False
 				if self.file.endswith('.exe') or self.file.endswith('.dll'):
 					info = GetFileVersionInfo(self.file, '\\')
 					ms = info['FileVersionMS']
@@ -41,7 +48,7 @@ class Artifact(Item):
 						msg = ['Artifact version too short : ' + self.format_name(),\
 								'Expected version : ' + self.version,\
 								'Found version    : ' + '.'.join(actual_version)]
-						version_checking.errors.append(msg)
+						artifacts_checker.errors.append(msg)
 						logger.error(msg[0])
 						logger.error(msg[1])
 						logger.error(msg[2])
@@ -51,7 +58,7 @@ class Artifact(Item):
 							msg = ['Invalid artifact version : ' + self.format_name(),\
 									'Expected version : ' + self.version,\
 									'Found version    : ' + '.'.join(actual_version)]
-							version_checking.errors.append(msg)
+							artifacts_checker.errors.append(msg)
 							logger.error(msg[0])
 							logger.error(msg[1])
 							logger.error(msg[2])
@@ -59,9 +66,14 @@ class Artifact(Item):
 				return True
 			except:
 				msg = ['Artifact version not found : ' + self.format_name(), 'Expected version : ' + self.version]
-				version_checking.errors.append(msg)
+				artifacts_checker.errors.append(msg)
 				logger.error(msg[0])
 				logger.error(msg[1])
 				return False
 		else:
 			return True
+	
+	def check(self, artifacts_checker):
+		if (self.check_generation(artifacts_checker)):
+			return self.check_version(artifacts_checker)
+		return False
