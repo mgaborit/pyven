@@ -44,6 +44,7 @@ def main():
 	zf.write('pyven/utils/factory.py')
 	zf.write('pyven/utils/pym_parser.py')
 	zf.write('pyven/utils/artifacts_checker.py')
+	zf.write('pyven/utils/parser_checker.py')
 
 if __name__ == '__main__':
 	main()

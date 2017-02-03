@@ -44,26 +44,38 @@ class Pyven:
 		self.parser = PymParser(self.pym)
 		self.objects = {'preprocessors': [], 'builders': [], 'unit_tests': [], 'integration_tests': []}
 		self.artifacts_checker = ArtifactsChecker()
+		self.enable_artifacts_checker = False
 		
 	def reportables(self):
 		reportables = []
 		if self.step in ['verify', 'install', 'deploy', 'deliver']:
+			if self.parser.checker.enabled:
+				reportables.append(self.parser.checker)
 			reportables.extend(self.objects['preprocessors'])
 			reportables.extend(self.objects['builders'])
-			reportables.append(self.artifacts_checker)
+			if self.artifacts_checker.enabled:
+				reportables.append(self.artifacts_checker)
 			reportables.extend(self.objects['unit_tests'])
 			reportables.extend(self.objects['valgrind_tests'])
 			reportables.extend(self.objects['integration_tests'])
 		elif self.step in ['test', 'package']:
+			if self.parser.checker.enabled:
+				reportables.append(self.parser.checker)
 			reportables.extend(self.objects['preprocessors'])
 			reportables.extend(self.objects['builders'])
-			reportables.append(self.artifacts_checker)
+			if self.artifacts_checker.enabled:
+				reportables.append(self.artifacts_checker)
 			reportables.extend(self.objects['unit_tests'])
 			reportables.extend(self.objects['valgrind_tests'])
 		elif self.step in ['build']:
+			if self.parser.checker.enabled:
+				reportables.append(self.parser.checker)
 			reportables.extend(self.objects['preprocessors'])
 			reportables.extend(self.objects['builders'])
-			reportables.append(self.artifacts_checker)
+			if self.artifacts_checker.enabled:
+				reportables.append(self.artifacts_checker)
+		else:
+			reportables.append(self.parser.checker)
 		return reportables
 	
 	@staticmethod
@@ -194,6 +206,8 @@ class Pyven:
 	def _configure(self, arg=None):
 		Pyven._log_step_delimiter()
 		logger.info('STEP CONFIGURE : STARTING')
+		if self.step != 'deliver':
+			Pyven._set_workspace()
 		self.objects = self.parser.parse()
 		self.objects['repositories'] = self._check_repositories(self.objects['repositories'])
 		self.objects['artifacts'] = self._check_artifacts(self.objects['artifacts'])
@@ -239,6 +253,7 @@ class Pyven:
 		for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
 			if not artifact.check(self.artifacts_checker):
 				ok = False
+		self.artifacts_checker.enabled = True
 		if not ok:
 			raise PyvenException('Artifacts missing')
 		for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
@@ -247,7 +262,6 @@ class Pyven:
 		
 	def build(self, arg=None):
 		if self.configure():
-			Pyven._set_workspace()
 			return self._build(arg)
 			
 # ============================================================================================================		
@@ -445,6 +459,5 @@ class Pyven:
 
 	def retrieve(self, arg=None):
 		if self.configure():
-			Pyven._set_workspace()
 			return self._retrieve(arg)
 			

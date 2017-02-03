@@ -1,9 +1,12 @@
-import logging
+import logging, os
 
 from lxml import etree
 
 import pyven.constants
+from pyven.exceptions.exception import PyvenException
+
 from pyven.utils.factory import Factory
+from pyven.utils.parser_checker import ParserChecker
 
 logger = logging.getLogger('global')
 
@@ -11,45 +14,54 @@ class PymParser(object):
 	
 	def __init__(self, pym='pym.xml'):
 		self.pym = pym
+		self.checker = ParserChecker()
 		
 	def parse(self):
 		logger.info('Starting pym.xml parsing')
-		tree = etree.parse('pym.xml')
-		doc_element = tree.getroot()
+		try:
+			if not os.path.isfile(self.pym):
+				raise PyvenException('No pym.xml file available in current directory')
+			tree = etree.parse(self.pym)
+			
+			doc_element = tree.getroot()
+			
+			if doc_element is None or doc_element.tag == "name":
+				raise PyvenException('Missing "pyven" markup')
+			expected_pyven_version = doc_element.get('version')
+			if expected_pyven_version is None:
+				raise PyvenException('Missing Pyven version information')
+			logger.info('Expected Pyven version : ' + expected_pyven_version)
+			if expected_pyven_version != pyven.constants.VERSION:
+				raise PyvenException('Invalid Pyven version', 'Expected version : ' + expected_pyven_version, 'Version in use : ' + pyven.constants.VERSION)
+			
+			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/repositories/repository'
+			repositories = self._parse(tree, 'repository', query)
+			
+			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/artifacts/artifact'
+			artifacts = self._parse(tree, 'artifact', query)
+			
+			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/packages/package'
+			packages = self._parse_packages(tree, query)
+			
+			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="preprocess"]'
+			preprocessors = self._parse(tree, 'preprocessor', query)
+			
+			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="build"]'
+			builders = self._parse_builders(tree, query)
+			
+			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="unit"]'
+			unit_tests = self._parse(tree, 'unit_test', query)
+			
+			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="valgrind"]'
+			valgrind_tests = self._parse(tree, 'valgrind_test', query)
+			
+			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="integration"]'
+			integration_tests = self._parse_integration_tests(tree, query)
 		
-		if doc_element is None or doc_element.tag == "name":
-			raise PyvenException('Missing "pyven" markup')
-		expected_pyven_version = doc_element.get('version')
-		if expected_pyven_version is None:
-			raise PyvenException('Missing Pyven version information')
-		logger.info('Expected Pyven version : ' + expected_pyven_version)
-		if expected_pyven_version != pyven.constants.VERSION:
-			raise PyvenException('Invalid Pyven version', 'Expected version : ' + expected_pyven_version, 'Version in use : ' + pyven.constants.VERSION)
-		
-		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/repositories/repository'
-		repositories = self._parse(tree, 'repository', query)
-		
-		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/artifacts/artifact'
-		artifacts = self._parse(tree, 'artifact', query)
-		
-		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/packages/package'
-		packages = self._parse_packages(tree, query)
-		
-		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="preprocess"]'
-		preprocessors = self._parse(tree, 'preprocessor', query)
-		
-		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="build"]'
-		builders = self._parse_builders(tree, query)
-		
-		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="unit"]'
-		unit_tests = self._parse(tree, 'unit_test', query)
-		
-		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="valgrind"]'
-		valgrind_tests = self._parse(tree, 'valgrind_test', query)
-		
-		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="integration"]'
-		integration_tests = self._parse_integration_tests(tree, query)
-		
+		except Exception as e:
+			self.checker.errors.append(e.args)
+			self.checker.enabled = True
+			raise PyvenException(e.args)
 		logger.info('pym.xml parsed successfully')
 		return {'repositories' : repositories,\
 				'artifacts' : artifacts,\
