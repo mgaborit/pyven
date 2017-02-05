@@ -157,7 +157,9 @@ class Report(object):
 			html_str += Report._write_head()
 			html_str += '<body>'
 			html_str += '<h1>Build report</h1>'
-			fragments = [f for f in os.listdir(report_dir) if os.path.splitext(f)[1] == '.html' and f != Report.index]
+			tmp = [f for f in os.listdir(report_dir) if os.path.splitext(f)[1] == '.html' and f != Report.index]
+			fragments = [f for f in tmp if f.startswith('root_project')]
+			fragments.extend([f for f in tmp if not f.startswith('root_project')])
 			projects = [os.path.splitext(f)[0] for f in fragments]
 			html_str += Report._write_projects(projects)
 			for fragment in fragments:
