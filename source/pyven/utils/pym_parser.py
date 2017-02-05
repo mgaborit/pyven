@@ -21,7 +21,12 @@ class PymParser(object):
 		try:
 			if not os.path.isfile(self.pym):
 				raise PyvenException('No pym.xml file available in current directory')
-			tree = etree.parse(self.pym)
+			try:
+				tree = etree.parse(self.pym)
+			except Exception as e:
+				pyven_exception = PyvenException('')
+				pyven_exception.args = e.args
+				raise pyven_exception
 			
 			doc_element = tree.getroot()
 			
@@ -33,6 +38,9 @@ class PymParser(object):
 			logger.info('Expected Pyven version : ' + expected_pyven_version)
 			if expected_pyven_version != pyven.constants.VERSION:
 				raise PyvenException('Invalid Pyven version', 'Expected version : ' + expected_pyven_version, 'Version in use : ' + pyven.constants.VERSION)
+			
+			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/subprojects/subproject'
+			subprojects = self._parse_subprojects(tree, query)
 			
 			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/repositories/repository'
 			repositories = self._parse(tree, 'repository', query)
@@ -58,12 +66,14 @@ class PymParser(object):
 			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="integration"]'
 			integration_tests = self._parse_integration_tests(tree, query)
 		
-		except Exception as e:
+		except PyvenException as e:
 			self.checker.errors.append(e.args)
 			self.checker.enabled = True
-			raise PyvenException(e.args)
+			raise e
+			
 		logger.info('pym.xml parsed successfully')
-		return {'repositories' : repositories,\
+		return {'subprojects' : subprojects,\
+				'repositories' : repositories,\
 				'artifacts' : artifacts,\
 				'packages' : packages,\
 				'preprocessors' : preprocessors,\
@@ -71,6 +81,12 @@ class PymParser(object):
 				'unit_tests' : unit_tests,\
 				'valgrind_tests' : valgrind_tests,\
 				'integration_tests' : integration_tests}
+	
+	def _parse_subprojects(self, node, query):
+		objects = []
+		for descendant in node.xpath(query):
+			objects.append(descendant.text)
+		return objects
 	
 	def _parse(self, node, type, query):
 		objects = []

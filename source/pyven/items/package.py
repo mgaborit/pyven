@@ -41,8 +41,8 @@ class Package(Item):
 		zf = zipfile.ZipFile(os.path.join(self.location(repo.url), self.basename()), mode='w')
 		try:
 			for item in self.items:
-				if not os.path.isfile(item.file):
-					logger.error('Package item not found --> ' + item.file)
+				if not os.path.isfile(os.path.join(item.location(repo.url), item.basename())):
+					logger.error('Package item not found --> ' + os.path.join(item.location(repo.url), item.basename()))
 					return False
 				else:
 					zf.write(os.path.join(item.location(repo.url), item.basename()), item.basename())
