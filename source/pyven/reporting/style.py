@@ -6,11 +6,25 @@ class Style(object):
 		self.step = {'div' : 'stepDiv', 'properties' : {'div' : 'propertiesDiv', 'property' : 'property'}}
 		self.error = {'div' : 'errorDiv', 'error' : 'error'}
 		self.warning = {'div' : 'warningDiv', 'warning' : 'warning'}
+		self.go_top = 'goTop'
 		
 	def write(self):
 		css = """
 			<!--/* <![CDATA[ */
 			"""
+		
+		css += '.' + self.go_top + """
+			{
+				float: right;
+				clear: none;
+				font-size : 16px;
+				font-weight : bold;
+				font-family: Arial;
+				padding-right : 5px;
+				padding-top : 5px;
+			}
+		"""
+		
 		css += 'h1' + """
 			{
 				font-size : 32px;

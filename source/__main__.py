@@ -26,7 +26,7 @@ def main(args):
 	parser.add_argument('path', nargs='?', help='path to the delivery directory (used with "deliver" step only)')
 	args = parser.parse_args()
 	
-	project = Pyven(args.step, pyven.constants.VERSION, args.verbose, args.warning_as_error)
+	project = Pyven(args.step, args.verbose, args.warning_as_error)
 	report = Report(project, args.nb_lines)
 	try:
 		ok = True
