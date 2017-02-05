@@ -27,7 +27,6 @@ def main(args):
 	args = parser.parse_args()
 	
 	project = Pyven(args.step, args.verbose, args.warning_as_error)
-	report = Report(project, args.nb_lines)
 	try:
 		ok = True
 		if project.step != 'deliver' and args.path is not None:
@@ -37,31 +36,25 @@ def main(args):
 			ok = project.configure()
 	
 		if project.step == 'aggregate' and not args.display:
-			report.aggregate()
+			Report.aggregate()
 			
 		if project.step == 'build':
 			ok = project.build()
-			report.write()
 	
 		if project.step == 'test':
 			ok = project.test()
-			report.write()
 	
 		if project.step == 'package':
 			ok = project.package()
-			report.write()
 	
 		if project.step == 'verify':
 			ok = project.verify()
-			report.write()
 	
 		if project.step == 'install':
 			ok = project.install()
-			report.write()
 	
 		if project.step == 'deploy':
 			ok = project.deploy()
-			report.write()
 	
 		if project.step == 'deliver':
 			if args.path is not None:
@@ -84,9 +77,15 @@ def main(args):
 			logger.error(msg)
 		sys.exit(1)
 	finally:
-		if args.display:
-			report.aggregate()
-			report.display()
+		if project.step not in ['aggregate', 'deliver', 'clean', 'retrieve']:
+			reports = [Report(project, args.nb_lines)]
+			for subproject in project.objects['subprojects']:
+				reports.append(Report(subproject, args.nb_lines))
+			for report in reports:
+				report.write()
+			if args.display:
+				Report.aggregate()
+				Report.display()
 	
 		toc = time.time()
 		logger.info('Total process time : ' + str(round(toc - tic, 3)) + ' seconds')

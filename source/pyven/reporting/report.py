@@ -13,13 +13,33 @@ class Report(object):
 	style = Style()
 	index = 'index.html'
 	
-	def __init__(self, pyven, nb_lines=10):
-		self.pyven = pyven
+	def __init__(self, project, nb_lines=10):
+		self.pyven = project
 		self.nb_lines = nb_lines
-		self.project_report = 'Root project'
-		if pyven.path != '':
-			self.project_report = pyven.path
 	
+	@staticmethod
+	def _report_name_to_path(name):
+		name_platform = name.split('.')
+		if name_platform[0].startswith('root_project'):
+			return name_platform[1] + ' : Root project'
+		if name_platform[1] == 'windows':
+			return name_platform[1] + ' : ' + '\\'.join(name_platform[0].split('_SLASH_'))
+		else:
+			return name_platform[1] + ' : ' + '/'.join(name_platform[0].split('_SLASH_'))
+	
+	@staticmethod
+	def _path_to_report_name(path):
+		if pyven.constants.PLATFORM == 'windows':
+			return '_SLASH_'.join(path.split('\\')) + '.' + pyven.constants.PLATFORM + '.html'
+		else:
+			return '_SLASH_'.join(path.split('/')) + '.' + pyven.constants.PLATFORM + '.html'
+	
+	def _project_report_name(self):
+		name = 'root_project.' + pyven.constants.PLATFORM + '.html'
+		if self.pyven.path != '':
+			name = self._path_to_report_name(self.pyven.path)
+		return name
+
 	def _write_error(self, error):
 		html_str = '<div class="' + Report.style.error['div'] + '">'
 		html_str += '<span class="' + Report.style.error['error'] + '"><p>' + '</p><p>'.join(error) + '</p></span>'
@@ -114,7 +134,7 @@ class Report(object):
 		report_dir = os.path.join(Pyven.WORKSPACE.url, 'report')
 		if not os.path.isdir(report_dir):
 			os.makedirs(report_dir)
-		html_file = codecs.open(os.path.join(report_dir, self.project_report), 'w', 'utf-8')
+		html_file = codecs.open(os.path.join(report_dir, self._project_report_name()), 'w', 'utf-8')
 		html_file.write(html_str)
 		html_file.close()
 	
@@ -124,7 +144,7 @@ class Report(object):
 		html_str += '<h2>Projects</h2>'
 		html_str += '<div class="' + Report.style.step['properties']['div'] + '">'
 		for project in projects:
-			html_str += '<p class="' + Report.style.step['properties']['property'] + '"><a href="#' + project + '">' + project + '</a></p>'
+			html_str += '<p class="' + Report.style.step['properties']['property'] + '"><a href="#' + project + '">' + Report._report_name_to_path(project) + '</a></p>'
 		html_str += '</div></div>'
 		return html_str
 	
@@ -144,7 +164,7 @@ class Report(object):
 				html_str += '<a name="' + os.path.splitext(fragment)[0] + '">'
 				html_str += '<div class="' + Report.style.step['div'] + '">'
 				html_str += '<p class="' + Report.style.go_top + '"><a href="#">Top</a></p>'
-				html_str += '<h2>'+os.path.splitext(fragment)[0]+'</h2>'
+				html_str += '<h2>'+Report._report_name_to_path(os.path.splitext(fragment)[0])+'</h2>'
 				file = codecs.open(os.path.join(report_dir, fragment), 'r', 'utf-8')
 				html_str += file.read()
 				file.close()
@@ -158,6 +178,7 @@ class Report(object):
 			html_file.close()
 			logger.info('Report generated')
 	
-	def display(self):
+	@staticmethod
+	def display():
 		webbrowser.open_new_tab(os.path.join(Pyven.WORKSPACE.url, 'report', Report.index))
 		
