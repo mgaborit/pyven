@@ -65,11 +65,13 @@ class Artifact(Item):
 							return False
 				return True
 			except:
-				msg = ['Artifact version not found : ' + self.format_name(), 'Expected version : ' + self.version]
-				artifacts_checker.errors.append(msg)
-				logger.error(msg[0])
-				logger.error(msg[1])
-				return False
+				if self.version not in ['0', '0.0', '0.0.0', '0.0.0.0']:
+					msg = ['Artifact version not found : ' + self.format_name(), 'Expected version : ' + self.version]
+					artifacts_checker.errors.append(msg)
+					logger.error(msg[0])
+					logger.error(msg[1])
+					return False
+				return True
 		else:
 			return True
 	
