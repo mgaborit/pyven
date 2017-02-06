@@ -29,15 +29,16 @@ class Report(object):
 	
 	@staticmethod
 	def _path_to_report_name(path):
-		if pyven.constants.PLATFORM == 'windows':
-			return '_SLASH_'.join(path.split('\\')) + '.' + pyven.constants.PLATFORM + '.html'
-		else:
-			return '_SLASH_'.join(path.split('/')) + '.' + pyven.constants.PLATFORM + '.html'
+		return '_SLASH_'.join(path.split(os.sep)) + '.' + pyven.constants.PLATFORM
+
+	@staticmethod
+	def _path_to_report_filename(path):
+		return Report._path_to_report_name(path) + '.html'
 	
 	def _project_report_name(self):
 		name = 'root_project.' + pyven.constants.PLATFORM + '.html'
 		if self.pyven.path != '':
-			name = self._path_to_report_name(self.pyven.path)
+			name = self._path_to_report_filename(self.pyven.path)
 		return name
 
 	def _write_error(self, error):
@@ -63,11 +64,11 @@ class Report(object):
 		html_str += '</head>'
 		return html_str
 		
-	def _write_ref(self, idx):
-		return pyven.constants.PLATFORM + '_' + str(idx)
+	def _write_ref(self, idx, path):
+		return Report._path_to_report_name(path) + '_' + str(idx)
 
 	def _write_step(self, step, idx):
-		html_str = '<a name="' + self._write_ref(idx) + '"><div class="stepDiv">'
+		html_str = '<a name="' + self._write_ref(idx, '_'.join(step.report_summary())) + '"><div class="stepDiv">'
 		try:
 			html_str += '<h2>' + ' '.join(step.report_identifiers()) + '</h2>'
 			html_str += '<div class="' + Report.style.step['properties']['div'] + '">'
@@ -122,7 +123,7 @@ class Report(object):
 			count = 0
 			for step in self.pyven.reportables():
 				if step.report_status() != 'SUCCESS':
-					html_str += self._write_error([' '.join(step.report_summary()) + ' <a href="#' + self._write_ref(count) + '">Details</a>'])
+					html_str += self._write_error([' '.join(step.report_summary()) + ' <a href="#' + self._write_ref(count, '_'.join(step.report_summary())) + '">Details</a>'])
 				count += 1
 		else:
 			html_str += '<span class="' + Report.style.status['success'] + '">SUCCESS</span>'
@@ -141,7 +142,7 @@ class Report(object):
 	@staticmethod
 	def _write_projects(projects):
 		html_str = '<div class="' + Report.style.step['div'] + '">'
-		html_str += '<h2>Projects</h2>'
+		html_str += '<h2>Pyven projects</h2>'
 		html_str += '<div class="' + Report.style.step['properties']['div'] + '">'
 		for project in projects:
 			html_str += '<p class="' + Report.style.step['properties']['property'] + '"><a href="#' + project + '">' + Report._report_name_to_path(project) + '</a></p>'
@@ -151,6 +152,8 @@ class Report(object):
 	@staticmethod
 	def aggregate():
 		logger.info('Aggregating build reports')
+		if Pyven.WORKSPACE is None:
+			Pyven._set_workspace()
 		report_dir = os.path.join(Pyven.WORKSPACE.url, 'report')
 		if os.path.isdir(report_dir):
 			html_str = '<html xmlns="http://www.w3.org/1999/xhtml" lang="en-EN" xml:lang="en-EN">'
