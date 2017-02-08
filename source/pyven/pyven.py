@@ -236,7 +236,7 @@ class Pyven:
 		checked = []
 		for integration_test in self.objects['integration_tests']:
 			if integration_test['package'] not in self.objects['packages'].keys():
-				raise PyvenException(self._project_log() + 'Integration test ' + os.path.join(integration_test['integration_test'].path, integration_test.filename)\
+				raise PyvenException(self._project_log() + 'Integration test ' + os.path.join(integration_test['integration_test'].path, integration_test['integration_test'].filename)\
 							+ ' : Package not declared --> ' + integration_test['package'])
 			else:
 				integration_test['integration_test'].package = self.objects['packages'][integration_test['package']]
