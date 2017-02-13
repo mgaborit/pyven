@@ -8,8 +8,8 @@ logger = logging.getLogger('global')
 	
 class ValgrindTest(Test):
 
-	def __init__(self, node):
-		super(ValgrindTest,self).__init__(node)
+	def __init__(self, type, path, filename, arguments, format):
+		super(ValgrindTest,self).__init__(type, path, filename, arguments, format)
 
 	def report_identifiers(self):
 		return ['Valgrind', 'memory', 'test', os.path.join(self.path, self.filename)]

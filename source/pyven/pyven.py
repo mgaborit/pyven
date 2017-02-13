@@ -9,12 +9,12 @@ from pyven.items.artifact import Artifact
 from pyven.items.package import Package
 
 from pyven.repositories.directory import DirectoryRepo
+from pyven.repositories.workspace import Workspace
 
 from pyven.processing.tools.tool import Tool
 from pyven.processing.tests.test import Test
 
 from pyven.parser.pym_parser import PymParser
-from pyven.utils.factory import Factory
 
 from pyven.checkers.checker import Checker
 
@@ -23,9 +23,9 @@ logger = logging.getLogger('global')
 class Pyven:
 	WORKSPACE = None
 	if pyven.constants.PLATFORM == 'windows':
-		LOCAL_REPO = Factory.create_repo('local', 'file', os.path.join(os.environ.get('USERPROFILE'), 'pvn_repo'))
+		LOCAL_REPO = DirectoryRepo('local', 'file', os.path.join(os.environ.get('USERPROFILE'), 'pvn_repo'))
 	elif pyven.constants.PLATFORM == 'linux':
-		LOCAL_REPO = Factory.create_repo('local', 'file', os.path.join(os.environ.get('HOME'), 'pvn_repo'))
+		LOCAL_REPO = DirectoryRepo('local', 'file', os.path.join(os.environ.get('HOME'), 'pvn_repo'))
 	if not os.path.isdir(LOCAL_REPO.url):
 		os.makedirs(LOCAL_REPO.url)
 
@@ -93,7 +93,7 @@ class Pyven:
 	@staticmethod
 	def _set_workspace():
 		if Pyven.WORKSPACE is None:
-			Pyven.WORKSPACE = Factory.create_repo('workspace', 'workspace', os.path.join(os.getcwd(), 'pvn_workspace'))
+			Pyven.WORKSPACE = Workspace('workspace', 'workspace', os.path.join(os.getcwd(), 'pvn_workspace'))
 			if not os.path.isdir(Pyven.WORKSPACE.url):
 				os.makedirs(Pyven.WORKSPACE.url)
 			logger.info('Workspace set at : ' + Pyven.WORKSPACE.url)
@@ -244,15 +244,15 @@ class Pyven:
 	def _check_integration_tests(self):
 		checked = []
 		for integration_test in self.objects['integration_tests']:
-			if integration_test['package'] not in self.objects['packages'].keys():
-				raise PyvenException(self._project_log() + 'Integration test ' + os.path.join(integration_test['integration_test'].path, integration_test['integration_test'].filename)\
-							+ ' : Package not declared --> ' + integration_test['package'])
+			if integration_test.package not in self.objects['packages'].keys():
+				raise PyvenException(self._project_log() + 'Integration test ' + os.path.join(integration_test.path, integration_test.filename)\
+							+ ' : Package not declared --> ' + integration_test.package)
 			else:
-				integration_test['integration_test'].package = self.objects['packages'][integration_test['package']]
-				logger.info(self._project_log() + 'Integration test ' + os.path.join(integration_test['integration_test'].path, integration_test['integration_test'].filename)\
-							+ ' : Package added --> ' + integration_test['package'])
-			checked.append(integration_test['integration_test'])
-			logger.info(self._project_log() + 'Integration test added --> ' + os.path.join(integration_test['integration_test'].path, integration_test['integration_test'].filename))
+				integration_test.package = self.objects['packages'][integration_test.package]
+				logger.info(self._project_log() + 'Integration test ' + os.path.join(integration_test.path, integration_test.filename)\
+							+ ' : Package added --> ' + integration_test.package.format_name())
+			checked.append(integration_test)
+			logger.info(self._project_log() + 'Integration test added --> ' + os.path.join(integration_test.path, integration_test.filename))
 		self.objects['integration_tests'] = checked
 		
 	@_step

@@ -8,14 +8,9 @@ logger = logging.getLogger('global')
 
 class IntegrationTest(Test):
 
-	def __init__(self, node):
-		super(IntegrationTest,self).__init__(node)
-		packages = node.xpath('package')
-		if len(packages) < 1:
-			raise PyvenException('Missing package for test : ' + os.path.join(self.path, self.filename))
-		if len(packages) > 1:
-			raise PyvenException('Too many packages specified for test : ' + os.path.join(self.path, self.filename))
-		self.package = packages[0].text
+	def __init__(self, type, path, filename, arguments, format, package):
+		super(IntegrationTest,self).__init__(type, path, filename, arguments, format)
+		self.package = package
 		
 	def _copy_resources(self, repo=None, resources=None):
 		self.package.unpack(self.path, repo, flatten=True)
