@@ -110,7 +110,6 @@ class Pyven:
 				toc = time.time()
 				logger.info(self._project_log() + 'Step time : ' + str(round(toc - tic, 3)) + ' seconds')
 			except PyvenException as e:
-				print(str(e.args))
 				for msg in e.args:
 					logger.error(self._project_log() + msg)
 				ok = False
