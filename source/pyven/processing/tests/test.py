@@ -11,19 +11,14 @@ logger = logging.getLogger('global')
 class Test(Processible, Reportable):
 	AVAILABLE_TYPES = ['unit', 'integration', 'valgrind']
 
-	def __init__(self, node):
+	def __init__(self, type, path, filename, arguments, format):
 		Processible.__init__(self)
 		Reportable.__init__(self)
-		self.type = node.get('type')
-		if self.type is None:
-			raise PyvenException('Missing test type')
-		if self.type not in Test.AVAILABLE_TYPES:
-			raise PyvenException('Wrong test type : ' + self.type, 'Available types : ' + str(Test.AVAILABLE_TYPES))
-		(self.path, self.filename) = os.path.split(node.find('file').text)
-		self.arguments = []
-		for argument in node.xpath('arguments/argument'):
-			self.arguments.append(argument.text)
-		self.format = 'cppunit'
+		self.type = type
+		self.path = path
+		self.filename = filename
+		self.arguments = arguments
+		self.format = format
 	
 	def report_summary(self):
 		return self.report_identifiers()

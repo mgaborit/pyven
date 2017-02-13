@@ -42,9 +42,7 @@ def main():
 	zf.write('pyven/reporting/reportable.py')
 	zf.write('pyven/reporting/style.py')
 
-	zf.write('pyven/utils/__init__.py')
 	zf.write('pyven/parser/__init__.py')
-	zf.write('pyven/utils/factory.py')
 	zf.write('pyven/parser/pym_parser.py')
 	zf.write('pyven/parser/elements_parser.py')
 	zf.write('pyven/parser/items_parser.py')
@@ -55,6 +53,10 @@ def main():
 	zf.write('pyven/parser/cmake_parser.py')
 	zf.write('pyven/parser/repositories_parser.py')
 	zf.write('pyven/parser/directory_repo_parser.py')
+	zf.write('pyven/parser/tests_parser.py')
+	zf.write('pyven/parser/unit_tests_parser.py')
+	zf.write('pyven/parser/valgrind_tests_parser.py')
+	zf.write('pyven/parser/integration_tests_parser.py')
 	
 	zf.write('pyven/checkers/__init__.py')
 	zf.write('pyven/checkers/checker.py')
