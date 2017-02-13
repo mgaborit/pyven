@@ -53,6 +53,8 @@ def main():
 	zf.write('pyven/parser/tools_parser.py')
 	zf.write('pyven/parser/msbuild_parser.py')
 	zf.write('pyven/parser/cmake_parser.py')
+	zf.write('pyven/parser/repositories_parser.py')
+	zf.write('pyven/parser/directory_repo_parser.py')
 	
 	zf.write('pyven/checkers/__init__.py')
 	zf.write('pyven/checkers/checker.py')

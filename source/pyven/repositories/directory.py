@@ -11,10 +11,6 @@ class DirectoryRepo(Repository):
 
 	def __init__(self, name, type, url):
 		super(DirectoryRepo, self, ).__init__(name, type, url)
-		
-	@classmethod
-	def from_node(cls, node):
-		return cls(node.get('name'), node.get('type'), node.get('url'))
 
 	def is_available(self):
 		return os.path.isdir(self.url)

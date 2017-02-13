@@ -9,6 +9,7 @@ from pyven.exceptions.parser_exception import ParserException
 from pyven.utils.factory import Factory
 from pyven.checkers.checker import Checker
 
+from pyven.parser.directory_repo_parser import DirectoryRepoParser
 from pyven.parser.artifacts_parser import ArtifactsParser
 from pyven.parser.packages_parser import PackagesParser
 from pyven.parser.msbuild_parser import MSBuildParser
@@ -21,6 +22,7 @@ class PymParser(object):
 	def __init__(self, pym='pym.xml'):
 		self.pym = pym
 		self.checker = Checker('Parser')
+		self.directory_repo_parser = DirectoryRepoParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/repositories/repository')
 		self.artifacts_parser = ArtifactsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/artifacts/artifact')
 		self.packages_parser = PackagesParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/packages/package')
 		self.cmake_parser = CMakeParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
@@ -52,9 +54,7 @@ class PymParser(object):
 			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/subprojects/subproject'
 			subprojects = self._parse_subprojects(tree, query)
 			
-			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/repositories/repository'
-			repositories = self._parse(tree, 'repository', query)
-			
+			repositories = self.directory_repo_parser.parse(tree)
 			artifacts = self.artifacts_parser.parse(tree)
 			packages = self.packages_parser.parse(tree)
 			
