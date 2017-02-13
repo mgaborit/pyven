@@ -22,11 +22,12 @@ def main(args):
 	parser.add_argument('--verbose', '-v', action='store_true', help='increase verbosity level')
 	parser.add_argument('--warning-as-error', '-wae', dest='warning_as_error', action='store_true', help='consider warnings as errors')
 	parser.add_argument('--lines', '-l', dest='nb_lines', action='store', type=int, default=10, help='Number of errors/warnings to be displayed in the build report')
+	parser.add_argument('--custom-pym', '-cp', dest='pym', action='store', type=str, default='pym.xml', help='Pym file name')
 	parser.add_argument('step', choices=pyven.constants.STEPS, help='pyven step to be achieved')
 	parser.add_argument('path', nargs='?', help='path to the delivery directory (used with "deliver" step only)')
 	args = parser.parse_args()
 	
-	project = Pyven(args.step, args.verbose, args.warning_as_error)
+	project = Pyven(args.step, args.verbose, args.warning_as_error, args.pym)
 	try:
 		ok = True
 		if project.step != 'deliver' and args.path is not None:

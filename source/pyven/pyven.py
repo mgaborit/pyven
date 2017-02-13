@@ -151,7 +151,7 @@ class Pyven:
 			if not os.path.isdir(subdirectory) or 'pym.xml' not in os.listdir(subdirectory):
 				raise PyvenException(self._project_log() + 'No pym.xml file found at ' + subdirectory)
 			else:
-				subproject = Pyven(step=self.step, verbose=self.verbose, warning_as_error=self.warning_as_error, pym='pym.xml', path=os.path.join(self.path, subdirectory))
+				subproject = Pyven(step=self.step, verbose=self.verbose, warning_as_error=self.warning_as_error, pym=self.pym, path=os.path.join(self.path, subdirectory))
 				checked.append(subproject)
 				logger.info(self._project_log() + 'Added subproject --> ' + subdirectory)
 		self.objects['subprojects'] = checked
