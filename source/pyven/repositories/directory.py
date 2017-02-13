@@ -3,6 +3,7 @@ import os, logging, shutil
 from pyven.exceptions.exception import PyvenException
 
 from pyven.repositories.repository import Repository
+from pyven.exceptions.repository_exception import RepositoryException
 
 logger = logging.getLogger('global')
 
@@ -34,7 +35,7 @@ class DirectoryRepo(Repository):
 	def publish(self, item, source):
 		src_file = os.path.join(item.location(source.url), item.basename())
 		if not os.path.isfile(src_file):
-			raise PyvenException('Item not found --> ' + item.format_name() + ' : ' + src_file)
+			raise RepositoryException('Item not found --> ' + item.format_name() + ' : ' + src_file)
 		dst_dir = os.path.join(item.location(self.url))
 		if not os.path.isdir(dst_dir):
 			os.makedirs(dst_dir)

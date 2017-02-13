@@ -10,16 +10,12 @@ logger = logging.getLogger('global')
 
 class MSBuildTool(Tool):
 
-	def __init__(self, node, project):
-		super(MSBuildTool, self).__init__(node)
-		self.configuration = node.find('configuration').text
-		self.architecture = node.find('architecture').text
+	def __init__(self, type, name, scope, configuration, architecture, project, options):
+		super(MSBuildTool, self).__init__(type, name, scope)
+		self.configuration = configuration
+		self.architecture = architecture
 		self.project = project
-		self.options = []
-		for option in node.xpath('options/option'):
-			self.options.append(option.text)
-		if self.scope == 'preprocess':
-			logger.warning('MSBuild will be called during preprocessing but not build')
+		self.options = options
 		
 	def report_summary(self):
 		return ['MSBuild', os.path.basename(self.project), self.configuration, self.architecture]

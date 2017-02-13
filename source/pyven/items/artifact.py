@@ -7,14 +7,11 @@ logger = logging.getLogger('global')
 
 from pyven.items.item import Item
 
-# pym.xml 'artifact' node
 class Artifact(Item):
 
-	def __init__(self, node):
-		super(Artifact, self).__init__(node)
-		self.file = None
-		if not self.to_retrieve:
-			self.file = node.text
+	def __init__(self, company, name, config, version, repo, to_retrieve, publish, file):
+		super(Artifact, self).__init__(company, name, config, version, repo, to_retrieve, publish)
+		self.file = file
 	
 	def type(self):
 		return 'artifact'
