@@ -52,7 +52,9 @@ class PymParser(object):
 				raise ParserException('Invalid Pyven version', 'Expected version : ' + expected_pyven_version, 'Version in use : ' + pyven.constants.VERSION)
 			
 			query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/subprojects/subproject'
-			subprojects = self._parse_subprojects(tree, query)
+			subprojects = []
+			for node in tree.xpath(query):
+				subprojects.append(node.text)
 			
 			repositories = self.directory_repo_parser.parse(tree)
 			artifacts = self.artifacts_parser.parse(tree)
@@ -89,12 +91,6 @@ class PymParser(object):
 				'unit_tests' : unit_tests,\
 				'valgrind_tests' : valgrind_tests,\
 				'integration_tests' : integration_tests}
-	
-	def _parse_subprojects(self, node, query):
-		objects = []
-		for descendant in node.xpath(query):
-			objects.append(descendant.text)
-		return objects
 	
 	def _parse(self, node, type, query):
 		objects = []
