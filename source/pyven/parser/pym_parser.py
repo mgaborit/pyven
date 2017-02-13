@@ -34,10 +34,10 @@ class PymParser(object):
 		self.integration_tests_parser = IntegrationTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="integration"]')
 		
 	def parse(self):
-		logger.info('Starting pym.xml parsing')
+		logger.info('Starting ' + self.pym + ' parsing')
 		try:
 			if not os.path.isfile(self.pym):
-				raise ParserException('No pym.xml file available in current directory')
+				raise ParserException('No configuration file available in current directory : ' + self.pym)
 			try:
 				tree = etree.parse(self.pym)
 			except Exception as e:
