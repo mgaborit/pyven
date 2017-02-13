@@ -10,20 +10,9 @@ from pyven.items.item import Item
 class Package(Item):
 	EXTENSION = '.zip'
 
-	def __init__(self, node):
-		super(Package, self).__init__(node)
-		self.items = []
-		delivery = ''
-		if node.find('delivery') is not None:
-			delivery = node.find('delivery').text
-		if '$company' in delivery:
-			delivery = delivery.replace('$company', self.company)
-		if '$name' in delivery:
-			delivery = delivery.replace('$name', self.name)
-		if '$config' in delivery:
-			delivery = delivery.replace('$config', self.config)
-		if '$version' in delivery:
-			delivery = delivery.replace('$version', self.version)
+	def __init__(self, company, name, config, version, repo, to_retrieve, publish, items, delivery):
+		super(Package, self).__init__(company, name, config, version, repo, to_retrieve, publish)
+		self.items = items
 		self.delivery = delivery
 
 	def type(self):

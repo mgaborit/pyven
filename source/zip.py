@@ -34,6 +34,8 @@ def main():
 	
 	zf.write('pyven/exceptions/__init__.py')
 	zf.write('pyven/exceptions/exception.py')
+	zf.write('pyven/exceptions/repository_exception.py')
+	zf.write('pyven/exceptions/parser_exception.py')
 	
 	zf.write('pyven/reporting/__init__.py')
 	zf.write('pyven/reporting/report.py')
@@ -41,10 +43,19 @@ def main():
 	zf.write('pyven/reporting/style.py')
 
 	zf.write('pyven/utils/__init__.py')
+	zf.write('pyven/parser/__init__.py')
 	zf.write('pyven/utils/factory.py')
-	zf.write('pyven/utils/pym_parser.py')
-	zf.write('pyven/utils/artifacts_checker.py')
-	zf.write('pyven/utils/parser_checker.py')
+	zf.write('pyven/parser/pym_parser.py')
+	zf.write('pyven/parser/elements_parser.py')
+	zf.write('pyven/parser/items_parser.py')
+	zf.write('pyven/parser/artifacts_parser.py')
+	zf.write('pyven/parser/packages_parser.py')
+	zf.write('pyven/parser/tools_parser.py')
+	zf.write('pyven/parser/msbuild_parser.py')
+	zf.write('pyven/parser/cmake_parser.py')
+	
+	zf.write('pyven/checkers/__init__.py')
+	zf.write('pyven/checkers/checker.py')
 
 if __name__ == '__main__':
 	main()

@@ -3,6 +3,7 @@ from lxml import etree
 
 import pyven.constants
 from pyven.exceptions.exception import PyvenException
+from pyven.exceptions.repository_exception import RepositoryException
 
 from pyven.items.artifact import Artifact
 from pyven.items.package import Package
@@ -12,10 +13,10 @@ from pyven.repositories.directory import DirectoryRepo
 from pyven.processing.tools.tool import Tool
 from pyven.processing.tests.test import Test
 
-from pyven.utils.pym_parser import PymParser
+from pyven.parser.pym_parser import PymParser
 from pyven.utils.factory import Factory
 
-from pyven.utils.artifacts_checker import ArtifactsChecker
+from pyven.checkers.checker import Checker
 
 logger = logging.getLogger('global')
 
@@ -41,41 +42,46 @@ class Pyven:
 		if self.warning_as_error:
 			logger.info(self._project_log() + 'Warnings will be considered as errors')
 		self.parser = PymParser(os.path.join(self.path, self.pym))
-		self.objects = {}
-		self.artifacts_checker = ArtifactsChecker()
-		self.enable_artifacts_checker = False
+		self.objects = {'subprojects' : []}
+		self.checkers = {'artifacts' : Checker('Artifacts'),\
+						'package' : Checker('Packaging'),\
+						'retrieve' : Checker('Retrieval')}
 		
 	def reportables(self):
 		reportables = []
 		if self.step in ['verify', 'install', 'deploy', 'deliver']:
-			if self.parser.checker.enabled:
+			if self.parser.checker.enabled():
 				reportables.append(self.parser.checker)
 			else:
 				reportables.extend(self.objects['preprocessors'])
 				reportables.extend(self.objects['builders'])
-				if self.artifacts_checker.enabled:
-					reportables.append(self.artifacts_checker)
+				if self.checkers['artifacts'].enabled():
+					reportables.append(self.checkers['artifacts'])
+				if self.checkers['package'].enabled():
+					reportables.append(self.checkers['package'])
 				reportables.extend(self.objects['unit_tests'])
 				reportables.extend(self.objects['valgrind_tests'])
 				reportables.extend(self.objects['integration_tests'])
 		elif self.step in ['test', 'package']:
-			if self.parser.checker.enabled:
+			if self.parser.checker.enabled():
 				reportables.append(self.parser.checker)
 			else:
 				reportables.extend(self.objects['preprocessors'])
 				reportables.extend(self.objects['builders'])
-				if self.artifacts_checker.enabled:
-					reportables.append(self.artifacts_checker)
+				if self.checkers['artifacts'].enabled():
+					reportables.append(self.checkers['artifacts'])
+				if self.checkers['package'].enabled():
+					reportables.append(self.checkers['package'])
 				reportables.extend(self.objects['unit_tests'])
 				reportables.extend(self.objects['valgrind_tests'])
 		elif self.step in ['build']:
-			if self.parser.checker.enabled:
+			if self.parser.checker.enabled():
 				reportables.append(self.parser.checker)
 			else:
 				reportables.extend(self.objects['preprocessors'])
 				reportables.extend(self.objects['builders'])
-				if self.artifacts_checker.enabled:
-					reportables.append(self.artifacts_checker)
+				if self.checkers['artifacts'].enabled():
+					reportables.append(self.checkers['artifacts'])
 		else:
 			reportables.append(self.parser.checker)
 		return reportables
@@ -104,6 +110,7 @@ class Pyven:
 				toc = time.time()
 				logger.info(self._project_log() + 'Step time : ' + str(round(toc - tic, 3)) + ' seconds')
 			except PyvenException as e:
+				print(str(e.args))
 				for msg in e.args:
 					logger.error(self._project_log() + msg)
 				ok = False
@@ -184,19 +191,22 @@ class Pyven:
 	def _check_packages(self):
 		checked = {}
 		for package in self.objects['packages']:
-			if package['package'].format_name() in checked.keys():
+			items = []
+			items.extend(package.items)
+			package.items = []
+			if package.format_name() in checked.keys():
 				raise PyvenException(self._project_log() + 'Package already added --> ' + package.format_name())
 			else:
-				for item in package['items']:
+				for item in items:
 					if item not in self.objects['artifacts'].keys():
-						raise PyvenException(self._project_log() + 'Package ' + package['package'].format_name() + ' : Artifact not declared --> ' + item)
+						raise PyvenException(self._project_log() + 'Package ' + package.format_name() + ' : Artifact not declared --> ' + item)
 					else:
-						package['package'].items.append(self.objects['artifacts'][item])
-						logger.info(self._project_log() + 'Package ' + package['package'].format_name() + ' : Artifact added --> ' + item)
-				checked[package['package'].format_name()] = package['package']
-				logger.info(self._project_log() + 'Package added --> ' + package['package'].format_name())
-				if not package['package'].publish:
-					logger.info(self._project_log() + 'Package ' + package['package'].format_name() + ' --> publishment disabled')
+						package.items.append(self.objects['artifacts'][item])
+						logger.info(self._project_log() + 'Package ' + package.format_name() + ' : Artifact added --> ' + item)
+				checked[package.format_name()] = package
+				logger.info(self._project_log() + 'Package added --> ' + package.format_name())
+				if not package.publish:
+					logger.info(self._project_log() + 'Package ' + package.format_name() + ' --> publishment disabled')
 		self.objects['packages'] = checked
 		
 	@_check
@@ -312,9 +322,8 @@ class Pyven:
 		self.__build('preprocessors')
 		self.__build('builders')
 		for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
-			if not artifact.check(self.artifacts_checker):
+			if not artifact.check(self.checkers['artifacts']):
 				ok = False
-		self.artifacts_checker.enabled = True
 		if not ok:
 			raise PyvenException('Artifacts missing')
 		for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
@@ -371,17 +380,20 @@ class Pyven:
 		for package in [p for p in self.objects['packages'].values() if not p.to_retrieve]:
 			package_ok = True
 			for artifact in [a for a in package.items if a.to_retrieve]:
-				if self.objects['repositories'][artifact.repo].is_available():
-					self.objects['repositories'][artifact.repo].retrieve(artifact, Pyven.WORKSPACE)
-					logger.info(self._project_log() + 'Repository ' + artifact.repo + ' --> Retrieved artifact ' + artifact.format_name())
-				elif Pyven.LOCAL_REPO.is_available():
-					logger.warning(self._project_log() + 'Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url)
-					Pyven.LOCAL_REPO.retrieve(artifact, Pyven.WORKSPACE)
-					logger.warning(self._project_log() + 'Local repository --> Retrieved artifact ' + artifact.format_name())
-				else:
-					logger.error(self._project_log() + 'Local repository not accessible --> ' + Pyven.LOCAL_REPO.name + ' : ' + Pyven.LOCAL_REPO.url,\
-								'Unable to retrieve artifact --> ' + artifact.format_name(),\
-								'Unable to build package --> ' + package.format_name())
+				try:
+					if self.objects['repositories'][artifact.repo].is_available():
+						self.objects['repositories'][artifact.repo].retrieve(artifact, Pyven.WORKSPACE)
+						logger.info(self._project_log() + 'Repository ' + artifact.repo + ' --> Retrieved artifact ' + artifact.format_name())
+					elif Pyven.LOCAL_REPO.is_available():
+						logger.warning(self._project_log() + 'Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url)
+						Pyven.LOCAL_REPO.retrieve(artifact, Pyven.WORKSPACE)
+						logger.warning(self._project_log() + 'Local repository --> Retrieved artifact ' + artifact.format_name())
+					else:
+						raise RepositoryException('Unable to retrieve artifact --> ' + artifact.format_name(),\
+													'Unable to build package --> ' + package.format_name())
+				except RepositoryException as e:
+					for msg in e.args:
+						logger.error(self._project_log() + msg)
 					package_ok = False
 					ok = False
 			if package_ok:
@@ -526,25 +538,36 @@ class Pyven:
 			for dir in subproject.path.split(os.sep):
 				os.chdir('..')
 		for package in [p for p in self.objects['packages'].values() if p.to_retrieve]:
-			if self.objects['repositories'][package.repo].is_available():
-				self.objects['repositories'][package.repo].retrieve(package, Pyven.WORKSPACE)
-			else:
-				logger.error(self._project_log() + 'Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
-							'Unable to retrieve package --> ' + package.format_name())
+			try:
+				if self.objects['repositories'][package.repo].is_available():
+					self.objects['repositories'][package.repo].retrieve(package, Pyven.WORKSPACE)
+				else:
+					raise RepositoryException(self._project_log() + 'Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
+												'Unable to retrieve package --> ' + package.format_name())
+			except RepositoryException as e:
+				for msg in e.args:
+					logger.error(msg)
+				ok = False
 		for artifact in [a for a in self.objects['artifacts'].values() if a.to_retrieve]:
-			if self.objects['repositories'][artifact.repo].is_available():
-				self.objects['repositories'][artifact.repo].retrieve(artifact, Pyven.WORKSPACE)
-			else:
-				logger.error(self._project_log() + 'Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
-							'Unable to retrieve artifact --> ' + artifact.format_name())
-		for package in [p for p in self.objects['packages'].values() if not p.to_retrieve]:
-			for item in [i for i in package.items if i.to_retrieve]:
-				for built_item in [i for i in package.items if not i.to_retrieve]:
-					dir = os.path.dirname(built_item.file)
-					if not os.path.isdir(dir):
-						os.makedirs(dir)
-					logger.info(self._project_log() + 'Copying artifact ' + item.format_name() + ' to directory ' + dir)
-					shutil.copy(os.path.join(item.location(Pyven.WORKSPACE.url), item.basename()), os.path.join(dir, item.basename()))
+			try:
+				if self.objects['repositories'][artifact.repo].is_available():
+					self.objects['repositories'][artifact.repo].retrieve(artifact, Pyven.WORKSPACE)
+				else:
+					raise RepositoryException(self._project_log() + 'Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
+												'Unable to retrieve artifact --> ' + artifact.format_name())
+			except RepositoryException as e:
+				for msg in e.args:
+					logger.error(msg)
+				ok = False
+		if ok:
+			for package in [p for p in self.objects['packages'].values() if not p.to_retrieve]:
+				for item in [i for i in package.items if i.to_retrieve]:
+					for built_item in [i for i in package.items if not i.to_retrieve]:
+						dir = os.path.dirname(built_item.file)
+						if not os.path.isdir(dir):
+							os.makedirs(dir)
+						logger.info(self._project_log() + 'Copying artifact ' + item.format_name() + ' to directory ' + dir)
+						shutil.copy(os.path.join(item.location(Pyven.WORKSPACE.url), item.basename()), os.path.join(dir, item.basename()))
 		return ok
 
 	def retrieve(self, arg=None):

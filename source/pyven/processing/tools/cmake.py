@@ -11,15 +11,11 @@ logger = logging.getLogger('global')
 
 class CMakeTool(Tool):
 
-	def __init__(self, node):
-		super(CMakeTool, self).__init__(node)
-		self.generator = node.find('generator').text
-		self.output_path = node.find('output-path').text
-		self.definitions = []
-		for definition in node.xpath('definitions/definition'):
-			self.definitions.append(definition.text)
-		if self.scope == 'build':
-			logger.warning('CMake will be called during build but not preprocessing')
+	def __init__(self, type, name, scope, generator, output_path, definitions):
+		super(CMakeTool, self).__init__(type, name, scope)
+		self.generator = generator
+		self.output_path = output_path
+		self.definitions = definitions
 	
 	def report_summary(self):
 		return ['CMake', self.name, self.generator]

@@ -11,33 +11,14 @@ class Item(object):
 	else:
 		raise PyvenException('Unsupported platform')
 	
-	def __init__(self, node):
-		self.company = node.get('company')
-		if self.company is None:
-			raise PyvenException('Missing artifact or package company')
-		self.name = node.get('name')
-		if self.name is None:
-			raise PyvenException('Missing artifact or package name')
-		self.config = node.get('config')
-		if self.config is None:
-			raise PyvenException('Missing artifact or package config')
-		self.version = node.get('version')
-		if self.version is None:
-			raise PyvenException('Missing artifact or package version')
-		self.repo = node.get('repo')
-		self.to_retrieve = self.repo is not None
-		if self.to_retrieve:
-			self.publish = False
-		else:
-			self.publish = True
-		publish = node.get('publish')
-		if publish is not None:
-			if publish == 'true':
-				self.publish = True
-			elif publish == 'false':
-				self.publish = False
-			else:
-				raise PyvenException('Invalid value for "publish" attribute')
+	def __init__(self, company, name, config, version, repo, to_retrieve, publish):
+		self.company = company
+		self.name = name
+		self.config = config
+		self.version = version
+		self.repo = repo
+		self.to_retrieve = to_retrieve
+		self.publish = publish
 	
 	def format_name(self, separator=':'):
 		return self.company + separator + self.name + separator + self.config + separator + self.version

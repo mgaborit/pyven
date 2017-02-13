@@ -13,7 +13,7 @@ class ArtifactsChecker(Reportable):
 		self.enabled = False
 		
 	def report_summary(self):
-		return ['Artifacts checking']
+		return ['Artifacts checks']
 
 	def report_identifiers(self):
 		return self.report_summary()

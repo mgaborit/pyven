@@ -1,6 +1,6 @@
 import os, logging, shutil
 
-from pyven.exceptions.exception import PyvenException
+from pyven.exceptions.repository_exception import RepositoryException
 
 from pyven.repositories.directory import DirectoryRepo
 
@@ -26,7 +26,7 @@ class Workspace(DirectoryRepo):
 		else:
 			src_file = os.path.join(item.location(source), item.basename())
 		if not os.path.isfile(src_file):
-			raise PyvenException('Item not found --> ' + item.format_name() + ' : ' + src_file)
+			raise RepositoryException('Item not found --> ' + item.format_name() + ' : ' + src_file)
 		dst_dir = os.path.join(item.location(self.url))
 		if not os.path.isdir(dst_dir):
 			os.makedirs(dst_dir)
