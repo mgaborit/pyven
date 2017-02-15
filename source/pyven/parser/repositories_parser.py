@@ -24,9 +24,19 @@ class RepositoriesParser(ElementsParser):
 		url = node.get('url')
 		if url is None:
 			errors.append('Missing repository url')
+		release = node.get('release')
+		if release is None:
+			release = False
+		elif release == 'false':
+			release = False
+		elif release == 'true':
+			release = True
+		else:
+			errors.append('Invalid value for "release" attribute : ' + release)
 		members['type'] = type
 		members['name'] = name
 		members['url'] = url
+		members['release'] = release
 		if len(errors) > 0:
 			e = ParserException('')
 			e.args = tuple(errors)

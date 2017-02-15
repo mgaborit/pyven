@@ -10,7 +10,7 @@ class PackagesParser(ItemsParser):
 	def _parse(self, node):
 		members = super(PackagesParser, self)._parse(node)
 		items = node.xpath('item')
-		if len(items) == 0:
+		if not members['to_retrieve'] and len(items) == 0:
 			raise ParserException('Missing package items information')
 		members['items'] = []
 		for item in items:
