@@ -8,10 +8,11 @@ logger = logging.getLogger('global')
 class Repository(object):
 	AVAILABLE_TYPES = ['file']
 	
-	def __init__(self, name, type, url):
+	def __init__(self, name, type, url, release=False):
 		self.name = name
 		self.type = type
 		self.url = url
+		self.release = release
 
 	def is_available(self):
 		raise NotImplementedError

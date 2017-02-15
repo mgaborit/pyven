@@ -14,4 +14,4 @@ class DirectoryRepoParser(RepositoriesParser):
 		
 	def _parse(self, node):
 		members = super(DirectoryRepoParser, self)._parse(node)
-		return DirectoryRepo(members['name'], members['type'], members['url'])
+		return DirectoryRepo(members['name'], members['type'], members['url'], members['release'])

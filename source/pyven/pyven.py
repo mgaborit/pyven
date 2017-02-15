@@ -29,7 +29,7 @@ class Pyven:
 	if not os.path.isdir(LOCAL_REPO.url):
 		os.makedirs(LOCAL_REPO.url)
 
-	def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', path=''):
+	def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path=''):
 		
 		self.pym = pym
 		self.path = path
@@ -38,6 +38,9 @@ class Pyven:
 		self.verbose = verbose
 		if self.verbose:
 			logger.info(self._project_log() + 'Verbose mode enabled')
+		self.release = release
+		if self.verbose:
+			logger.info(self._project_log() + 'Release mode enabled')
 		self.warning_as_error = warning_as_error
 		if self.warning_as_error:
 			logger.info(self._project_log() + 'Warnings will be considered as errors')
@@ -168,7 +171,10 @@ class Pyven:
 				else:
 					checked[repo.name] = repo
 					if repo.is_available():
-						logger.info(self._project_log() + 'Repository added --> ' + repo.name + ' : ' + repo.url)
+						if repo.release:
+							logger.info(self._project_log() + 'Release repository added --> ' + repo.name + ' : ' + repo.url)
+						else:
+							logger.info(self._project_log() + 'Repository added --> ' + repo.name + ' : ' + repo.url)
 					else:
 						logger.warning(self._project_log() + 'Repository not accessible --> ' + repo.name + ' : ' + repo.url)
 		self.objects['repositories'] = checked
@@ -456,7 +462,7 @@ class Pyven:
 		for subproject in self.objects['subprojects']:
 			if not subproject._deploy():
 				ok = False
-		for repo in self.objects['repositories'].values():
+		for repo in [r for r in self.objects['repositories'].values() if not r.release or (r.release and self.release)]:
 			for artifact in [a for a in self.objects['artifacts'].values() if a.publish]:
 				repo.publish(artifact, Pyven.WORKSPACE)
 				logger.info(self._project_log() + 'Repository ' + repo.name + ' --> Published artifact ' + artifact.format_name())

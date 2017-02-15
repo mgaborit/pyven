@@ -9,8 +9,8 @@ logger = logging.getLogger('global')
 
 class DirectoryRepo(Repository):
 
-	def __init__(self, name, type, url):
-		super(DirectoryRepo, self, ).__init__(name, type, url)
+	def __init__(self, name, type, url, release=False):
+		super(DirectoryRepo, self, ).__init__(name, type, url, release)
 
 	def is_available(self):
 		return os.path.isdir(self.url)
