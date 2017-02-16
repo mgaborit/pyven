@@ -160,9 +160,9 @@ class Pyven:
 		self.objects['subprojects'] = []
 		for subdirectory in subprojects:
 			if not os.path.isdir(subdirectory):
-				raise PyvenException(self._project_log() + 'Subproject directory does not exist : ' + subdirectory)
+				raise PyvenException('Subproject directory does not exist : ' + subdirectory)
 			elif self.pym not in os.listdir(subdirectory):
-				raise PyvenException(self._project_log() + 'No ' + self.pym + ' file found at ' + subdirectory)
+				raise PyvenException('No ' + self.pym + ' file found at ' + subdirectory)
 			else:
 				subproject = Pyven(step=self.step, verbose=self.verbose, warning_as_error=self.warning_as_error, pym=self.pym, path=os.path.join(self.path, subdirectory))
 				self.objects['subprojects'].append(subproject)
@@ -278,12 +278,6 @@ class Pyven:
 	def _configure(self, arg=None):
 		ok = True
 		self.objects = self.parser.parse()
-		if not self._check_subprojects():
-			ok = False
-		else:
-			for subproject in self.objects['subprojects']:
-				if not subproject.configure():
-					ok = False
 		if not ok or not self._check_repositories():
 			ok = False
 		elif not self._check_artifacts():
@@ -300,6 +294,12 @@ class Pyven:
 			ok = False
 		elif not self._check_integration_tests():
 			ok = False
+		if not self._check_subprojects():
+			ok = False
+		else:
+			for subproject in self.objects['subprojects']:
+				if not subproject.configure():
+					ok = False
 		if self.step != 'deliver':
 			self._set_workspace()
 		return ok
