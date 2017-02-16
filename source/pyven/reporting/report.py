@@ -1,4 +1,4 @@
-import os, webbrowser, logging, codecs
+import os, webbrowser, logging, codecs, shutil
 
 from pyven.exceptions.exception import PyvenException
 from pyven.pyven import Pyven
@@ -138,6 +138,12 @@ class Report(object):
 		html_file = codecs.open(os.path.join(report_dir, self._project_report_name()), 'w', 'utf-8')
 		html_file.write(html_str)
 		html_file.close()
+	
+	@staticmethod
+	def clean():
+		report_dir = os.path.join(Pyven.WORKSPACE.url, 'report')
+		if os.path.isdir(report_dir):
+			shutil.rmtree(report_dir)
 	
 	@staticmethod
 	def _write_projects(projects):

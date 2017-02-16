@@ -83,6 +83,7 @@ def main(args):
 			reports = [Report(project, args.nb_lines)]
 			for subproject in project.objects['subprojects']:
 				reports.append(Report(subproject, args.nb_lines))
+			Report.clean()
 			for report in reports:
 				report.write()
 			if args.display:
