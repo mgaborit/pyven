@@ -14,7 +14,10 @@ class Repository(object):
 		self.url = url
 		self.release = release
 
-	def is_available(self):
+	def is_reachable(self):
+		raise NotImplementedError
+		
+	def is_available(self, item, type):
 		raise NotImplementedError
 		
 	def retrieve(self, artifact, destination):

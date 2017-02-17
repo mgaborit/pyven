@@ -72,6 +72,8 @@ class Pyven:
 				reportables.extend(self.objects['builders'])
 				if self.checkers['artifacts'].enabled():
 					reportables.append(self.checkers['artifacts'])
+				if self.checkers['retrieve'].enabled():
+					reportables.append(self.checkers['retrieve'])
 				if self.checkers['package'].enabled():
 					reportables.append(self.checkers['package'])
 				reportables.extend(self.objects['unit_tests'])
@@ -87,6 +89,8 @@ class Pyven:
 				reportables.extend(self.objects['builders'])
 				if self.checkers['artifacts'].enabled():
 					reportables.append(self.checkers['artifacts'])
+				if self.checkers['retrieve'].enabled():
+					reportables.append(self.checkers['retrieve'])
 				if self.checkers['package'].enabled():
 					reportables.append(self.checkers['package'])
 				reportables.extend(self.objects['unit_tests'])
@@ -101,6 +105,8 @@ class Pyven:
 				reportables.extend(self.objects['builders'])
 				if self.checkers['artifacts'].enabled():
 					reportables.append(self.checkers['artifacts'])
+		elif self.step in ['retrieve']:
+			reportables.append(self.checkers['retrieve'])
 		else:
 			reportables.append(self.parser.checker)
 			reportables.append(self.checkers['configuration'])
@@ -190,7 +196,7 @@ class Pyven:
 					raise PyvenException('Repository already added --> ' + repo.name + ' : ' + repo.url)
 				else:
 					self.objects['repositories'][repo.name] = repo
-					if repo.is_available():
+					if repo.is_reachable():
 						if repo.release:
 							logger.info(self._project_log() + 'Release repository added --> ' + repo.name + ' : ' + repo.url)
 						else:
@@ -419,7 +425,13 @@ class Pyven:
 				ok = False
 		if ok:
 			for package in [p for p in self.objects['packages'].values() if not p.to_retrieve]:
-				if not package.pack(Pyven.WORKSPACE):
+				try:
+					if not package.pack(Pyven.WORKSPACE):
+						ok = False
+				except PyvenException as e:
+					self.checkers['package'].errors.append(e.args)
+					for msg in e.args:
+						logger.error(self._project_log() + msg)
 					ok = False
 		if not ok:
 			raise PyvenException('Some packages were not built')
@@ -506,7 +518,7 @@ class Pyven:
 		logger.info(self._project_log() + 'Delivering to directory ' + path)
 		for package in [p for p in self.objects['packages'].values() if p.publish]:
 			if package.to_retrieve:
-				if self.objects['repositories'][package.repo].is_available():
+				if self.objects['repositories'][package.repo].is_reachable():
 					package.deliver(path, self.objects['repositories'][package.repo])
 				else:
 					logger.error(self._project_log() + 'Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
@@ -552,15 +564,20 @@ class Pyven:
 	
 	def __retrieve(self, type):
 		ok = True
-		for item in [i for i in self.objects[type + 's'].values() if i.to_retrieve and i.repo != Pyven.WORKSPACE.name]:
+		for item in [i for i in self.objects[type + 's'].values() if i.to_retrieve and i.repo]:
 			try:
-				if self.objects['repositories'][item.repo].is_available():
-					self.objects['repositories'][item.repo].retrieve(item, Pyven.WORKSPACE)
-					logger.info(self._project_log() + 'Repository ' + item.repo + ' --> Retrieved ' + type + ' : ' + item.format_name())
-				else:
-					raise RepositoryException(self._project_log() + 'Repository not accessible --> ' + self.objects['repositories'][item.repo].name + ' : ' + self.objects['repositories'][item.repo].url,\
+				if not self.objects['repositories'][item.repo].is_reachable():
+					raise RepositoryException('Repository not accessible --> ' + self.objects['repositories'][item.repo].name + ' : ' + self.objects['repositories'][item.repo].url,\
 												'Unable to retrieve ' + type + ' --> ' + item.format_name())
+				if not self.objects['repositories'][item.repo].is_available(item, type):
+					raise RepositoryException('Repository ' + item.repo + ' --> Unable to retrieve ' + type + ' : ' + item.format_name())
+				if item.repo != Pyven.WORKSPACE.name:
+					self.objects['repositories'][item.repo].retrieve(item, Pyven.WORKSPACE)
+				else:
+					item.file = os.path.join(item.location(Pyven.WORKSPACE.url), os.listdir(item.location(Pyven.WORKSPACE.url))[0])
+				logger.info(self._project_log() + 'Repository ' + item.repo + ' --> Retrieved ' + type + ' : ' + item.format_name())
 			except RepositoryException as e:
+				self.checkers['retrieve'].errors.append(e.args)
 				for msg in e.args:
 					logger.error(msg)
 				ok = False

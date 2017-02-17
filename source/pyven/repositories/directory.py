@@ -12,8 +12,16 @@ class DirectoryRepo(Repository):
 	def __init__(self, name, type, url, release=False):
 		super(DirectoryRepo, self, ).__init__(name, type, url, release)
 
-	def is_available(self):
+	def is_reachable(self):
 		return os.path.isdir(self.url)
+		
+	def is_available(self, item, type):
+		dir = item.location(self.url)
+		dir_ok = os.path.isdir(dir)
+		file_ok = False
+		if dir_ok:
+			file_ok = len(os.listdir(dir)) == 1
+		return dir_ok and file_ok
 		
 	def retrieve(self, item, destination):
 		src_dir = item.location(self.url)

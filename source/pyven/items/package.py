@@ -27,19 +27,26 @@ class Package(Item):
 			os.makedirs(self.location(repo.url))
 		if os.path.isfile(os.path.join(self.location(repo.url), self.basename())):
 			os.remove(os.path.join(self.location(repo.url), self.basename()))
-		zf = zipfile.ZipFile(os.path.join(self.location(repo.url), self.basename()), mode='w')
-		try:
-			for item in self.items:
-				if not os.path.isfile(os.path.join(item.location(repo.url), item.basename())):
-					logger.error('Package item not found --> ' + os.path.join(item.location(repo.url), item.basename()))
-					return False
-				else:
+		ok = True
+		errors = []
+		for item in self.items:
+			if not os.path.isfile(os.path.join(item.location(repo.url), item.basename())):
+				errors.append('Package item not found --> ' + os.path.join(item.location(repo.url), item.basename()))
+				ok = False
+		if ok:
+			zf = zipfile.ZipFile(os.path.join(self.location(repo.url), self.basename()), mode='w')
+			try:
+				for item in self.items:
 					zf.write(os.path.join(item.location(repo.url), item.basename()), item.basename())
 					logger.info('Package ' + self.format_name() + ' --> Added artifact ' + item.format_name())
-		finally:
-			logger.info('Package ' + self.format_name() + ' --> Created archive ' + self.basename())
-			zf.close()
-		return True
+			finally:
+				zf.close()
+				logger.info('Package ' + self.format_name() + ' --> Created archive ' + self.basename())
+		else:
+			e = PyvenException('')
+			e.args = tuple(errors)
+			raise e
+		return ok
 			
 	def unpack(self, dir, repo, flatten=False):
 		if not os.path.isfile(os.path.join(self.location(repo.url), self.basename())):

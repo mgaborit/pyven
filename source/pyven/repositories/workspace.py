@@ -11,7 +11,7 @@ class Workspace(DirectoryRepo):
 	def __init__(self, name, type, url):
 		super(Workspace, self, ).__init__(name, type, url)
 		
-	def is_available(self):
+	def is_reachable(self):
 		if not os.path.isdir(self.url):
 			os.makedirs(self.url)
 		if not os.path.isdir(os.path.join(self.url, 'packages')):
