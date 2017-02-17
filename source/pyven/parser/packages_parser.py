@@ -19,13 +19,13 @@ class PackagesParser(ItemsParser):
 		if node.find('delivery') is not None:
 			delivery = node.find('delivery').text
 		if '$company' in delivery:
-			delivery = delivery.replace('$company', members['company'])
+			delivery = delivery.replace('$$company', members['company'])
 		if '$name' in delivery:
-			delivery = delivery.replace('$name', members['name'])
+			delivery = delivery.replace('$$name', members['name'])
 		if '$config' in delivery:
-			delivery = delivery.replace('$config', members['config'])
+			delivery = delivery.replace('$$config', members['config'])
 		if '$version' in delivery:
-			delivery = delivery.replace('$version', members['version'])
+			delivery = delivery.replace('$$version', members['version'])
 		members['delivery'] = delivery
 		return Package(members['company'],\
 						members['name'],\

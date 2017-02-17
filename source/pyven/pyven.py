@@ -45,7 +45,16 @@ class Pyven:
 		if self.warning_as_error:
 			logger.info(self._project_log() + 'Warnings will be considered as errors')
 		self.parser = PymParser(os.path.join(self.path, self.pym))
-		self.objects = {'subprojects' : []}
+		self.constants = {}
+		self.objects = {'subprojects' : [],\
+						'repositories' : {},\
+						'artifacts' : {},\
+						'packages' : {},\
+						'preprocessors' : [],\
+						'builders' : [],\
+						'unit_tests' : [],\
+						'valgrind_tests' : [],\
+						'integration_tests' : []}
 		self.checkers = {'artifacts' : Checker('Artifacts'),\
 						'package' : Checker('Packaging'),\
 						'retrieve' : Checker('Retrieval'),\
@@ -141,11 +150,16 @@ class Pyven:
 		
 # ============================================================================================================		
 
-	def _check(function):
-		def __intern(self=None):
+	def _replace_constants(self, str):
+		for name, value in self.constants.items():
+			str = str.replace('$'+name, value)
+		return str
+
+	def _check(function, objects=None):
+		def __intern(self=None, objects=None):
 			ok = True
 			try:
-				function(self)
+				function(self, objects)
 			except PyvenException as e:
 				self.checkers['configuration'].errors.append(e.args)
 				for msg in e.args:
@@ -155,10 +169,8 @@ class Pyven:
 		return __intern
 		
 	@_check
-	def _check_subprojects(self):
-		subprojects = self.objects['subprojects']
-		self.objects['subprojects'] = []
-		for subdirectory in subprojects:
+	def _check_subprojects(self, objects):
+		for subdirectory in objects['subprojects']:
 			if not os.path.isdir(subdirectory):
 				raise PyvenException('Subproject directory does not exist : ' + subdirectory)
 			elif self.pym not in os.listdir(subdirectory):
@@ -169,10 +181,8 @@ class Pyven:
 				logger.info(self._project_log() + 'Added subproject --> ' + subdirectory)
 	
 	@_check
-	def _check_repositories(self):
-		repositories = self.objects['repositories']
-		self.objects['repositories'] = {}
-		for repo in repositories:
+	def _check_repositories(self, objects):
+		for repo in objects['repositories']:
 			if repo.name == 'workspace' or repo.name == Pyven.LOCAL_REPO.name:
 				raise PyvenException('Repository name reserved --> ' + repo.name + ' : ' + repo.url)
 			else:
@@ -189,10 +199,14 @@ class Pyven:
 						raise PyvenException('Repository not accessible --> ' + repo.name + ' : ' + repo.url)
 		
 	@_check
-	def _check_artifacts(self):
-		artifacts = self.objects['artifacts']
-		self.objects['artifacts'] = {}
-		for artifact in artifacts:
+	def _check_artifacts(self, objects):
+		for artifact in objects['artifacts']:
+			artifact.company = self._replace_constants(artifact.company)
+			artifact.name = self._replace_constants(artifact.name)
+			artifact.config = self._replace_constants(artifact.config)
+			artifact.version = self._replace_constants(artifact.version)
+			if not artifact.to_retrieve:
+				artifact.file = self._replace_constants(artifact.file)
 			if artifact.format_name() in self.objects['artifacts'].keys():
 				raise PyvenException('Artifact already added --> ' + artifact.format_name())
 			elif artifact.to_retrieve and artifact.repo not in self.objects['repositories'].keys() and artifact.repo not in [Pyven.LOCAL_REPO.name, 'workspace']:
@@ -204,10 +218,13 @@ class Pyven:
 					logger.info(self._project_log() + 'Artifact ' + artifact.format_name() + ' --> publishment disabled')
 		
 	@_check
-	def _check_packages(self):
-		packages = self.objects['packages']
-		self.objects['packages'] = {}
-		for package in packages:
+	def _check_packages(self, objects):
+		for package in objects['packages']:
+			package.company = self._replace_constants(package.company)
+			package.name = self._replace_constants(package.name)
+			package.config = self._replace_constants(package.config)
+			package.version = self._replace_constants(package.version)
+			package.delivery = self._replace_constants(package.delivery)
 			items = []
 			items.extend(package.items)
 			package.items = []
@@ -217,6 +234,7 @@ class Pyven:
 				raise PyvenException('Package repository not declared --> ' + package.format_name() + ' : repo ' + package.repo)
 			else:
 				for item in items:
+					item = self._replace_constants(item)
 					if item not in self.objects['artifacts'].keys():
 						raise PyvenException('Package ' + package.format_name() + ' : Artifact not declared --> ' + item)
 					else:
@@ -228,41 +246,44 @@ class Pyven:
 					logger.info(self._project_log() + 'Package ' + package.format_name() + ' --> publishment disabled')
 		
 	@_check
-	def _check_preprocessors(self):
+	def _check_preprocessors(self, objects):
 		checked = []
-		for preprocessor in self.objects['preprocessors']:
+		for preprocessor in objects['preprocessors']:
+			preprocessor.name = self._replace_constants(preprocessor.name)
 			checked.append(preprocessor)
 			logger.info(self._project_log() + 'Preprocessor added --> ' + preprocessor.type + ':' + preprocessor.name)
 		self.objects['preprocessors'] = checked
 		
 	@_check
-	def _check_builders(self):
+	def _check_builders(self, objects):
 		checked = []
-		for builder in self.objects['builders']:
+		for builder in objects['builders']:
+			builder.name = self._replace_constants(builder.name)
 			checked.append(builder)
 			logger.info(self._project_log() + 'Builder added --> ' + builder.type + ':' + builder.name)
 		self.objects['builders'] = checked
 		
 	@_check
-	def _check_unit_tests(self):
+	def _check_unit_tests(self, objects):
 		checked = []
-		for unit_test in self.objects['unit_tests']:
+		for unit_test in objects['unit_tests']:
 			checked.append(unit_test)
 			logger.info(self._project_log() + 'Unit test added --> ' + os.path.join(unit_test.path, unit_test.filename))
 		self.objects['unit_tests'] = checked
 		
 	@_check
-	def _check_valgrind_tests(self):
+	def _check_valgrind_tests(self, objects):
 		checked = []
-		for valgrind_test in self.objects['valgrind_tests']:
+		for valgrind_test in objects['valgrind_tests']:
 			checked.append(valgrind_test)
 			logger.info(self._project_log() + 'Valgrind test added --> ' + os.path.join(valgrind_test.path, valgrind_test.filename))
 		self.objects['valgrind_tests'] = checked
 		
 	@_check
-	def _check_integration_tests(self):
+	def _check_integration_tests(self, objects):
 		checked = []
-		for integration_test in self.objects['integration_tests']:
+		for integration_test in objects['integration_tests']:
+			integration_test.package = self._replace_constants(integration_test.package)
 			if integration_test.package not in self.objects['packages'].keys():
 				raise PyvenException('Integration test ' + os.path.join(integration_test.path, integration_test.filename)\
 							+ ' : Package not declared --> ' + integration_test.package)
@@ -277,24 +298,25 @@ class Pyven:
 	@_step
 	def _configure(self, arg=None):
 		ok = True
-		self.objects = self.parser.parse()
-		if not ok or not self._check_repositories():
+		objects = self.parser.parse()
+		self.constants = objects['constants']
+		if not ok or not self._check_repositories(objects):
 			ok = False
-		elif not self._check_artifacts():
+		elif not self._check_artifacts(objects):
 			ok = False
-		elif not self._check_packages():
+		elif not self._check_packages(objects):
 			ok = False
-		elif not self._check_preprocessors():
+		elif not self._check_preprocessors(objects):
 			ok = False
-		elif not self._check_builders():
+		elif not self._check_builders(objects):
 			ok = False
-		elif not self._check_unit_tests():
+		elif not self._check_unit_tests(objects):
 			ok = False
-		elif not self._check_valgrind_tests():
+		elif not self._check_valgrind_tests(objects):
 			ok = False
-		elif not self._check_integration_tests():
+		elif not self._check_integration_tests(objects):
 			ok = False
-		if not self._check_subprojects():
+		if not self._check_subprojects(objects):
 			ok = False
 		else:
 			for subproject in self.objects['subprojects']:
