@@ -45,6 +45,7 @@ def main():
 	zf.write('pyven/parser/__init__.py')
 	zf.write('pyven/parser/pym_parser.py')
 	zf.write('pyven/parser/elements_parser.py')
+	zf.write('pyven/parser/constants_parser.py')
 	zf.write('pyven/parser/items_parser.py')
 	zf.write('pyven/parser/artifacts_parser.py')
 	zf.write('pyven/parser/packages_parser.py')
