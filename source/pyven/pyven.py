@@ -152,7 +152,7 @@ class Pyven:
 
 	def _replace_constants(self, str):
 		for name, value in self.constants.items():
-			str = str.replace('$'+name, value)
+			str = str.replace('$('+name+')', value)
 		return str
 
 	def _check(function, objects=None):
