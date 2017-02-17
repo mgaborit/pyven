@@ -106,7 +106,12 @@ class Pyven:
 				if self.checkers['artifacts'].enabled():
 					reportables.append(self.checkers['artifacts'])
 		elif self.step in ['retrieve']:
-			reportables.append(self.checkers['retrieve'])
+			if self.parser.checker.enabled():
+				reportables.append(self.parser.checker)
+			elif self.checkers['configuration'].enabled():
+				reportables.append(self.checkers['configuration'])
+			else:
+				reportables.append(self.checkers['retrieve'])
 		else:
 			reportables.append(self.parser.checker)
 			reportables.append(self.checkers['configuration'])

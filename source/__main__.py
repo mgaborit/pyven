@@ -79,7 +79,7 @@ def main(args):
 			logger.error(msg)
 		sys.exit(1)
 	finally:
-		if project.step not in ['aggregate', 'deliver', 'clean', 'retrieve']:
+		if project.step not in ['aggregate', 'clean']:
 			reports = [Report(project, args.nb_lines)]
 			for subproject in project.objects['subprojects']:
 				reports.append(Report(subproject, args.nb_lines))
