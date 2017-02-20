@@ -18,6 +18,10 @@ class Report(object):
 		self.nb_lines = nb_lines
 	
 	@staticmethod
+	def _failure_comment():
+		return '<!-- FAILURE -->'
+	
+	@staticmethod
 	def _report_name_to_path(name):
 		name_platform = name.split('.')
 		if name_platform[0].startswith('root_project'):
@@ -105,7 +109,15 @@ class Report(object):
 		return html_str
 		
 	def _write_body(self):
-		html_str = self._write_summary()
+		html_str = ''
+		ok = True
+		i = 0
+		while ok and i < len(self.pyven.reportables()):
+			ok = self.pyven.reportables()[i].report_status() == 'SUCCESS'
+			i += 1
+		if not ok:
+			html_str = Report._failure_comment()
+		html_str += self._write_summary()
 		count = 0
 		for step in self.pyven.reportables():
 			html_str += self._write_step(step, count)

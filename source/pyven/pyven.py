@@ -39,7 +39,7 @@ class Pyven:
 		if self.verbose:
 			logger.info(self._project_log() + 'Verbose mode enabled')
 		self.release = release
-		if self.verbose:
+		if self.release:
 			logger.info(self._project_log() + 'Release mode enabled')
 		self.warning_as_error = warning_as_error
 		if self.warning_as_error:
