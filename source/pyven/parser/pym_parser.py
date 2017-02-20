@@ -24,6 +24,7 @@ class PymParser(object):
 	
 	def __init__(self, pym='pym.xml'):
 		self.pym = pym
+		self.repo_config = 'repositories.xml'
 		self.checker = Checker('Parser')
 		self.constants_parser = ConstantsParser('/pyven/constants/constant')
 		self.directory_repo_parser = DirectoryRepoParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/repositories/repository')
@@ -35,28 +36,38 @@ class PymParser(object):
 		self.valgrind_tests_parser = ValgrindTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="valgrind"]')
 		self.integration_tests_parser = IntegrationTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="integration"]')
 		
+	def _check_version(self, tree, file):
+		doc_element = tree.getroot()
+		if doc_element is None or doc_element.tag == "name":
+			raise ParserException('[' + file + '] Missing "pyven" tag')
+		expected_pyven_version = doc_element.get('version')
+		if expected_pyven_version is None:
+			raise ParserException('[' + file + '] Missing Pyven version information')
+		if expected_pyven_version != pyven.constants.VERSION:
+			raise ParserException('[' + file + '] Invalid Pyven version --> Expected : ' + expected_pyven_version + ', actual : ' + pyven.constants.VERSION)
+		
+	def _parse_xml(self, file):
+		tree = None
+		if not os.path.isfile(file):
+			raise ParserException('Configuration file not available : ' + file)
+		try:
+			tree = etree.parse(file)
+		except Exception as e:
+			pyven_exception = ParserException('')
+			pyven_exception.args = e.args
+			raise pyven_exception
+		return tree
+		
 	def parse(self):
 		logger.info('Starting ' + self.pym + ' parsing')
 		try:
-			if not os.path.isfile(self.pym):
-				raise ParserException('No configuration file available in current directory : ' + self.pym)
-			try:
-				tree = etree.parse(self.pym)
-			except Exception as e:
-				pyven_exception = ParserException('')
-				pyven_exception.args = e.args
-				raise pyven_exception
+			repo_config = os.path.join(os.environ.get('PVN_HOME'), self.repo_config)
+			tree = self._parse_xml(repo_config)
+			self._check_version(tree, repo_config)
+			self.directory_repo_parser.parse_available_repositories(tree)
 			
-			doc_element = tree.getroot()
-			
-			if doc_element is None or doc_element.tag == "name":
-				raise ParserException('Missing "pyven" markup')
-			expected_pyven_version = doc_element.get('version')
-			if expected_pyven_version is None:
-				raise ParserException('Missing Pyven version information')
-			logger.info('Expected Pyven version : ' + expected_pyven_version)
-			if expected_pyven_version != pyven.constants.VERSION:
-				raise ParserException('Invalid Pyven version', 'Expected version : ' + expected_pyven_version, 'Version in use : ' + pyven.constants.VERSION)
+			tree = self._parse_xml(self.pym)
+			self._check_version(tree, self.pym)
 			
 			constants = self.constants_parser.parse(tree)
 			
