@@ -14,6 +14,7 @@ from pyven.parser.artifacts_parser import ArtifactsParser
 from pyven.parser.packages_parser import PackagesParser
 from pyven.parser.msbuild_parser import MSBuildParser
 from pyven.parser.cmake_parser import CMakeParser
+from pyven.parser.command_parser import CommandParser
 from pyven.parser.unit_tests_parser import UnitTestsParser
 from pyven.parser.valgrind_tests_parser import ValgrindTestsParser
 from pyven.parser.integration_tests_parser import IntegrationTestsParser
@@ -31,6 +32,7 @@ class PymParser(object):
 		self.artifacts_parser = ArtifactsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/artifacts/artifact')
 		self.packages_parser = PackagesParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/packages/package')
 		self.cmake_parser = CMakeParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
+		self.command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
 		self.msbuild_parser = MSBuildParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
 		self.unit_tests_parser = UnitTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="unit"]')
 		self.valgrind_tests_parser = ValgrindTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="valgrind"]')
@@ -87,6 +89,8 @@ class PymParser(object):
 			builders = []
 			for msbuild_tools in self.msbuild_parser.parse(tree):
 				builders.extend(msbuild_tools)
+			for command_tools in self.command_parser.parse(tree):
+				builders.extend(command_tools)
 			
 			unit_tests = self.unit_tests_parser.parse(tree)
 			valgrind_tests = self.valgrind_tests_parser.parse(tree)
