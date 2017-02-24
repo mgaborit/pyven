@@ -3,7 +3,7 @@ from pyven.exceptions.parser_exception import ParserException
 from pyven.parser.elements_parser import ElementsParser
 
 class ToolsParser(ElementsParser):
-	TYPES = ['msbuild', 'cmake', 'makefile']
+	TYPES = ['msbuild', 'cmake', 'makefile', 'command']
 	SCOPES = ['preprocess', 'build']
 	
 	def __init__(self, query):
@@ -16,7 +16,7 @@ class ToolsParser(ElementsParser):
 		if type is None:
 			errors.append('Missing tool type')
 		elif type not in ToolsParser.TYPES:
-			errors.append('Invalid tool type : ' + type + ', available tools : ' + str(Tool.TYPES))
+			errors.append('Invalid tool type : ' + type + ', available tools : ' + str(ToolsParser.TYPES))
 		name = node.get('name')
 		if name is None:
 			errors.append('Missing tool name')
@@ -24,7 +24,7 @@ class ToolsParser(ElementsParser):
 		if scope is None:
 			errors.append('Missing tool scope')
 		elif scope not in ToolsParser.SCOPES:
-			errors.append('Invalid tool scope : ' + scope + ', available scopes : ' + str(Tool.SCOPES))
+			errors.append('Invalid tool scope : ' + scope + ', available scopes : ' + str(ToolsParser.SCOPES))
 		members['type'] = type
 		members['name'] = name
 		members['scope'] = scope

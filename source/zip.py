@@ -20,6 +20,7 @@ def main():
 	zf.write('pyven/processing/tools/makefile.py')
 	zf.write('pyven/processing/tools/msbuild.py')
 	zf.write('pyven/processing/tools/cmake.py')
+	zf.write('pyven/processing/tools/command.py')
 	
 	zf.write('pyven/processing/tests/__init__.py')
 	zf.write('pyven/processing/tests/test.py')
@@ -52,6 +53,7 @@ def main():
 	zf.write('pyven/parser/tools_parser.py')
 	zf.write('pyven/parser/msbuild_parser.py')
 	zf.write('pyven/parser/cmake_parser.py')
+	zf.write('pyven/parser/command_parser.py')
 	zf.write('pyven/parser/repositories_parser.py')
 	zf.write('pyven/parser/directory_repo_parser.py')
 	zf.write('pyven/parser/tests_parser.py')
