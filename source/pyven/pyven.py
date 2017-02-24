@@ -18,6 +18,9 @@ from pyven.parser.pym_parser import PymParser
 
 from pyven.checkers.checker import Checker
 
+from pyven.reporting.reportable import Reportable
+from pyven.processing.processible import Processible
+
 logger = logging.getLogger('global')
 
 class Pyven:
@@ -112,6 +115,8 @@ class Pyven:
 				reportables.append(self.checkers['configuration'])
 			else:
 				reportables.append(self.checkers['retrieve'])
+		elif self.step in ['parse']:
+			reportables.extend(self.objects['unit_tests'])
 		else:
 			reportables.append(self.parser.checker)
 			reportables.append(self.checkers['configuration'])
@@ -611,4 +616,23 @@ class Pyven:
 	def retrieve(self, arg=None):
 		if self.configure():
 			return self._retrieve(arg)
+					
+# ============================================================================================================		
+
+	@_step
+	def _parse(self, path):
+		ok = True
+		format = 'cppunit'
+		for report in [r for r in os.listdir(path) if r.endswith('.xml')]:
+			test = Test('', path, report, [], format)
+			test.errors = Reportable.parse_xml(format, os.path.join(path, report))
+			if len(test.errors) > 0:
+				test.status = Processible.STATUS['failure']
+			else:
+				test.status = Processible.STATUS['success']
+			self.objects['unit_tests'].append(test)
+		return ok
+		
+	def parse(self, arg=None):
+		return self._parse(arg)
 			

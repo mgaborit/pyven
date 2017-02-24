@@ -31,7 +31,7 @@ def main(args):
 	project = Pyven(args.step, args.verbose, args.warning_as_error, args.pym, args.release)
 	try:
 		ok = True
-		if project.step != 'deliver' and args.path is not None:
+		if project.step not in ['deliver', 'parse'] and args.path is not None:
 			parser.error('Too many arguments provided')
 	
 		if project.step == 'configure':
@@ -63,6 +63,13 @@ def main(args):
 				ok = project.deliver(args.path)
 			else:
 				parser.error('Missing path to delivery directory')
+				ok = False
+	
+		if project.step == 'parse':
+			if args.path is not None:
+				ok = project.parse(args.path)
+			else:
+				parser.error('Missing path to parsing directory')
 				ok = False
 	
 		if project.step == 'clean':
