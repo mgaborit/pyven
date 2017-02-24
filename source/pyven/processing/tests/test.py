@@ -20,6 +20,9 @@ class Test(Processible, Reportable):
 		self.arguments = arguments
 		self.format = format
 	
+	def report_identifiers(self):
+		return ['Test', self.filename]
+		
 	def report_summary(self):
 		return self.report_identifiers()
 
