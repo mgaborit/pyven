@@ -25,11 +25,11 @@ class Report(object):
 	def _report_name_to_path(name):
 		name_platform = name.split('.')
 		if name_platform[0].startswith('root_project'):
-			return name_platform[1] + ' : Root project'
+			return 'Root project'
 		if name_platform[1] == 'windows':
-			return name_platform[1] + ' : ' + '\\'.join(name_platform[0].split('_SLASH_'))
+			return '\\'.join(name_platform[0].split('_SLASH_'))
 		else:
-			return name_platform[1] + ' : ' + '/'.join(name_platform[0].split('_SLASH_'))
+			return '/'.join(name_platform[0].split('_SLASH_'))
 	
 	@staticmethod
 	def _path_to_report_name(path):
