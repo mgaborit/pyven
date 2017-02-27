@@ -23,7 +23,7 @@ class Report(object):
 	
 	@staticmethod
 	def _report_name_to_path(name):
-		name_platform = name.split('.')
+		name_platform = name.split('_PLATFORM_')
 		if name_platform[0].startswith('root_project'):
 			return 'Root project'
 		if name_platform[1] == 'windows':
@@ -33,14 +33,14 @@ class Report(object):
 	
 	@staticmethod
 	def _path_to_report_name(path):
-		return '_SLASH_'.join(path.split(os.sep)) + '.' + pyven.constants.PLATFORM
+		return '_SLASH_'.join(path.split(os.sep)) + '_PLATFORM_' + pyven.constants.PLATFORM
 
 	@staticmethod
 	def _path_to_report_filename(path):
 		return Report._path_to_report_name(path) + '.html'
 	
 	def _project_report_name(self):
-		name = 'root_project.' + pyven.constants.PLATFORM + '.html'
+		name = 'root_project_PLATFORM_' + pyven.constants.PLATFORM + '.html'
 		if self.pyven.path != '':
 			name = self._path_to_report_filename(self.pyven.path)
 		return name
