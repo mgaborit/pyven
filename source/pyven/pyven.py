@@ -212,7 +212,7 @@ class Pyven:
 						else:
 							logger.info(self._project_log() + 'Repository added --> ' + repo.name + ' : ' + repo.url)
 					else:
-						raise PyvenException('Repository not accessible --> ' + repo.name + ' : ' + repo.url)
+						logger.warning('Repository not accessible --> ' + repo.name + ' : ' + repo.url)
 		
 	@_check
 	def _check_artifacts(self, objects):
