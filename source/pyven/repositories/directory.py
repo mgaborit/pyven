@@ -15,7 +15,7 @@ class DirectoryRepo(Repository):
 	def is_reachable(self):
 		return os.path.isdir(self.url)
 		
-	def is_available(self, item, type):
+	def is_available(self, item):
 		dir = item.location(self.url)
 		dir_ok = os.path.isdir(dir)
 		file_ok = False
@@ -37,6 +37,8 @@ class DirectoryRepo(Repository):
 		shutil.copy2(src_file, dst_file)
 		
 	def publish(self, item, source):
+		if self.release and self.is_available(item):
+			raise RepositoryException('Release repository ' + self.name + ' --> ' + item.type() + ' already present : ' + item.format_name())
 		src_file = os.path.join(item.location(source.url), item.basename())
 		if not os.path.isfile(src_file):
 			raise RepositoryException('Item not found --> ' + item.format_name() + ' : ' + src_file)

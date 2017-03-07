@@ -61,7 +61,8 @@ class Pyven:
 		self.checkers = {'artifacts' : Checker('Artifacts'),\
 						'package' : Checker('Packaging'),\
 						'retrieve' : Checker('Retrieval'),\
-						'configuration' : Checker('Configuration')}
+						'configuration' : Checker('Configuration'),\
+						'deployment' : Checker('Deployment')}
 		
 	def reportables(self):
 		reportables = []
@@ -82,6 +83,8 @@ class Pyven:
 				reportables.extend(self.objects['unit_tests'])
 				reportables.extend(self.objects['valgrind_tests'])
 				reportables.extend(self.objects['integration_tests'])
+				if self.checkers['deployment'].enabled():
+					reportables.append(self.checkers['deployment'])
 		elif self.step in ['test', 'package']:
 			if self.parser.checker.enabled():
 				reportables.append(self.parser.checker)
@@ -502,12 +505,18 @@ class Pyven:
 			if not subproject._deploy():
 				ok = False
 		for repo in [r for r in self.objects['repositories'].values() if (not r.release or (r.release and self.release)) and r.name != Pyven.WORKSPACE.name]:
-			for artifact in [a for a in self.objects['artifacts'].values() if a.publish]:
-				repo.publish(artifact, Pyven.WORKSPACE)
-				logger.info(self._project_log() + 'Repository ' + repo.name + ' --> Published artifact ' + artifact.format_name())
-			for package in [p for p in self.objects['packages'].values() if p.publish]:
-				repo.publish(package, Pyven.WORKSPACE)
-				logger.info(self._project_log() + 'Repository ' + repo.name + ' --> Published package ' + package.format_name())
+			try:
+				for artifact in [a for a in self.objects['artifacts'].values() if a.publish]:
+					repo.publish(artifact, Pyven.WORKSPACE)
+					logger.info(self._project_log() + 'Repository ' + repo.name + ' --> Published artifact ' + artifact.format_name())
+				for package in [p for p in self.objects['packages'].values() if p.publish]:
+					repo.publish(package, Pyven.WORKSPACE)
+					logger.info(self._project_log() + 'Repository ' + repo.name + ' --> Published package ' + package.format_name())
+			except RepositoryException as e:
+				self.checkers['deployment'].errors.append(e.args)
+				for msg in e.args:
+					logger.error(self._project_log() + msg)
+				raise e
 		return ok
 		
 	def deploy(self, arg=None):
@@ -579,7 +588,7 @@ class Pyven:
 				if not self.objects['repositories'][item.repo].is_reachable():
 					raise RepositoryException('Repository not accessible --> ' + self.objects['repositories'][item.repo].name + ' : ' + self.objects['repositories'][item.repo].url,\
 												'Unable to retrieve ' + type + ' --> ' + item.format_name())
-				if not self.objects['repositories'][item.repo].is_available(item, type):
+				if not self.objects['repositories'][item.repo].is_available(item):
 					raise RepositoryException('Repository ' + item.repo + ' --> Unable to retrieve ' + type + ' : ' + item.format_name())
 				if item.repo != Pyven.WORKSPACE.name:
 					self.objects['repositories'][item.repo].retrieve(item, Pyven.WORKSPACE)
