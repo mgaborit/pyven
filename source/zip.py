@@ -7,6 +7,12 @@ def main():
 	zf.write('pyven/pyven.py')
 	zf.write('pyven/constants.py')
 	
+	zf.write('pyven/steps/__init__.py')
+	zf.write('pyven/steps/step.py')
+	zf.write('pyven/steps/preprocess.py')
+	zf.write('pyven/steps/build.py')
+	zf.write('pyven/steps/artifacts_checks.py')
+	
 	zf.write('pyven/items/__init__.py')
 	zf.write('pyven/items/item.py')
 	zf.write('pyven/items/artifact.py')

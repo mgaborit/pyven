@@ -10,7 +10,7 @@ logger = logging.getLogger('global')
 class DirectoryRepo(Repository):
 
 	def __init__(self, name, type, url, release=False):
-		super(DirectoryRepo, self, ).__init__(name, type, url, release)
+		super(DirectoryRepo, self).__init__(name, type, url, release)
 
 	def is_reachable(self):
 		return os.path.isdir(self.url)
