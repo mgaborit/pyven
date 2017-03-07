@@ -21,9 +21,11 @@ from pyven.checkers.checker import Checker
 from pyven.reporting.reportable import Reportable
 from pyven.processing.processible import Processible
 
+from pyven.steps.step import Step
 from pyven.steps.preprocess import Preprocess
 from pyven.steps.build import Build
 from pyven.steps.artifacts_checks import ArtifactsChecks
+from pyven.steps.unit_tests import UnitTests
 
 logger = logging.getLogger('global')
 
@@ -70,6 +72,7 @@ class Pyven:
 		self.preprocess = Preprocess(self.path, self.verbose)
 		self.build2 = Build(self.path, self.verbose, self.warning_as_error)
 		self.artifacts_checks = ArtifactsChecks(self.path, self.verbose)
+		self.unit_tests = UnitTests(self.path, self.verbose)
 		
 	def reportables(self):
 		reportables = []
@@ -79,10 +82,10 @@ class Pyven:
 			elif self.checkers['configuration'].enabled():
 				reportables.append(self.checkers['configuration'])
 			else:
-				reportables.extend(self.objects['preprocessors'])
+				reportables.extend(self.preprocess.tools)
 				if self.preprocess.checker.enabled():
 					reportables.append(self.preprocess.checker)
-				reportables.extend(self.objects['builders'])
+				reportables.extend(self.build2.tools)
 				if self.build2.checker.enabled():
 					reportables.append(self.build2.checker)
 				if self.artifacts_checks.checker.enabled():
@@ -91,7 +94,9 @@ class Pyven:
 					reportables.append(self.checkers['retrieve'])
 				if self.checkers['package'].enabled():
 					reportables.append(self.checkers['package'])
-				reportables.extend(self.objects['unit_tests'])
+				reportables.extend(self.unit_tests.tests)
+				if self.unit_tests.checker.enabled():
+					reportables.append(self.unit_tests.checker)
 				reportables.extend(self.objects['valgrind_tests'])
 				reportables.extend(self.objects['integration_tests'])
 				if self.checkers['deployment'].enabled():
@@ -102,10 +107,10 @@ class Pyven:
 			elif self.checkers['configuration'].enabled():
 				reportables.append(self.checkers['configuration'])
 			else:
-				reportables.extend(self.objects['preprocessors'])
+				reportables.extend(self.preprocess.tools)
 				if self.preprocess.checker.enabled():
 					reportables.append(self.preprocess.checker)
-				reportables.extend(self.objects['builders'])
+				reportables.extend(self.build2.tools)
 				if self.build2.checker.enabled():
 					reportables.append(self.build2.checker)
 				if self.artifacts_checks.checker.enabled():
@@ -114,7 +119,9 @@ class Pyven:
 					reportables.append(self.checkers['retrieve'])
 				if self.checkers['package'].enabled():
 					reportables.append(self.checkers['package'])
-				reportables.extend(self.objects['unit_tests'])
+				reportables.extend(self.unit_tests.tests)
+				if self.unit_tests.checker.enabled():
+					reportables.append(self.unit_tests.checker)
 				reportables.extend(self.objects['valgrind_tests'])
 		elif self.step in ['build']:
 			if self.parser.checker.enabled():
@@ -122,10 +129,10 @@ class Pyven:
 			elif self.checkers['configuration'].enabled():
 				reportables.append(self.checkers['configuration'])
 			else:
-				reportables.extend(self.objects['preprocessors'])
+				reportables.extend(self.preprocess.tools)
 				if self.preprocess.checker.enabled():
 					reportables.append(self.preprocess.checker)
-				reportables.extend(self.objects['builders'])
+				reportables.extend(self.build2.tools)
 				if self.build2.checker.enabled():
 					reportables.append(self.build2.checker)
 				if self.artifacts_checks.checker.enabled():
@@ -153,6 +160,7 @@ class Pyven:
 			os.makedirs(Pyven.WORKSPACE.url)
 		logger.info('Workspace set at : ' + Pyven.WORKSPACE.url)
 		self.objects['repositories'][Pyven.WORKSPACE.name] = Pyven.WORKSPACE
+		Step.WORKSPACE = Pyven.WORKSPACE
 	
 	def _step(function, arg=None):
 		def __intern(self=None, arg=None):
@@ -308,7 +316,7 @@ class Pyven:
 		for unit_test in objects['unit_tests']:
 			checked.append(unit_test)
 			logger.info(self._project_log() + 'Unit test added --> ' + os.path.join(unit_test.path, unit_test.filename))
-		self.objects['unit_tests'] = checked
+		self.unit_tests.tests = checked
 		
 	@_check
 	def _check_valgrind_tests(self, objects):
@@ -380,6 +388,7 @@ class Pyven:
 		if ok:
 			for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
 				Pyven.WORKSPACE.publish(artifact, artifact.file)
+		return ok
 		
 	def build(self, arg=None):
 		if self.configure():
@@ -407,13 +416,9 @@ class Pyven:
 				ok = False
 			for dir in subproject.path.split(os.sep):
 				os.chdir('..')
-		if len(self.objects['unit_tests']) == 0:
-			logger.warning(self._project_log() + 'No unit tests found')
-		else:
-			if not self.__test(self.objects['unit_tests'], self.verbose):
-				raise PyvenException('Unit test failures found')
-			if not self.__test(self.objects['valgrind_tests'], self.verbose):
-				raise PyvenException('Valgrind test failures found')
+		ok = self.unit_tests.process()
+		if not self.__test(self.objects['valgrind_tests'], self.verbose):
+			raise PyvenException('Valgrind test failures found')
 		return ok
 
 	def test(self, arg=None):
