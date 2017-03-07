@@ -24,7 +24,7 @@ class ArtifactsChecks(Step):
 				ok = False
 			else:
 				logger.info(self.log_path() + 'Artifact ' + artifact.format_name() + ' --> OK')
-		if ok:
+		if not ok:
 			logger.error('Artifacts missing')
 		else:
 			logger.info(self.log_path() + self.name + ' completed')

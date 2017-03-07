@@ -27,7 +27,7 @@ class Build(Step):
 				toc = time.time()
 				logger.info(self.log_path() + 'Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 		if not ok:
-			logger.error(sub_step[1] + ' errors found')
+			logger.error(self.name + ' errors found')
 		else:
 			logger.info(self.log_path() + self.name + ' completed')
 		return ok
