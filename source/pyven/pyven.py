@@ -579,7 +579,7 @@ class Pyven:
 				if not self.objects['repositories'][item.repo].is_reachable():
 					raise RepositoryException('Repository not accessible --> ' + self.objects['repositories'][item.repo].name + ' : ' + self.objects['repositories'][item.repo].url,\
 												'Unable to retrieve ' + type + ' --> ' + item.format_name())
-				if not self.objects['repositories'][item.repo].is_available(item, type):
+				if not self.objects['repositories'][item.repo].is_available(item):
 					raise RepositoryException('Repository ' + item.repo + ' --> Unable to retrieve ' + type + ' : ' + item.format_name())
 				if item.repo != Pyven.WORKSPACE.name:
 					self.objects['repositories'][item.repo].retrieve(item, Pyven.WORKSPACE)
