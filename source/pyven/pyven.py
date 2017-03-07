@@ -21,6 +21,10 @@ from pyven.checkers.checker import Checker
 from pyven.reporting.reportable import Reportable
 from pyven.processing.processible import Processible
 
+from pyven.steps.preprocess import Preprocess
+from pyven.steps.build import Build
+from pyven.steps.artifacts_checks import ArtifactsChecks
+
 logger = logging.getLogger('global')
 
 class Pyven:
@@ -63,6 +67,9 @@ class Pyven:
 						'retrieve' : Checker('Retrieval'),\
 						'configuration' : Checker('Configuration'),\
 						'deployment' : Checker('Deployment')}
+		self.preprocess = Preprocess(self.path, self.verbose)
+		self.build2 = Build(self.path, self.verbose, self.warning_as_error)
+		self.artifacts_checks = ArtifactsChecks(self.path, self.verbose)
 		
 	def reportables(self):
 		reportables = []
@@ -73,9 +80,13 @@ class Pyven:
 				reportables.append(self.checkers['configuration'])
 			else:
 				reportables.extend(self.objects['preprocessors'])
+				if self.preprocess.checker.enabled():
+					reportables.append(self.preprocess.checker)
 				reportables.extend(self.objects['builders'])
-				if self.checkers['artifacts'].enabled():
-					reportables.append(self.checkers['artifacts'])
+				if self.build2.checker.enabled():
+					reportables.append(self.build2.checker)
+				if self.artifacts_checks.checker.enabled():
+					reportables.append(self.artifacts_checks.checker)
 				if self.checkers['retrieve'].enabled():
 					reportables.append(self.checkers['retrieve'])
 				if self.checkers['package'].enabled():
@@ -92,9 +103,13 @@ class Pyven:
 				reportables.append(self.checkers['configuration'])
 			else:
 				reportables.extend(self.objects['preprocessors'])
+				if self.preprocess.checker.enabled():
+					reportables.append(self.preprocess.checker)
 				reportables.extend(self.objects['builders'])
-				if self.checkers['artifacts'].enabled():
-					reportables.append(self.checkers['artifacts'])
+				if self.build2.checker.enabled():
+					reportables.append(self.build2.checker)
+				if self.artifacts_checks.checker.enabled():
+					reportables.append(self.artifacts_checks.checker)
 				if self.checkers['retrieve'].enabled():
 					reportables.append(self.checkers['retrieve'])
 				if self.checkers['package'].enabled():
@@ -108,9 +123,13 @@ class Pyven:
 				reportables.append(self.checkers['configuration'])
 			else:
 				reportables.extend(self.objects['preprocessors'])
+				if self.preprocess.checker.enabled():
+					reportables.append(self.preprocess.checker)
 				reportables.extend(self.objects['builders'])
-				if self.checkers['artifacts'].enabled():
-					reportables.append(self.checkers['artifacts'])
+				if self.build2.checker.enabled():
+					reportables.append(self.build2.checker)
+				if self.artifacts_checks.checker.enabled():
+					reportables.append(self.artifacts_checks.checker)
 		elif self.step in ['retrieve']:
 			if self.parser.checker.enabled():
 				reportables.append(self.parser.checker)
@@ -235,6 +254,7 @@ class Pyven:
 				logger.info(self._project_log() + 'Artifact added --> ' + artifact.format_name())
 				if not artifact.publish:
 					logger.info(self._project_log() + 'Artifact ' + artifact.format_name() + ' --> publishment disabled')
+		self.artifacts_checks.artifacts = self.objects['artifacts']
 		
 	@_check
 	def _check_packages(self, objects):
@@ -271,7 +291,7 @@ class Pyven:
 			preprocessor.name = self._replace_constants(preprocessor.name)
 			checked.append(preprocessor)
 			logger.info(self._project_log() + 'Preprocessor added --> ' + preprocessor.type + ':' + preprocessor.name)
-		self.objects['preprocessors'] = checked
+		self.preprocess.tools = checked
 		
 	@_check
 	def _check_builders(self, objects):
@@ -280,7 +300,7 @@ class Pyven:
 			builder.name = self._replace_constants(builder.name)
 			checked.append(builder)
 			logger.info(self._project_log() + 'Builder added --> ' + builder.type + ':' + builder.name)
-		self.objects['builders'] = checked
+		self.build2.tools = checked
 		
 	@_check
 	def _check_unit_tests(self, objects):
@@ -319,7 +339,7 @@ class Pyven:
 		ok = True
 		objects = self.parser.parse()
 		self.constants = objects['constants']
-		if not ok or not self._check_repositories(objects):
+		if not self._check_repositories(objects):
 			ok = False
 		elif not self._check_artifacts(objects):
 			ok = False
@@ -350,44 +370,16 @@ class Pyven:
 	
 # ============================================================================================================		
 
-	def __build(self, scope):
-		if scope == 'preprocessors':
-			sub_step = ('preprocessing', 'Preprocessing')
-		elif scope == 'builders':
-			sub_step = ('build', 'Build')
-		
-		logger.info(self._project_log() + 'Starting ' + sub_step[0])
-		ok = True
-		for tool in self.objects[scope]:
-			tic = time.time()
-			if not tool.process(self.verbose, self.warning_as_error):
-				ok = False
-			else:
-				toc = time.time()
-				logger.info(self._project_log() + 'Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
-		if not ok:
-			raise PyvenException(sub_step[1] + ' errors found')
-		logger.info(self._project_log() + sub_step[1] + ' completed')
-	
 	@_step	
 	def _build(self, arg=None):
 		ok = True
 		for subproject in self.objects['subprojects']:
-			os.chdir(subproject.path)
 			if not subproject._build():
 				ok = False
-			for dir in subproject.path.split(os.sep):
-				os.chdir('..')
-		self.__build('preprocessors')
-		self.__build('builders')
-		for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
-			if not artifact.check(self.checkers['artifacts']):
-				ok = False
-		if not ok:
-			raise PyvenException('Artifacts missing')
-		for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
-			Pyven.WORKSPACE.publish(artifact, artifact.file)
-		return ok
+		ok = self.preprocess.process() and self.build2.process() and self.artifacts_checks.process()
+		if ok:
+			for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
+				Pyven.WORKSPACE.publish(artifact, artifact.file)
 		
 	def build(self, arg=None):
 		if self.configure():
