@@ -38,8 +38,7 @@ class Step(object):
 					for dir in self.path.split(os.sep):
 						os.chdir('..')
 			except PyvenException as e:
-				for msg in e.args:
-					self.checker.errors.append(msg)
+				self.checker.errors.append(e.args)
 				ok = False
 			if ok:
 				self.log_delimiter()
