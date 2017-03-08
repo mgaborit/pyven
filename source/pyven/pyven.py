@@ -26,6 +26,7 @@ from pyven.steps.preprocess import Preprocess
 from pyven.steps.build import Build
 from pyven.steps.artifacts_checks import ArtifactsChecks
 from pyven.steps.unit_tests import UnitTests
+from pyven.steps.package import Package
 
 logger = logging.getLogger('global')
 
@@ -73,6 +74,7 @@ class Pyven:
 		self.build2 = Build(self.path, self.verbose, self.warning_as_error)
 		self.artifacts_checks = ArtifactsChecks(self.path, self.verbose)
 		self.unit_tests = UnitTests(self.path, self.verbose)
+		self.package2 = Package(self.path, self.verbose)
 		
 	def reportables(self):
 		reportables = []
@@ -90,13 +92,11 @@ class Pyven:
 					reportables.append(self.build2.checker)
 				if self.artifacts_checks.checker.enabled():
 					reportables.append(self.artifacts_checks.checker)
-				if self.checkers['retrieve'].enabled():
-					reportables.append(self.checkers['retrieve'])
-				if self.checkers['package'].enabled():
-					reportables.append(self.checkers['package'])
 				reportables.extend(self.unit_tests.tests)
 				if self.unit_tests.checker.enabled():
 					reportables.append(self.unit_tests.checker)
+				if self.package2.checker.enabled():
+					reportables.append(self.package2.checker)
 				reportables.extend(self.objects['valgrind_tests'])
 				reportables.extend(self.objects['integration_tests'])
 				if self.checkers['deployment'].enabled():
@@ -115,13 +115,11 @@ class Pyven:
 					reportables.append(self.build2.checker)
 				if self.artifacts_checks.checker.enabled():
 					reportables.append(self.artifacts_checks.checker)
-				if self.checkers['retrieve'].enabled():
-					reportables.append(self.checkers['retrieve'])
-				if self.checkers['package'].enabled():
-					reportables.append(self.checkers['package'])
 				reportables.extend(self.unit_tests.tests)
 				if self.unit_tests.checker.enabled():
 					reportables.append(self.unit_tests.checker)
+				if self.package2.checker.enabled():
+					reportables.append(self.package2.checker)
 				reportables.extend(self.objects['valgrind_tests'])
 		elif self.step in ['build']:
 			if self.parser.checker.enabled():
@@ -243,6 +241,7 @@ class Pyven:
 							logger.info(self._project_log() + 'Repository added --> ' + repo.name + ' : ' + repo.url)
 					else:
 						logger.warning('Repository not accessible --> ' + repo.name + ' : ' + repo.url)
+		self.package2.repositories = self.objects['repositories']
 		
 	@_check
 	def _check_artifacts(self, objects):
@@ -263,6 +262,7 @@ class Pyven:
 				if not artifact.publish:
 					logger.info(self._project_log() + 'Artifact ' + artifact.format_name() + ' --> publishment disabled')
 		self.artifacts_checks.artifacts = self.objects['artifacts']
+		self.package2.artifacts = self.objects['artifacts']
 		
 	@_check
 	def _check_packages(self, objects):
@@ -291,6 +291,7 @@ class Pyven:
 				logger.info(self._project_log() + 'Package added --> ' + package.format_name())
 				if not package.publish:
 					logger.info(self._project_log() + 'Package ' + package.format_name() + ' --> publishment disabled')
+		self.package2.packages = self.objects['packages']
 		
 	@_check
 	def _check_preprocessors(self, objects):
@@ -429,22 +430,10 @@ class Pyven:
 
 	@_step
 	def _package(self, arg=None):
-		ok = self.__retrieve('artifact') and self.__retrieve('package')
+		ok = self.package2.process()
 		for subproject in self.objects['subprojects']:
 			if not subproject._package():
 				ok = False
-		if ok:
-			for package in [p for p in self.objects['packages'].values() if not p.to_retrieve]:
-				try:
-					if not package.pack(Pyven.WORKSPACE):
-						ok = False
-				except PyvenException as e:
-					self.checkers['package'].errors.append(e.args)
-					for msg in e.args:
-						logger.error(self._project_log() + msg)
-					ok = False
-		if not ok:
-			raise PyvenException('Some packages were not built')
 		return ok
 
 	def package(self, arg=None):
