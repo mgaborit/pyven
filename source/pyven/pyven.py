@@ -26,7 +26,11 @@ from pyven.steps.preprocess import Preprocess
 from pyven.steps.build import Build
 from pyven.steps.artifacts_checks import ArtifactsChecks
 from pyven.steps.unit_tests import UnitTests
-from pyven.steps.package import Package
+from pyven.steps.package import PackageStep
+from pyven.steps.integration_tests import IntegrationTests
+from pyven.steps.deploy import Deploy
+from pyven.steps.retrieve import Retrieve
+from pyven.steps.deliver import Deliver
 
 logger = logging.getLogger('global')
 
@@ -74,11 +78,15 @@ class Pyven:
 		self.build2 = Build(self.path, self.verbose, self.warning_as_error)
 		self.artifacts_checks = ArtifactsChecks(self.path, self.verbose)
 		self.unit_tests = UnitTests(self.path, self.verbose)
-		self.package2 = Package(self.path, self.verbose)
+		self.package2 = PackageStep(self.path, self.verbose)
+		self.integration_tests = IntegrationTests(self.path, self.verbose)
+		self.deploy2 = Deploy(self.path, self.verbose, self.release)
+		self.retrieve2 = Retrieve(self.path, self.verbose)
+		self.deliver2 = Deliver(self.path, self.verbose, '')
 		
 	def reportables(self):
 		reportables = []
-		if self.step in ['verify', 'install', 'deploy', 'deliver']:
+		if self.step in ['verify', 'install', 'deploy']:
 			if self.parser.checker.enabled():
 				reportables.append(self.parser.checker)
 			elif self.checkers['configuration'].enabled():
@@ -98,9 +106,11 @@ class Pyven:
 				if self.package2.checker.enabled():
 					reportables.append(self.package2.checker)
 				reportables.extend(self.objects['valgrind_tests'])
-				reportables.extend(self.objects['integration_tests'])
-				if self.checkers['deployment'].enabled():
-					reportables.append(self.checkers['deployment'])
+				reportables.extend(self.integration_tests.tests)
+				if self.integration_tests.checker.enabled():
+					reportables.append(self.integration_tests.checker)
+				if self.deploy2.checker.enabled():
+					reportables.append(self.deploy2.checker)
 		elif self.step in ['test', 'package']:
 			if self.parser.checker.enabled():
 				reportables.append(self.parser.checker)
@@ -141,7 +151,14 @@ class Pyven:
 			elif self.checkers['configuration'].enabled():
 				reportables.append(self.checkers['configuration'])
 			else:
-				reportables.append(self.checkers['retrieve'])
+				reportables.append(self.retrieve2.checker)
+		elif self.step in ['deliver']:
+			if self.parser.checker.enabled():
+				reportables.append(self.parser.checker)
+			elif self.checkers['configuration'].enabled():
+				reportables.append(self.checkers['configuration'])
+			else:
+				reportables.append(self.deliver2.checker)
 		elif self.step in ['parse']:
 			reportables.extend(self.objects['unit_tests'])
 		else:
@@ -242,6 +259,9 @@ class Pyven:
 					else:
 						logger.warning('Repository not accessible --> ' + repo.name + ' : ' + repo.url)
 		self.package2.repositories = self.objects['repositories']
+		self.deploy2.repositories = self.objects['repositories']
+		self.retrieve2.repositories = self.objects['repositories']
+		self.deliver2.repositories = self.objects['repositories']
 		
 	@_check
 	def _check_artifacts(self, objects):
@@ -263,6 +283,8 @@ class Pyven:
 					logger.info(self._project_log() + 'Artifact ' + artifact.format_name() + ' --> publishment disabled')
 		self.artifacts_checks.artifacts = self.objects['artifacts']
 		self.package2.artifacts = self.objects['artifacts']
+		self.deploy2.artifacts = self.objects['artifacts']
+		self.retrieve2.artifacts = self.objects['artifacts']
 		
 	@_check
 	def _check_packages(self, objects):
@@ -292,6 +314,9 @@ class Pyven:
 				if not package.publish:
 					logger.info(self._project_log() + 'Package ' + package.format_name() + ' --> publishment disabled')
 		self.package2.packages = self.objects['packages']
+		self.deploy2.packages = self.objects['packages']
+		self.retrieve2.packages = self.objects['packages']
+		self.deliver2.packages = self.objects['packages']
 		
 	@_check
 	def _check_preprocessors(self, objects):
@@ -341,7 +366,7 @@ class Pyven:
 							+ ' : Package added --> ' + integration_test.package.format_name())
 			checked.append(integration_test)
 			logger.info(self._project_log() + 'Integration test added --> ' + os.path.join(integration_test.path, integration_test.filename))
-		self.objects['integration_tests'] = checked
+		self.integration_tests.tests = checked
 		
 	@_step
 	def _configure(self, arg=None):
@@ -412,15 +437,9 @@ class Pyven:
 	def _test(self, arg=None):
 		ok = True
 		for subproject in self.objects['subprojects']:
-			os.chdir(subproject.path)
 			if not subproject._test():
 				ok = False
-			for dir in subproject.path.split(os.sep):
-				os.chdir('..')
-		ok = self.unit_tests.process()
-		if not self.__test(self.objects['valgrind_tests'], self.verbose):
-			raise PyvenException('Valgrind test failures found')
-		return ok
+		return ok and self.unit_tests.process()
 
 	def test(self, arg=None):
 		if self.build():
@@ -446,17 +465,9 @@ class Pyven:
 	def _verify(self, arg=None):
 		ok = True
 		for subproject in self.objects['subprojects']:
-			os.chdir(subproject.path)
 			if not subproject._verify():
 				ok = False
-			for dir in subproject.path.split(os.sep):
-				os.chdir('..')
-		if len(self.objects['integration_tests']) == 0:
-			logger.warning(self._project_log() + 'No integration tests found')
-		else:
-			if not self.__test(self.objects['integration_tests'], self.verbose):
-				raise PyvenException('Integration test failures found')
-		return ok
+		return ok and self.integration_tests.process()
 		
 	def verify(self, arg=None):
 		if self.package():
@@ -490,20 +501,7 @@ class Pyven:
 		for subproject in self.objects['subprojects']:
 			if not subproject._deploy():
 				ok = False
-		for repo in [r for r in self.objects['repositories'].values() if (not r.release or (r.release and self.release)) and r.name != Pyven.WORKSPACE.name]:
-			try:
-				for artifact in [a for a in self.objects['artifacts'].values() if a.publish]:
-					repo.publish(artifact, Pyven.WORKSPACE)
-					logger.info(self._project_log() + 'Repository ' + repo.name + ' --> Published artifact ' + artifact.format_name())
-				for package in [p for p in self.objects['packages'].values() if p.publish]:
-					repo.publish(package, Pyven.WORKSPACE)
-					logger.info(self._project_log() + 'Repository ' + repo.name + ' --> Published package ' + package.format_name())
-			except RepositoryException as e:
-				self.checkers['deployment'].errors.append(e.args)
-				for msg in e.args:
-					logger.error(self._project_log() + msg)
-				raise e
-		return ok
+		return ok and self.deploy2.process()
 		
 	def deploy(self, arg=None):
 		if self.verify():
@@ -515,24 +513,10 @@ class Pyven:
 	def _deliver(self, path):
 		ok = True
 		for subproject in self.objects['subprojects']:
-			os.chdir(subproject.path)
-			if not subproject._deliver():
+			if not subproject._deliver(path):
 				ok = False
-			for dir in subproject.path.split(os.sep):
-				os.chdir('..')
-		logger.info(self._project_log() + 'Delivering to directory ' + path)
-		for package in [p for p in self.objects['packages'].values() if p.publish]:
-			if package.to_retrieve:
-				if self.objects['repositories'][package.repo].is_reachable():
-					package.deliver(path, self.objects['repositories'][package.repo])
-				else:
-					logger.error(self._project_log() + 'Repository not accessible --> ' + self.objects['repositories'][artifact.repo].name + ' : ' + self.objects['repositories'][artifact.repo].url,\
-							'Unable to retrieve package --> ' + package.format_name())
-			else:
-				self._set_workspace()
-				package.deliver(path, Pyven.WORKSPACE)
-			logger.info(self._project_log() + 'Delivered package : ' + package.format_name())
-		return ok
+		self.deliver2.location = path
+		return ok and self.deliver2.process()
 		
 	def deliver(self, arg=None):
 		if self.configure():
@@ -567,45 +551,12 @@ class Pyven:
 			
 # ============================================================================================================		
 	
-	def __retrieve(self, type):
-		ok = True
-		for item in [i for i in self.objects[type + 's'].values() if i.to_retrieve and i.repo]:
-			try:
-				if not self.objects['repositories'][item.repo].is_reachable():
-					raise RepositoryException('Repository not accessible --> ' + self.objects['repositories'][item.repo].name + ' : ' + self.objects['repositories'][item.repo].url,\
-												'Unable to retrieve ' + type + ' --> ' + item.format_name())
-				if not self.objects['repositories'][item.repo].is_available(item):
-					raise RepositoryException('Repository ' + item.repo + ' --> Unable to retrieve ' + type + ' : ' + item.format_name())
-				if item.repo != Pyven.WORKSPACE.name:
-					self.objects['repositories'][item.repo].retrieve(item, Pyven.WORKSPACE)
-				else:
-					item.file = os.path.join(item.location(Pyven.WORKSPACE.url), os.listdir(item.location(Pyven.WORKSPACE.url))[0])
-				logger.info(self._project_log() + 'Repository ' + item.repo + ' --> Retrieved ' + type + ' : ' + item.format_name())
-			except RepositoryException as e:
-				self.checkers['retrieve'].errors.append(e.args)
-				for msg in e.args:
-					logger.error(msg)
-				ok = False
-		return ok
-	
 	@_step
 	def _retrieve(self, arg=None):
-		ok = self.__retrieve('artifact') and self.__retrieve('package')
+		ok = self.retrieve2.process()
 		for subproject in self.objects['subprojects']:
-			os.chdir(subproject.path)
 			if not subproject._retrieve():
 				ok = False
-			for dir in subproject.path.split(os.sep):
-				os.chdir('..')
-		if ok:
-			for package in [p for p in self.objects['packages'].values() if not p.to_retrieve]:
-				for item in [i for i in package.items if i.to_retrieve]:
-					for built_item in [i for i in package.items if not i.to_retrieve]:
-						dir = os.path.dirname(built_item.file)
-						if not os.path.isdir(dir):
-							os.makedirs(dir)
-						logger.info(self._project_log() + 'Copying artifact ' + item.format_name() + ' to directory ' + dir)
-						shutil.copy(os.path.join(item.location(Pyven.WORKSPACE.url), item.basename()), os.path.join(dir, item.basename()))
 		return ok
 
 	def retrieve(self, arg=None):
@@ -615,9 +566,8 @@ class Pyven:
 # ============================================================================================================		
 
 	@_step
-	def _parse(self, path):
+	def _parse(self, path, format='cppunit'):
 		ok = True
-		format = 'cppunit'
 		for report in [r for r in os.listdir(path) if r.endswith('.xml')]:
 			test = Test('', path, report, [], format)
 			test.errors = Reportable.parse_xml(format, os.path.join(path, report))
