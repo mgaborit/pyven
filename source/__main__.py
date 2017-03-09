@@ -88,7 +88,7 @@ def main(args):
 	finally:
 		if project.step not in ['aggregate', 'clean']:
 			reports = [Report(project, args.nb_lines)]
-			for subproject in project.objects['subprojects']:
+			for subproject in project.subprojects:
 				reports.append(Report(subproject, args.nb_lines))
 			Report.clean()
 			for report in reports:

@@ -2,24 +2,12 @@ import logging, os, shutil, time
 from lxml import etree
 
 import pyven.constants
-from pyven.exceptions.exception import PyvenException
-from pyven.exceptions.repository_exception import RepositoryException
-
-from pyven.items.artifact import Artifact
-from pyven.items.package import Package
 
 from pyven.repositories.directory import DirectoryRepo
 from pyven.repositories.workspace import Workspace
-
-from pyven.processing.tools.tool import Tool
-from pyven.processing.tests.test import Test
-
-from pyven.parser.pym_parser import PymParser
-
-from pyven.checkers.checker import Checker
-
 from pyven.reporting.reportable import Reportable
 from pyven.processing.processible import Processible
+from pyven.processing.tests.test import Test
 
 from pyven.steps.step import Step
 from pyven.steps.configure import Configure
@@ -51,7 +39,6 @@ class Pyven:
 	def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path=''):
 		self.pym = pym
 		self.path = path
-		logger.info(self._project_log() + 'Initializing Pyven project')
 		self.step = step
 		self.verbose = verbose
 		if self.verbose:
@@ -62,22 +49,7 @@ class Pyven:
 		self.warning_as_error = warning_as_error
 		if self.warning_as_error:
 			logger.info(self._project_log() + 'Warnings will be considered as errors')
-		self.parser = PymParser(os.path.join(self.path, self.pym))
-		self.constants = {}
-		self.objects = {'subprojects' : [],\
-						'repositories' : {},\
-						'artifacts' : {},\
-						'packages' : {},\
-						'preprocessors' : [],\
-						'builders' : [],\
-						'unit_tests' : [],\
-						'valgrind_tests' : [],\
-						'integration_tests' : []}
-		self.checkers = {'artifacts' : Checker('Artifacts'),\
-						'package' : Checker('Packaging'),\
-						'retrieve' : Checker('Retrieval'),\
-						'configuration' : Checker('Configuration'),\
-						'deployment' : Checker('Deployment')}
+		self.subprojects = []
 		self.configure2 = Configure(self.path, self.verbose, self.pym)
 		self.preprocess = Preprocess(self.path, self.verbose)
 		self.build2 = Build(self.path, self.verbose, self.warning_as_error)
@@ -112,7 +84,6 @@ class Pyven:
 					reportables.append(self.unit_tests.checker)
 				if self.package2.checker.enabled():
 					reportables.append(self.package2.checker)
-				reportables.extend(self.objects['valgrind_tests'])
 				reportables.extend(self.integration_tests.tests)
 				if self.integration_tests.checker.enabled():
 					reportables.append(self.integration_tests.checker)
@@ -139,7 +110,6 @@ class Pyven:
 					reportables.append(self.unit_tests.checker)
 				if self.package2.checker.enabled():
 					reportables.append(self.package2.checker)
-				reportables.extend(self.objects['valgrind_tests'])
 		elif self.step in ['build']:
 			if self.configure2.parser.checker.enabled():
 				reportables.append(self.configure2.parser.checker)
@@ -169,7 +139,7 @@ class Pyven:
 			else:
 				reportables.append(self.deliver2.checker)
 		elif self.step in ['parse']:
-			reportables.extend(self.objects['unit_tests'])
+			reportables.extend(self.unit_tests.tests)
 		elif self.step in ['clean']:
 			reportables.append(self.configure2.parser.checker)
 			reportables.append(self.configure2.checker)
@@ -179,54 +149,17 @@ class Pyven:
 			reportables.append(self.configure2.checker)
 		return reportables
 	
-	@staticmethod
-	def _step_log_delimiter():
-		logger.info('===================================')
-	
 	def _set_workspace(self):
 		if not os.path.isdir(Pyven.WORKSPACE.url):
 			os.makedirs(Pyven.WORKSPACE.url)
 		logger.info('Workspace set at : ' + Pyven.WORKSPACE.url)
-		self.objects['repositories'][Pyven.WORKSPACE.name] = Pyven.WORKSPACE
 		Step.WORKSPACE = Pyven.WORKSPACE
 	
-	def _step(function, arg=None):
-		def __intern(self=None, arg=None):
-			Pyven._step_log_delimiter()
-			logger.info(self._project_log() + 'STEP ' + function.__name__.replace('_', '').upper() + ' : STARTING')
-			Pyven._step_log_delimiter()
-			ok = True
-			try:
-				tic = time.time()
-				ok = function(self, arg)
-				toc = time.time()
-				logger.info(self._project_log() + 'Step time : ' + str(round(toc - tic, 3)) + ' seconds')
-			except PyvenException as e:
-				for msg in e.args:
-					logger.error(self._project_log() + msg)
-				ok = False
-			if ok:
-				Pyven._step_log_delimiter()
-				logger.info(self._project_log() + 'STEP ' + function.__name__.replace('_', '').upper() + ' : SUCCESSFUL')
-				Pyven._step_log_delimiter()
-			else:
-				Pyven._step_log_delimiter()
-				logger.error(self._project_log() + 'STEP ' + function.__name__.replace('_', '').upper() + ' : FAILED')
-				Pyven._step_log_delimiter()
-			return ok
-		return __intern
-		
-	def _project_log(self):
-		log = ''
-		if self.path != '':
-			log = '[' + self.path + '] '
-		return log
-		
 # ============================================================================================================		
-	@_step
+	
 	def _configure(self, arg=None):
 		ok = self.configure2.process()
-		for subproject in self.objects['subprojects']:
+		for subproject in self.subprojects:
 			if not subproject.configure():
 				ok = False
 		if ok:
@@ -267,17 +200,13 @@ class Pyven:
 	
 # ============================================================================================================		
 
-	@_step	
+		
 	def _build(self, arg=None):
 		ok = True
-		for subproject in self.objects['subprojects']:
+		for subproject in self.subprojects:
 			if not subproject._build():
 				ok = False
-		ok = self.preprocess.process() and self.build2.process() and self.artifacts_checks.process()
-		if ok:
-			for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
-				Step.WORKSPACE.publish(artifact, artifact.file)
-		return ok
+		return ok and self.preprocess.process() and self.build2.process() and self.artifacts_checks.process()
 		
 	def build(self, arg=None):
 		if self.configure():
@@ -285,21 +214,10 @@ class Pyven:
 			
 # ============================================================================================================		
 
-	def __test(self, tests, verbose=False):
-		ok = True
-		for test in tests:
-			tic = time.time()
-			if not test.process(verbose, Step.WORKSPACE):
-				ok = False
-			else:
-				toc = time.time()
-				logger.info(self._project_log() + 'Time for test ' + test.filename + ' : ' + str(round(toc - tic, 3)) + ' seconds')
-		return ok
-
-	@_step
+	
 	def _test(self, arg=None):
 		ok = True
-		for subproject in self.objects['subprojects']:
+		for subproject in self.subprojects:
 			if not subproject._test():
 				ok = False
 		return ok and self.unit_tests.process()
@@ -310,13 +228,13 @@ class Pyven:
 			
 # ============================================================================================================		
 
-	@_step
+	
 	def _package(self, arg=None):
-		ok = self.package2.process()
-		for subproject in self.objects['subprojects']:
+		ok = True
+		for subproject in self.subprojects:
 			if not subproject._package():
 				ok = False
-		return ok
+		return ok and self.package2.process()
 
 	def package(self, arg=None):
 		if self.test():
@@ -324,10 +242,10 @@ class Pyven:
 			
 # ============================================================================================================		
 
-	@_step
+	
 	def _verify(self, arg=None):
 		ok = True
-		for subproject in self.objects['subprojects']:
+		for subproject in self.subprojects:
 			if not subproject._verify():
 				ok = False
 		return ok and self.integration_tests.process()
@@ -338,10 +256,10 @@ class Pyven:
 			
 # ============================================================================================================		
 
-	@_step
+	
 	def _install(self, arg=None):
 		ok = True
-		for subproject in self.objects['subprojects']:
+		for subproject in self.subprojects:
 			if not subproject._install():
 				ok = False
 		return ok and self.install2.process()
@@ -352,10 +270,10 @@ class Pyven:
 			
 # ============================================================================================================		
 
-	@_step
+	
 	def _deploy(self, repo=None):
 		ok = True
-		for subproject in self.objects['subprojects']:
+		for subproject in self.subprojects:
 			if not subproject._deploy():
 				ok = False
 		return ok and self.deploy2.process()
@@ -366,10 +284,10 @@ class Pyven:
 			
 # ============================================================================================================		
 
-	@_step
+	
 	def _deliver(self, path):
 		ok = True
-		for subproject in self.objects['subprojects']:
+		for subproject in self.subprojects:
 			if not subproject._deliver(path):
 				ok = False
 		self.deliver2.location = path
@@ -381,10 +299,10 @@ class Pyven:
 			
 # ============================================================================================================		
 
-	@_step
+	
 	def _clean(self, arg=None):
 		ok = True
-		for subproject in self.objects['subprojects']:
+		for subproject in self.subprojects:
 			if not subproject._clean():
 				ok = False
 		return ok and self.clean2.process()
@@ -395,10 +313,10 @@ class Pyven:
 			
 # ============================================================================================================		
 	
-	@_step
+	
 	def _retrieve(self, arg=None):
 		ok = self.retrieve2.process()
-		for subproject in self.objects['subprojects']:
+		for subproject in self.subprojects:
 			if not subproject._retrieve():
 				ok = False
 		return ok
@@ -409,7 +327,7 @@ class Pyven:
 					
 # ============================================================================================================		
 
-	@_step
+	
 	def _parse(self, path, format='cppunit'):
 		ok = True
 		for report in [r for r in os.listdir(path) if r.endswith('.xml')]:
@@ -419,7 +337,7 @@ class Pyven:
 				test.status = Processible.STATUS['failure']
 			else:
 				test.status = Processible.STATUS['success']
-			self.objects['unit_tests'].append(test)
+			self.unit_tests.tests.append(test)
 		return ok
 		
 	def parse(self, arg=None):
