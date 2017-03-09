@@ -10,22 +10,11 @@ logger = logging.getLogger('global')
 
 class MakefileTool(Tool):
 
-	def __init__(self, node):
-		super(MakefileTool, self).__init__(node)
-		workspaces = node.xpath('workspace')
-		if len(workspaces) < 1:
-			raise PyvenException('Missing Makefile directory')
-		if len(workspaces) > 1:
-			raise PyvenException('Too many Makefile directories specified, only one needed')
-		self.workspace = workspaces[0].text
-		self.options = []
-		for option in node.xpath('options/option'):
-			self.options.append(option.text)
-		self.rules = []
-		for rule in node.xpath('rules/rule'):
-			self.rules.append(rule.text)
-		if self.scope == 'preprocess':
-			logger.warning('Makefile will be called during preprocessing but not build')
+	def __init__(self, type, name, scope, workspace, rules, options):
+		super(MakefileTool, self).__init__(type, name, scope)
+		self.workspace = workspace
+		self.rules = rules
+		self.options = options
 		
 	def report_summary(self):
 		return ['Makefile', self.name]
