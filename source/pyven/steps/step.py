@@ -1,4 +1,4 @@
-import os, logging
+import os, logging, time
 from pyven.exceptions.exception import PyvenException
 
 logger = logging.getLogger('global')
@@ -34,7 +34,10 @@ class Step(object):
 					if not os.path.isdir(self.path):
 						raise PyvenException('Subproject path does not exist : ' + self.path)
 					os.chdir(self.path)
+				tic = time.time()
 				ok = function(self)
+				toc = time.time()
+				logger.info(self.log_path() + 'Step time : ' + str(round(toc - tic, 3)) + ' seconds')
 				if self.path != '':
 					for dir in self.path.split(os.sep):
 						os.chdir('..')
