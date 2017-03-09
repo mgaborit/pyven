@@ -22,6 +22,7 @@ from pyven.reporting.reportable import Reportable
 from pyven.processing.processible import Processible
 
 from pyven.steps.step import Step
+from pyven.steps.configure import Configure
 from pyven.steps.preprocess import Preprocess
 from pyven.steps.build import Build
 from pyven.steps.artifacts_checks import ArtifactsChecks
@@ -42,9 +43,10 @@ class Pyven:
 		LOCAL_REPO = DirectoryRepo('local', 'file', os.path.join(os.environ.get('HOME'), 'pvn_repo'))
 	if not os.path.isdir(LOCAL_REPO.url):
 		os.makedirs(LOCAL_REPO.url)
+		
+	Step.LOCAL_REPO = LOCAL_REPO
 
 	def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path=''):
-		
 		self.pym = pym
 		self.path = path
 		logger.info(self._project_log() + 'Initializing Pyven project')
@@ -74,6 +76,7 @@ class Pyven:
 						'retrieve' : Checker('Retrieval'),\
 						'configuration' : Checker('Configuration'),\
 						'deployment' : Checker('Deployment')}
+		self.configure2 = Configure(self.path, self.verbose, self.pym)
 		self.preprocess = Preprocess(self.path, self.verbose)
 		self.build2 = Build(self.path, self.verbose, self.warning_as_error)
 		self.artifacts_checks = ArtifactsChecks(self.path, self.verbose)
@@ -87,10 +90,10 @@ class Pyven:
 	def reportables(self):
 		reportables = []
 		if self.step in ['verify', 'install', 'deploy']:
-			if self.parser.checker.enabled():
-				reportables.append(self.parser.checker)
-			elif self.checkers['configuration'].enabled():
-				reportables.append(self.checkers['configuration'])
+			if self.configure2.parser.checker.enabled():
+				reportables.append(self.configure2.parser.checker)
+			elif self.configure2.checker.enabled():
+				reportables.append(self.configure2.checker)
 			else:
 				reportables.extend(self.preprocess.tools)
 				if self.preprocess.checker.enabled():
@@ -112,10 +115,10 @@ class Pyven:
 				if self.deploy2.checker.enabled():
 					reportables.append(self.deploy2.checker)
 		elif self.step in ['test', 'package']:
-			if self.parser.checker.enabled():
-				reportables.append(self.parser.checker)
-			elif self.checkers['configuration'].enabled():
-				reportables.append(self.checkers['configuration'])
+			if self.configure2.parser.checker.enabled():
+				reportables.append(self.configure2.parser.checker)
+			elif self.configure2.checker.enabled():
+				reportables.append(self.configure2.checker)
 			else:
 				reportables.extend(self.preprocess.tools)
 				if self.preprocess.checker.enabled():
@@ -132,10 +135,10 @@ class Pyven:
 					reportables.append(self.package2.checker)
 				reportables.extend(self.objects['valgrind_tests'])
 		elif self.step in ['build']:
-			if self.parser.checker.enabled():
-				reportables.append(self.parser.checker)
-			elif self.checkers['configuration'].enabled():
-				reportables.append(self.checkers['configuration'])
+			if self.configure2.parser.checker.enabled():
+				reportables.append(self.configure2.parser.checker)
+			elif self.configure2.checker.enabled():
+				reportables.append(self.configure2.checker)
 			else:
 				reportables.extend(self.preprocess.tools)
 				if self.preprocess.checker.enabled():
@@ -146,24 +149,24 @@ class Pyven:
 				if self.artifacts_checks.checker.enabled():
 					reportables.append(self.artifacts_checks.checker)
 		elif self.step in ['retrieve']:
-			if self.parser.checker.enabled():
-				reportables.append(self.parser.checker)
-			elif self.checkers['configuration'].enabled():
-				reportables.append(self.checkers['configuration'])
+			if self.configure2.parser.checker.enabled():
+				reportables.append(self.configure2.parser.checker)
+			elif self.configure2.checker.enabled():
+				reportables.append(self.configure2.checker)
 			else:
 				reportables.append(self.retrieve2.checker)
 		elif self.step in ['deliver']:
-			if self.parser.checker.enabled():
-				reportables.append(self.parser.checker)
-			elif self.checkers['configuration'].enabled():
-				reportables.append(self.checkers['configuration'])
+			if self.configure2.parser.checker.enabled():
+				reportables.append(self.configure2.parser.checker)
+			elif self.configure2.checker.enabled():
+				reportables.append(self.configure2.checker)
 			else:
 				reportables.append(self.deliver2.checker)
 		elif self.step in ['parse']:
 			reportables.extend(self.objects['unit_tests'])
 		else:
-			reportables.append(self.parser.checker)
-			reportables.append(self.checkers['configuration'])
+			reportables.append(self.configure2.parser.checker)
+			reportables.append(self.configure2.checker)
 		return reportables
 	
 	@staticmethod
@@ -210,191 +213,35 @@ class Pyven:
 		return log
 		
 # ============================================================================================================		
-
-	def _replace_constants(self, str):
-		for name, value in self.constants.items():
-			str = str.replace('$('+name+')', value)
-		return str
-
-	def _check(function, objects=None):
-		def __intern(self=None, objects=None):
-			ok = True
-			try:
-				function(self, objects)
-			except PyvenException as e:
-				self.checkers['configuration'].errors.append(e.args)
-				for msg in e.args:
-					logger.error(self._project_log() + msg)
-				ok = False
-			return ok
-		return __intern
-		
-	@_check
-	def _check_subprojects(self, objects):
-		for subdirectory in objects['subprojects']:
-			if not os.path.isdir(subdirectory):
-				raise PyvenException('Subproject directory does not exist : ' + subdirectory)
-			elif self.pym not in os.listdir(subdirectory):
-				raise PyvenException('No ' + self.pym + ' file found at ' + subdirectory)
-			else:
-				subproject = Pyven(step=self.step, verbose=self.verbose, warning_as_error=self.warning_as_error, pym=self.pym, path=os.path.join(self.path, subdirectory))
-				self.objects['subprojects'].append(subproject)
-				logger.info(self._project_log() + 'Added subproject --> ' + subdirectory)
-	
-	@_check
-	def _check_repositories(self, objects):
-		for repo in objects['repositories']:
-			if repo.name == 'workspace' or repo.name == Pyven.LOCAL_REPO.name:
-				raise PyvenException('Repository name reserved --> ' + repo.name + ' : ' + repo.url)
-			else:
-				if repo.name in self.objects['repositories'].keys():
-					raise PyvenException('Repository already added --> ' + repo.name + ' : ' + repo.url)
-				else:
-					self.objects['repositories'][repo.name] = repo
-					if repo.is_reachable():
-						if repo.release:
-							logger.info(self._project_log() + 'Release repository added --> ' + repo.name + ' : ' + repo.url)
-						else:
-							logger.info(self._project_log() + 'Repository added --> ' + repo.name + ' : ' + repo.url)
-					else:
-						logger.warning('Repository not accessible --> ' + repo.name + ' : ' + repo.url)
-		self.package2.repositories = self.objects['repositories']
-		self.deploy2.repositories = self.objects['repositories']
-		self.retrieve2.repositories = self.objects['repositories']
-		self.deliver2.repositories = self.objects['repositories']
-		
-	@_check
-	def _check_artifacts(self, objects):
-		for artifact in objects['artifacts']:
-			artifact.company = self._replace_constants(artifact.company)
-			artifact.name = self._replace_constants(artifact.name)
-			artifact.config = self._replace_constants(artifact.config)
-			artifact.version = self._replace_constants(artifact.version)
-			if not artifact.to_retrieve:
-				artifact.file = self._replace_constants(artifact.file)
-			if artifact.format_name() in self.objects['artifacts'].keys():
-				raise PyvenException('Artifact already added --> ' + artifact.format_name())
-			elif artifact.to_retrieve and artifact.repo not in self.objects['repositories'].keys() and artifact.repo not in [Pyven.LOCAL_REPO.name, 'workspace']:
-				raise PyvenException('Artifact repository not declared --> ' + artifact.format_name() + ' : repo ' + artifact.repo)
-			else:
-				self.objects['artifacts'][artifact.format_name()] = artifact
-				logger.info(self._project_log() + 'Artifact added --> ' + artifact.format_name())
-				if not artifact.publish:
-					logger.info(self._project_log() + 'Artifact ' + artifact.format_name() + ' --> publishment disabled')
-		self.artifacts_checks.artifacts = self.objects['artifacts']
-		self.package2.artifacts = self.objects['artifacts']
-		self.deploy2.artifacts = self.objects['artifacts']
-		self.retrieve2.artifacts = self.objects['artifacts']
-		
-	@_check
-	def _check_packages(self, objects):
-		for package in objects['packages']:
-			package.company = self._replace_constants(package.company)
-			package.name = self._replace_constants(package.name)
-			package.config = self._replace_constants(package.config)
-			package.version = self._replace_constants(package.version)
-			package.delivery = self._replace_constants(package.delivery)
-			items = []
-			items.extend(package.items)
-			package.items = []
-			if package.format_name() in self.objects['packages'].keys():
-				raise PyvenException('Package already added --> ' + package.format_name())
-			elif package.to_retrieve and package.repo not in self.objects['repositories'].keys() and package.repo not in [Pyven.LOCAL_REPO.name, 'workspace']:
-				raise PyvenException('Package repository not declared --> ' + package.format_name() + ' : repo ' + package.repo)
-			else:
-				for item in items:
-					item = self._replace_constants(item)
-					if item not in self.objects['artifacts'].keys():
-						raise PyvenException('Package ' + package.format_name() + ' : Artifact not declared --> ' + item)
-					else:
-						package.items.append(self.objects['artifacts'][item])
-						logger.info(self._project_log() + 'Package ' + package.format_name() + ' : Artifact added --> ' + item)
-				self.objects['packages'][package.format_name()] = package
-				logger.info(self._project_log() + 'Package added --> ' + package.format_name())
-				if not package.publish:
-					logger.info(self._project_log() + 'Package ' + package.format_name() + ' --> publishment disabled')
-		self.package2.packages = self.objects['packages']
-		self.deploy2.packages = self.objects['packages']
-		self.retrieve2.packages = self.objects['packages']
-		self.deliver2.packages = self.objects['packages']
-		
-	@_check
-	def _check_preprocessors(self, objects):
-		checked = []
-		for preprocessor in objects['preprocessors']:
-			preprocessor.name = self._replace_constants(preprocessor.name)
-			checked.append(preprocessor)
-			logger.info(self._project_log() + 'Preprocessor added --> ' + preprocessor.type + ':' + preprocessor.name)
-		self.preprocess.tools = checked
-		
-	@_check
-	def _check_builders(self, objects):
-		checked = []
-		for builder in objects['builders']:
-			builder.name = self._replace_constants(builder.name)
-			checked.append(builder)
-			logger.info(self._project_log() + 'Builder added --> ' + builder.type + ':' + builder.name)
-		self.build2.tools = checked
-		
-	@_check
-	def _check_unit_tests(self, objects):
-		checked = []
-		for unit_test in objects['unit_tests']:
-			checked.append(unit_test)
-			logger.info(self._project_log() + 'Unit test added --> ' + os.path.join(unit_test.path, unit_test.filename))
-		self.unit_tests.tests = checked
-		
-	@_check
-	def _check_valgrind_tests(self, objects):
-		checked = []
-		for valgrind_test in objects['valgrind_tests']:
-			checked.append(valgrind_test)
-			logger.info(self._project_log() + 'Valgrind test added --> ' + os.path.join(valgrind_test.path, valgrind_test.filename))
-		self.objects['valgrind_tests'] = checked
-		
-	@_check
-	def _check_integration_tests(self, objects):
-		checked = []
-		for integration_test in objects['integration_tests']:
-			integration_test.package = self._replace_constants(integration_test.package)
-			if integration_test.package not in self.objects['packages'].keys():
-				raise PyvenException('Integration test ' + os.path.join(integration_test.path, integration_test.filename)\
-							+ ' : Package not declared --> ' + integration_test.package)
-			else:
-				integration_test.package = self.objects['packages'][integration_test.package]
-				logger.info(self._project_log() + 'Integration test ' + os.path.join(integration_test.path, integration_test.filename)\
-							+ ' : Package added --> ' + integration_test.package.format_name())
-			checked.append(integration_test)
-			logger.info(self._project_log() + 'Integration test added --> ' + os.path.join(integration_test.path, integration_test.filename))
-		self.integration_tests.tests = checked
-		
 	@_step
 	def _configure(self, arg=None):
-		ok = True
-		objects = self.parser.parse()
-		self.constants = objects['constants']
-		if not self._check_repositories(objects):
-			ok = False
-		elif not self._check_artifacts(objects):
-			ok = False
-		elif not self._check_packages(objects):
-			ok = False
-		elif not self._check_preprocessors(objects):
-			ok = False
-		elif not self._check_builders(objects):
-			ok = False
-		elif not self._check_unit_tests(objects):
-			ok = False
-		elif not self._check_valgrind_tests(objects):
-			ok = False
-		elif not self._check_integration_tests(objects):
-			ok = False
-		if not self._check_subprojects(objects):
-			ok = False
-		else:
-			for subproject in self.objects['subprojects']:
-				if not subproject.configure():
-					ok = False
+		ok = self.configure2.process()
+		for subproject in self.objects['subprojects']:
+			if not subproject.configure():
+				ok = False
+		if ok:
+			self.preprocess.tools = self.configure2.preprocessors
+			self.build2.tools = self.configure2.builders
+			self.artifacts_checks.artifacts = self.configure2.artifacts
+			self.unit_tests.tests = self.configure2.unit_tests
+			
+			self.package2.artifacts = self.configure2.artifacts
+			self.package2.packages = self.configure2.packages
+			self.package2.repositories = self.configure2.repositories
+			
+			self.integration_tests.tests = self.configure2.integration_tests
+			
+			self.deploy2.artifacts = self.configure2.artifacts
+			self.deploy2.packages = self.configure2.packages
+			self.deploy2.repositories = self.configure2.repositories
+			
+			self.retrieve2.artifacts = self.configure2.artifacts
+			self.retrieve2.packages = self.configure2.packages
+			self.retrieve2.repositories = self.configure2.repositories
+			
+			self.retrieve2.packages = self.configure2.packages
+			self.retrieve2.repositories = self.configure2.repositories
+			
 		if self.step != 'deliver':
 			self._set_workspace()
 		return ok
@@ -413,7 +260,7 @@ class Pyven:
 		ok = self.preprocess.process() and self.build2.process() and self.artifacts_checks.process()
 		if ok:
 			for artifact in [a for a in self.objects['artifacts'].values() if not a.to_retrieve]:
-				Pyven.WORKSPACE.publish(artifact, artifact.file)
+				Step.WORKSPACE.publish(artifact, artifact.file)
 		return ok
 		
 	def build(self, arg=None):
@@ -426,7 +273,7 @@ class Pyven:
 		ok = True
 		for test in tests:
 			tic = time.time()
-			if not test.process(verbose, Pyven.WORKSPACE):
+			if not test.process(verbose, Step.WORKSPACE):
 				ok = False
 			else:
 				toc = time.time()
@@ -482,11 +329,11 @@ class Pyven:
 			if not subproject._install():
 				ok = False
 		for artifact in [a for a in self.objects['artifacts'].values() if a.publish]:
-			Pyven.LOCAL_REPO.publish(artifact, Pyven.WORKSPACE)
-			logger.info(self._project_log() + 'Repository ' + Pyven.LOCAL_REPO.name + ' --> Published artifact ' + artifact.format_name())
+			Step.LOCAL_REPO.publish(artifact, Step.WORKSPACE)
+			logger.info(self._project_log() + 'Repository ' + Step.LOCAL_REPO.name + ' --> Published artifact ' + artifact.format_name())
 		for package in [p for p in self.objects['packages'].values() if p.publish]:
-			Pyven.LOCAL_REPO.publish(package, Pyven.WORKSPACE)
-			logger.info(self._project_log() + 'Repository ' + Pyven.LOCAL_REPO.name + ' --> Published package ' + package.format_name())
+			Step.LOCAL_REPO.publish(package, Step.WORKSPACE)
+			logger.info(self._project_log() + 'Repository ' + Step.LOCAL_REPO.name + ' --> Published package ' + package.format_name())
 		return ok
 		
 	def install(self, arg=None):
