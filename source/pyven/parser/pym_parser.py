@@ -13,6 +13,7 @@ from pyven.parser.directory_repo_parser import DirectoryRepoParser
 from pyven.parser.artifacts_parser import ArtifactsParser
 from pyven.parser.packages_parser import PackagesParser
 from pyven.parser.msbuild_parser import MSBuildParser
+from pyven.parser.makefile_parser import MakefileParser
 from pyven.parser.cmake_parser import CMakeParser
 from pyven.parser.command_parser import CommandParser
 from pyven.parser.unit_tests_parser import UnitTestsParser
@@ -35,6 +36,7 @@ class PymParser(object):
 		self.cmake_parser = CMakeParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
 		self.command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
 		self.msbuild_parser = MSBuildParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
+		self.makefile_parser = MakefileParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
 		self.unit_tests_parser = UnitTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="unit"]')
 		self.valgrind_tests_parser = ValgrindTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="valgrind"]')
 		self.integration_tests_parser = IntegrationTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="integration"]')
@@ -119,6 +121,8 @@ class PymParser(object):
 		builders = []
 		for msbuild_tools in self.msbuild_parser.parse(self.tree):
 			builders.extend(msbuild_tools)
+		for makefile_tools in self.makefile_parser.parse(self.tree):
+			builders.extend(makefile_tools)
 		for command_tools in self.command_parser.parse(self.tree):
 			builders.extend(command_tools)
 		return builders

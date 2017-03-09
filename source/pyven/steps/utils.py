@@ -14,7 +14,7 @@ def retrieve(type, step, items):
 					item.file = os.path.join(item.location(Step.WORKSPACE.url), os.listdir(item.location(Step.WORKSPACE.url))[0])
 					logger.info(step.log_path() + 'Workspace --> Retrieved ' + type + ' : ' + item.format_name())
 				else:
-					raise RepositoryException('Repository ' + item.repo + ' not accessible -->  Unable to retrieve ' + type + ' : ' + item.format_name())
+					raise RepositoryException('Repository ' + item.repo + ' unreachable -->  Unable to retrieve ' + type + ' : ' + item.format_name())
 			elif not step.repositories[item.repo].is_available(item):
 				raise RepositoryException('Repository ' + item.repo + ' --> ' + type + ' ' + item.format_name() + ' not available')
 			elif item.repo != Step.WORKSPACE.name:

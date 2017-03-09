@@ -29,9 +29,11 @@ from pyven.steps.artifacts_checks import ArtifactsChecks
 from pyven.steps.unit_tests import UnitTests
 from pyven.steps.package import PackageStep
 from pyven.steps.integration_tests import IntegrationTests
+from pyven.steps.install import Install
 from pyven.steps.deploy import Deploy
 from pyven.steps.retrieve import Retrieve
 from pyven.steps.deliver import Deliver
+from pyven.steps.clean import Clean
 
 logger = logging.getLogger('global')
 
@@ -83,9 +85,11 @@ class Pyven:
 		self.unit_tests = UnitTests(self.path, self.verbose)
 		self.package2 = PackageStep(self.path, self.verbose)
 		self.integration_tests = IntegrationTests(self.path, self.verbose)
+		self.install2 = Install(self.path, self.verbose)
 		self.deploy2 = Deploy(self.path, self.verbose, self.release)
 		self.retrieve2 = Retrieve(self.path, self.verbose)
 		self.deliver2 = Deliver(self.path, self.verbose, '')
+		self.clean2 = Clean(self.path, self.verbose)
 		
 	def reportables(self):
 		reportables = []
@@ -112,6 +116,8 @@ class Pyven:
 				reportables.extend(self.integration_tests.tests)
 				if self.integration_tests.checker.enabled():
 					reportables.append(self.integration_tests.checker)
+				if self.install2.checker.enabled():
+					reportables.append(self.install2.checker)
 				if self.deploy2.checker.enabled():
 					reportables.append(self.deploy2.checker)
 		elif self.step in ['test', 'package']:
@@ -164,6 +170,10 @@ class Pyven:
 				reportables.append(self.deliver2.checker)
 		elif self.step in ['parse']:
 			reportables.extend(self.objects['unit_tests'])
+		elif self.step in ['clean']:
+			reportables.append(self.configure2.parser.checker)
+			reportables.append(self.configure2.checker)
+			reportables.append(self.clean2.checker)
 		else:
 			reportables.append(self.configure2.parser.checker)
 			reportables.append(self.configure2.checker)
@@ -231,6 +241,9 @@ class Pyven:
 			
 			self.integration_tests.tests = self.configure2.integration_tests
 			
+			self.install2.artifacts = self.configure2.artifacts
+			self.install2.packages = self.configure2.packages
+			
 			self.deploy2.artifacts = self.configure2.artifacts
 			self.deploy2.packages = self.configure2.packages
 			self.deploy2.repositories = self.configure2.repositories
@@ -239,8 +252,11 @@ class Pyven:
 			self.retrieve2.packages = self.configure2.packages
 			self.retrieve2.repositories = self.configure2.repositories
 			
-			self.retrieve2.packages = self.configure2.packages
-			self.retrieve2.repositories = self.configure2.repositories
+			self.deliver2.packages = self.configure2.packages
+			self.deliver2.repositories = self.configure2.repositories
+			
+			self.clean2.preprocessors = self.configure2.preprocessors
+			self.clean2.builders = self.configure2.builders
 			
 		if self.step != 'deliver':
 			self._set_workspace()
@@ -328,13 +344,7 @@ class Pyven:
 		for subproject in self.objects['subprojects']:
 			if not subproject._install():
 				ok = False
-		for artifact in [a for a in self.objects['artifacts'].values() if a.publish]:
-			Step.LOCAL_REPO.publish(artifact, Step.WORKSPACE)
-			logger.info(self._project_log() + 'Repository ' + Step.LOCAL_REPO.name + ' --> Published artifact ' + artifact.format_name())
-		for package in [p for p in self.objects['packages'].values() if p.publish]:
-			Step.LOCAL_REPO.publish(package, Step.WORKSPACE)
-			logger.info(self._project_log() + 'Repository ' + Step.LOCAL_REPO.name + ' --> Published package ' + package.format_name())
-		return ok
+		return ok and self.install2.process()
 		
 	def install(self, arg=None):
 		if self.verify():
@@ -375,22 +385,9 @@ class Pyven:
 	def _clean(self, arg=None):
 		ok = True
 		for subproject in self.objects['subprojects']:
-			os.chdir(subproject.path)
 			if not subproject._clean():
 				ok = False
-			for dir in subproject.path.split(os.sep):
-				os.chdir('..')
-		build_ok = True
-		for tool in self.objects['builders']:
-			if not tool.clean(self.verbose):
-				build_ok = False
-		preprocess_ok = True
-		for tool in self.objects['preprocessors']:
-			if not tool.clean(self.verbose):
-				preprocess_ok = False
-		if not preprocess_ok or not build_ok:
-			raise PyvenException('Cleaning errors found')
-		return ok and build_ok and preprocess_ok
+		return ok and self.clean2.process()
 	
 	def clean(self, arg=None):
 		if self.configure():

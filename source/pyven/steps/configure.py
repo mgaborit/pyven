@@ -62,8 +62,8 @@ class Configure(Step):
 		for subdirectory in subprojects:
 			if not os.path.isdir(subdirectory):
 				raise PyvenException('Subproject directory does not exist : ' + subdirectory)
-			elif self.pym not in os.listdir(subdirectory):
-				raise PyvenException('No ' + self.pym + ' file found at ' + subdirectory)
+			elif self.parser.pym not in os.listdir(subdirectory):
+				raise PyvenException('No ' + self.parser.pym + ' file found at ' + subdirectory)
 			else:
 				#subproject = Pyven(step=self.step, verbose=self.verbose, warning_as_error=self.warning_as_error, pym=self.pym, path=os.path.join(self.path, subdirectory))
 				self.subprojects.append(subdirectory)

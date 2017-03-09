@@ -27,6 +27,8 @@ class ArtifactsChecks(Step):
 		if not ok:
 			logger.error('Artifacts missing')
 		else:
+			for artifact in [a for a in self.artifacts.values() if not a.to_retrieve]:
+				Step.WORKSPACE.publish(artifact, artifact.file)
 			logger.info(self.log_path() + self.name + ' completed')
 		return ok
 	
