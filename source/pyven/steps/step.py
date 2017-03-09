@@ -4,6 +4,7 @@ from pyven.exceptions.exception import PyvenException
 logger = logging.getLogger('global')
 
 class Step(object):
+	LOCAL_REPO = None
 	WORKSPACE = None
 
 	def __init__(self, path='', verbose=False):
