@@ -1,4 +1,4 @@
-import subprocess, os, logging, shutil, time
+import subprocess, os, shutil, time
 
 from pyven.exceptions.exception import PyvenException
 
@@ -6,7 +6,7 @@ from pyven.processing.processible import Processible
 from pyven.reporting.reportable import Reportable
 from pyven.processing.tools.tool import Tool
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
 class MakefileTool(Tool):
 
@@ -37,24 +37,24 @@ class MakefileTool(Tool):
 				call.append(option)
 			for rule in self.rules:
 				call.append(rule)
-		logger.info(' '.join(call))
+		Logger.get().info(' '.join(call))
 		return call
 	
 	def process(self, verbose=False, warning_as_error=False):
-		logger.info('Building : ' + self.type + ':' + self.name)
+		Logger.get().info('Building : ' + self.type + ':' + self.name)
 		cwd = os.getcwd()
 		if os.path.isdir(self.workspace):
-			logger.info('Entering test directory : ' + self.workspace)
+			Logger.get().info('Entering test directory : ' + self.workspace)
 			os.chdir(self.workspace)
-			logger.info('Building : ' + self.type + ':' + self.name)
+			Logger.get().info('Building : ' + self.type + ':' + self.name)
 			self.duration, out, err, returncode = self._call_command(self._format_call())
 			os.chdir(cwd)
 			
 			if verbose:
 				for line in out.splitlines():
-					logger.info('[' + self.type + ']' + line)
+					Logger.get().info('[' + self.type + ']' + line)
 				for line in err.splitlines():
-					logger.info('[' + self.type + ']' + line)
+					Logger.get().info('[' + self.type + ']' + line)
 			
 			warnings = Reportable.parse_logs(out.splitlines(), ['Warning', 'warning', 'WARNING', 'Avertissement', 'avertissement', 'AVERTISSEMENT'], [])
 			warnings.extend(Reportable.parse_logs(err.splitlines(), ['Warning', 'warning', 'WARNING', 'Avertissement', 'avertissement', 'AVERTISSEMENT'], []))
@@ -63,35 +63,35 @@ class MakefileTool(Tool):
 				self.status = Processible.STATUS['failure']
 				errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'], [])
 				errors.extend(Reportable.parse_logs(err.splitlines(), ['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'], []))
-				logger.error('Build failed : ' + self.type + ':' + self.name)
+				Logger.get().error('Build failed : ' + self.type + ':' + self.name)
 			elif warning_as_error and len(warnings) > 0:
 				self.status = Processible.STATUS['failure']
-				logger.error('Build failed : ' + self.type + ':' + self.name)
+				Logger.get().error('Build failed : ' + self.type + ':' + self.name)
 			else:
 				self.status = Processible.STATUS['success']
 			return returncode == 0 and (not warning_as_error or len(warnings) == 0)
-		logger.error('Unknown directory : ' + self.workspace)
+		Logger.get().error('Unknown directory : ' + self.workspace)
 		return False
 		
 	def clean(self, verbose=False):
 		cwd = os.getcwd()
-		logger.info('Entering directory : ' + self.workspace)
+		Logger.get().info('Entering directory : ' + self.workspace)
 		if os.path.isdir(self.workspace):
 			os.chdir(self.workspace)
 			if os.path.isfile('Makefile') or os.path.isfile('makefile'):
-				logger.info('Cleaning : ' + self.type + ':' + self.name)
+				Logger.get().info('Cleaning : ' + self.type + ':' + self.name)
 				self.duration, out, err, returncode = self._call_command(self._format_call(clean=True))
 				os.chdir(cwd)
 				
 				if verbose:
 					for line in out.splitlines():
-						logger.info('[' + self.type + ']' + line)
+						Logger.get().info('[' + self.type + ']' + line)
 					for line in err.splitlines():
-						logger.info('[' + self.type + ']' + line)
+						Logger.get().info('[' + self.type + ']' + line)
 						
 				if returncode != 0:
-					logger.error('Clean failed : ' + self.type + ':' + self.name)
+					Logger.get().error('Clean failed : ' + self.type + ':' + self.name)
 				return returncode == 0
-		logger.info('No makefile found')
+		Logger.get().info('No makefile found')
 		return True
 		

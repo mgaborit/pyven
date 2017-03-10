@@ -1,11 +1,9 @@
-import os, logging, shutil
+import os, shutil
 
 from pyven.exceptions.exception import PyvenException
 
 from pyven.repositories.repository import Repository
 from pyven.exceptions.repository_exception import RepositoryException
-
-logger = logging.getLogger('global')
 
 class DirectoryRepo(Repository):
 

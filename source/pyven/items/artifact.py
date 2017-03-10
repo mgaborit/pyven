@@ -1,11 +1,11 @@
-import logging, os
+import os
 
 from pyven.exceptions.exception import PyvenException
 import pyven.constants
 
-logger = logging.getLogger('global')
-
 from pyven.items.item import Item
+
+from pyven.logging.logger import Logger
 
 class Artifact(Item):
 
@@ -26,8 +26,8 @@ class Artifact(Item):
 			msg = ['Artifact not found : ' + self.format_name(),\
 					'Expected location : ' + self.file]
 			artifacts_checker.errors.append(msg)
-			logger.error(msg[0])
-			logger.error(msg[1])
+			Logger.get().error(msg[0])
+			Logger.get().error(msg[1])
 			return False
 		return True
 		
@@ -46,9 +46,9 @@ class Artifact(Item):
 								'Expected version : ' + self.version,\
 								'Found version    : ' + '.'.join(actual_version)]
 						artifacts_checker.errors.append(msg)
-						logger.error(msg[0])
-						logger.error(msg[1])
-						logger.error(msg[2])
+						Logger.get().error(msg[0])
+						Logger.get().error(msg[1])
+						Logger.get().error(msg[2])
 						return False
 					for idx, expected in enumerate(expected_version):
 						if actual_version[idx] != expected:
@@ -56,17 +56,17 @@ class Artifact(Item):
 									'Expected version : ' + self.version,\
 									'Found version    : ' + '.'.join(actual_version)]
 							artifacts_checker.errors.append(msg)
-							logger.error(msg[0])
-							logger.error(msg[1])
-							logger.error(msg[2])
+							Logger.get().error(msg[0])
+							Logger.get().error(msg[1])
+							Logger.get().error(msg[2])
 							return False
 				return True
 			except:
 				if self.version not in ['0', '0.0', '0.0.0', '0.0.0.0']:
 					msg = ['Artifact version not found : ' + self.format_name(), 'Expected version : ' + self.version]
 					artifacts_checker.errors.append(msg)
-					logger.error(msg[0])
-					logger.error(msg[1])
+					Logger.get().error(msg[0])
+					Logger.get().error(msg[1])
 					return False
 				return True
 		else:

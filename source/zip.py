@@ -5,6 +5,7 @@ def main():
 	zf.write('__main__.py')
 	zf.write('pyven/__init__.py')
 	zf.write('pyven/pyven.py')
+	zf.write('pyven/project.py')
 	zf.write('pyven/constants.py')
 	
 	zf.write('pyven/steps/__init__.py')
@@ -80,6 +81,9 @@ def main():
 	
 	zf.write('pyven/checkers/__init__.py')
 	zf.write('pyven/checkers/checker.py')
+	
+	zf.write('pyven/logging/__init__.py')
+	zf.write('pyven/logging/logger.py')
 
 if __name__ == '__main__':
 	main()

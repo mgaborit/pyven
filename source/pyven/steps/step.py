@@ -1,60 +1,74 @@
-import os, logging, time
-from pyven.exceptions.exception import PyvenException
+import os, time
+from pyven.logging.logger import Logger
 
-logger = logging.getLogger('global')
+from pyven.exceptions.exception import PyvenException
 
 class Step(object):
 	LOCAL_REPO = None
 	WORKSPACE = None
+	PROJECTS = []
 
-	def __init__(self, path='', verbose=False):
-		self.path = path
+	def __init__(self, verbose=False):
 		self.verbose = verbose
 		self.name = None
 		self.checker = None
 
-	def log_path(self):
-		result = ''
-		if self.path != '':
-			result = '[' + self.path + '] '
-		return result
-		
-	def log_delimiter(self):
-		logger.info(self.log_path() + '===================================')
+	@staticmethod
+	def log_delimiter(path=None):
+		Logger.get().info('===================================')
+	
+	def step(function):
+		def _intern(self):
+			Step.log_delimiter()
+			Logger.get().info('STEP ' + self.name.replace('_', ' ').upper() + ' : STARTING')
+			ok = function(self)
+			if ok:
+				Logger.get().info('STEP ' + self.name.replace('_', ' ').upper() + ' : SUCCESSFUL')
+				Step.log_delimiter()
+			else:
+				Logger.get().info('STEP ' + self.name.replace('_', ' ').upper() + ' : FAILED')
+				Step.log_delimiter()
+			return ok
+		return _intern
 	
 	@staticmethod
 	def error_checks(function):
-		def _intern(self):
-			self.log_delimiter()
-			logger.info(self.log_path() + 'STEP ' + self.name.replace('_', '').upper() + ' : STARTING')
-			self.log_delimiter()
+		def _intern(self, project):
 			ok = True
+			Logger.set_format(project)
 			try:
-				if self.path != '':
-					if not os.path.isdir(self.path):
-						raise PyvenException('Subproject path does not exist : ' + self.path)
-					os.chdir(self.path)
-				tic = time.time()
-				ok = function(self)
-				toc = time.time()
-				logger.info(self.log_path() + 'Step time : ' + str(round(toc - tic, 3)) + ' seconds')
-				if self.path != '':
-					for dir in self.path.split(os.sep):
-						os.chdir('..')
-			except PyvenException as e:
-				self.checker.errors.append(e.args)
-				ok = False
-			if ok:
-				self.log_delimiter()
-				logger.info(self.log_path() + 'STEP ' + self.name.replace('_', '').upper() + ' : SUCCESSFUL')
-				self.log_delimiter()
-			else:
-				self.log_delimiter()
-				logger.info(self.log_path() + 'STEP ' + self.name.replace('_', '').upper() + ' : FAILED')
-				self.log_delimiter()
+				try:
+					if project.path != '.':
+						if not os.path.isdir(project.path):
+							raise PyvenException('Subproject path does not exist : ' + project.path)
+						Logger.get().info('Entering directory')
+						os.chdir(project.path)
+						Logger.set_format(project)
+					try:
+						tic = time.time()
+						ok = function(self, project)
+						toc = time.time()
+						Logger.get().info('Step time : ' + str(round(toc - tic, 3)) + ' seconds')
+					finally:
+						if project.path != '.':
+							for dir in project.path.split(os.sep):
+								os.chdir('..')
+							Logger.get().info('Leaving directory')
+				except PyvenException as e:
+					self.checker.errors.append(e.args)
+					ok = False
+			finally:
+				Logger.set_format()
 			return ok
 		return _intern
-		
-	def process(self):
-		raise NotImplementedError
 	
+	@step
+	def process(self):
+		ok = True
+		for project in Step.PROJECTS:
+			if not self._process(project):
+				ok = False
+		return ok
+	
+	def _process(self, project):
+		raise NotImplementedError

@@ -1,35 +1,34 @@
-import logging, time
+import time
 
 from pyven.exceptions.exception import PyvenException
 
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
 class Build(Step):
-	def __init__(self, path, verbose, warning_as_error=False):
-		super(Build, self).__init__(path, verbose)
+	def __init__(self, verbose, warning_as_error=False):
+		super(Build, self).__init__(verbose)
 		self.name = 'build'
 		self.checker = Checker('Build')
-		self.tools = []
 		self.warning_as_error = warning_as_error
 
 	@Step.error_checks
-	def process(self):
-		logger.info(self.log_path() + 'Starting ' + self.name)
+	def _process(self, project):
+		Logger.get().info('Starting ' + self.name)
 		ok = True
-		for tool in self.tools:
+		for tool in project.builders:
 			tic = time.time()
 			if not tool.process(self.verbose, self.warning_as_error):
 				ok = False
 			else:
 				toc = time.time()
-				logger.info(self.log_path() + 'Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
+				Logger.get().info('Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 		if not ok:
-			logger.error(self.name + ' errors found')
+			Logger.get().error(self.name + ' errors found')
 		else:
-			logger.info(self.log_path() + self.name + ' completed')
+			Logger.get().info(self.name + ' completed')
 		return ok
 	
 	

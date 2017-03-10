@@ -1,10 +1,10 @@
-import subprocess, logging, os, time
+import subprocess, os, time
 
 from pyven.exceptions.exception import PyvenException
 
 from pyven.processing.tests.test import Test
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
 class IntegrationTest(Test):
 

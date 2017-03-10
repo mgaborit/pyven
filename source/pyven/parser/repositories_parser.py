@@ -1,4 +1,3 @@
-import logging
 from lxml import etree
 
 from pyven.parser.elements_parser import ElementsParser
