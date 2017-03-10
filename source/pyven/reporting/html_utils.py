@@ -124,16 +124,6 @@ class HTMLUtils(object):
 			shutil.rmtree(report_dir)
 	
 	# @div
-	# def write_step(self, step, title):
-		# self.write_step_summary(pyven, title='Summary'):
-		# for reportable in step.reportables():
-			# self.write_reportable(reportable)
-	
-	# @div
-	# def write_step_summary(self, pyven, title):
-		# pass
-	
-	# @div
 	# def write_reportable(self, reportable, title, properties):
 		# html_str = '<a name="' + self._write_ref(idx, '_'.join(reportable.report_summary())) + '"><div class="stepDiv">'
 		# try:
