@@ -1,4 +1,4 @@
-import logging, os
+import os
 from lxml import etree
 
 from pyven.parser.repositories_parser import RepositoriesParser

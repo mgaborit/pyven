@@ -1,4 +1,4 @@
-import subprocess, os, logging, shutil, time
+import subprocess, os, shutil, time
 
 import pyven.constants
 from pyven.exceptions.exception import PyvenException
@@ -7,7 +7,7 @@ from pyven.processing.processible import Processible
 from pyven.processing.tools.tool import Tool
 from pyven.reporting.reportable import Reportable
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
 class CommandTool(Tool):
 
@@ -38,14 +38,14 @@ class CommandTool(Tool):
 		call.extend(self.command.split(' '))
 		if pyven.constants.PLATFORM == 'linux':
 			call = [' '.join(call)]
-		logger.info(self.command)
+		Logger.get().info(self.command)
 		return call
 	
 	def process(self, verbose=False, warning_as_error=False):
-		logger.info('Preprocessing : ' + self.type + ':' + self.name)
+		Logger.get().info('Preprocessing : ' + self.type + ':' + self.name)
 		if not os.path.isdir(self.directory):
 			os.makedirs(self.directory)
-		logger.info('Entering directory : ' + self.directory)
+		Logger.get().info('Entering directory : ' + self.directory)
 		cwd = os.getcwd()
 		os.chdir(self.directory)
 		self.duration, out, err, returncode = self._call_command(self._format_call())
@@ -53,21 +53,21 @@ class CommandTool(Tool):
 		
 		if verbose:
 			for line in out.splitlines():
-				logger.info('[' + self.type + ']' + line)
+				Logger.get().info('[' + self.type + ']' + line)
 			for line in err.splitlines():
-				logger.info('[' + self.type + ']' + line)
+				Logger.get().info('[' + self.type + ']' + line)
 		
 		self.warnings = Reportable.parse_logs(out.splitlines(), ['Warning', 'warning'], [])
 		
 		if returncode != 0:
 			self.status = Processible.STATUS['failure']
 			self.errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error'], [])
-			logger.error('Preprocessing failed : ' + self.type + ':' + self.name)
+			Logger.get().error('Preprocessing failed : ' + self.type + ':' + self.name)
 		else:
 			self.status = Processible.STATUS['success']
 		return returncode == 0
 	
 	def clean(self, verbose=False):
-		logger.info('Cleaning : ' + self.type + ':' + self.name + ' --> Nothing to be done')
+		Logger.get().info('Cleaning : ' + self.type + ':' + self.name + ' --> Nothing to be done')
 		return True
 		

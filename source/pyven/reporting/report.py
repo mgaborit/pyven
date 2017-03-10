@@ -1,4 +1,4 @@
-import os, webbrowser, logging, codecs, shutil
+import os, webbrowser, codecs, shutil
 
 from pyven.exceptions.exception import PyvenException
 from pyven.pyven import Pyven
@@ -6,8 +6,6 @@ from pyven.pyven import Pyven
 from pyven.reporting.style import Style
 
 import pyven.constants
-
-logger = logging.getLogger('global')
 
 class Report(object):
 	style = Style()
@@ -169,7 +167,7 @@ class Report(object):
 	
 	@staticmethod
 	def aggregate():
-		logger.info('Aggregating build reports')
+		Logger.get().info('Aggregating build reports')
 		if Pyven.WORKSPACE is None:
 			Pyven._set_workspace()
 		report_dir = os.path.join(Pyven.WORKSPACE.url, 'report')
@@ -192,14 +190,14 @@ class Report(object):
 				html_str += file.read()
 				file.close()
 				html_str += '</div></a>'
-				logger.info(os.path.splitext(fragment)[0]+' report added')
+				Logger.get().info(os.path.splitext(fragment)[0]+' report added')
 			html_str += '</body>'
 			html_str += '</html>'
 			
 			html_file = codecs.open(os.path.join(report_dir, Report.index), 'w', 'utf-8')
 			html_file.write(html_str)
 			html_file.close()
-			logger.info('Report generated')
+			Logger.get().info('Report generated')
 	
 	@staticmethod
 	def display():

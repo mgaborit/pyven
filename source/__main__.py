@@ -1,17 +1,11 @@
-import sys, logging, time, argparse
+import sys, time, argparse
 import pyven.constants
+
 from pyven.exceptions.exception import PyvenException
 
 from pyven.pyven import Pyven
+from pyven.logging.logger import Logger
 from pyven.reporting.report import Report
-
-logger = logging.getLogger('global')
-logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('[%(levelname)s] %(message)s')
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.DEBUG)
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
 
 def main(args):
 	tic = time.time()
@@ -24,81 +18,46 @@ def main(args):
 	parser.add_argument('--lines', '-l', dest='nb_lines', action='store', type=int, default=10, help='Number of errors/warnings to be displayed in the build report')
 	parser.add_argument('--custom-pym', '-cp', dest='pym', action='store', type=str, default='pym.xml', help='Pym file name')
 	parser.add_argument('--release', '-r', action='store_true', help='Enable deployment to release repositories')
-	parser.add_argument('step', choices=pyven.constants.STEPS, help='pyven step to be achieved')
+	parser.add_argument('step', choices=Pyven.STEPS + Pyven.UTILS, help='pyven step to be achieved')
 	parser.add_argument('path', nargs='?', help='path to the delivery directory (used with "deliver" step only)')
 	args = parser.parse_args()
 	
-	project = Pyven(args.step, args.verbose, args.warning_as_error, args.pym, args.release)
+	if args.step not in ['deliver', 'parse'] and args.path is not None:
+		parser.error('Too many arguments provided')
+	
+	if args.step in ['deliver', 'parse'] and args.path is None:
+		parser.error('Missing path argument for step ' + args.step)
+
+	
+	pyven = Pyven(args.step, args.verbose, args.warning_as_error, args.pym, args.release, arguments={'path' : args.path})
 	try:
 		ok = True
-		if project.step not in ['deliver', 'parse'] and args.path is not None:
-			parser.error('Too many arguments provided')
-	
-		if project.step == 'configure':
-			ok = project.configure()
-	
-		if project.step == 'aggregate' and not args.display:
+		if pyven.step == 'aggregate' and not args.display:
 			Report.aggregate()
-			
-		if project.step == 'build':
-			ok = project.build()
-	
-		if project.step == 'test':
-			ok = project.test()
-	
-		if project.step == 'package':
-			ok = project.package()
-	
-		if project.step == 'verify':
-			ok = project.verify()
-	
-		if project.step == 'install':
-			ok = project.install()
-	
-		if project.step == 'deploy':
-			ok = project.deploy()
-	
-		if project.step == 'deliver':
-			if args.path is not None:
-				ok = project.deliver(args.path)
-			else:
-				parser.error('Missing path to delivery directory')
-				ok = False
-	
-		if project.step == 'parse':
-			if args.path is not None:
-				ok = project.parse(args.path)
-			else:
-				parser.error('Missing path to parsing directory')
-				ok = False
-	
-		if project.step == 'clean':
-			ok = project.clean()
-	
-		if project.step == 'retrieve':
-			ok = project.retrieve()
-	
+		
+		elif pyven.step == 'parse':
+			ok = pyven.parse(arguments['path'])
+		
+		else:
+			ok = pyven.process()
+		
 		if not ok:
 			raise PyvenException('Pyven build failed')
 	
 	except PyvenException as e:
 		for msg in e.args:
-			logger.error(msg)
+			Logger.get().error(msg)
 		sys.exit(1)
 	finally:
-		if project.step not in ['aggregate', 'clean']:
-			reports = [Report(project, args.nb_lines)]
-			for subproject in project.subprojects:
-				reports.append(Report(subproject, args.nb_lines))
+		if pyven.step not in ['aggregate', 'clean']:
+#			Report(pyven, args.nb_lines).write()
 			Report.clean()
-			for report in reports:
-				report.write()
 			if args.display:
 				Report.aggregate()
 				Report.display()
 	
 		toc = time.time()
-		logger.info('Total process time : ' + str(round(toc - tic, 3)) + ' seconds')
+		Logger.get().info('Total process time : ' + str(round(toc - tic, 3)) + ' seconds')
 	
 if __name__ == '__main__':
 	main(sys.argv)

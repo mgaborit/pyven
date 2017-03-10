@@ -1,4 +1,5 @@
-import logging, os
+import os
+from pyven.logging.logger import Logger
 
 from lxml import etree
 
@@ -19,8 +20,6 @@ from pyven.parser.command_parser import CommandParser
 from pyven.parser.unit_tests_parser import UnitTestsParser
 from pyven.parser.valgrind_tests_parser import ValgrindTestsParser
 from pyven.parser.integration_tests_parser import IntegrationTestsParser
-
-logger = logging.getLogger('global')
 
 class PymParser(object):
 	
@@ -76,7 +75,7 @@ class PymParser(object):
 	
 	@check_errors
 	def parse_pym(self):
-		logger.info('Starting ' + self.pym + ' parsing')
+		Logger.get().info('Starting ' + self.pym + ' parsing')
 		self.tree = PymParser.parse_xml(self.pym)
 		PymParser.check_version(self.tree, self.pym)
 		return True
@@ -86,7 +85,7 @@ class PymParser(object):
 		return self.constants_parser.parse(self.tree)
 		
 	@check_errors
-	def parse_subprojects(self):
+	def parse_projects(self):
 		query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/subprojects/subproject'
 		subprojects = []
 		for node in self.tree.xpath(query):
@@ -138,30 +137,3 @@ class PymParser(object):
 	@check_errors
 	def parse_integration_tests(self):
 		return self.integration_tests_parser.parse(self.tree)
-		
-	def parse(self):
-		
-		self.parse_pym()
-		
-		constants = self.parse_constants()
-		subprojects = self.parse_subprojects()
-		repositories = self.parse_repositories()
-		artifacts = self.parse_artifacts()
-		packages = self.parse_packages()
-		preprocessors = self.parse_preprocessors()
-		builders = self.parse_builders()
-		unit_tests = self.parse_unit_tests()
-		valgrind_tests = self.parse_valgrind_tests()
-		integration_tests = self.parse_integration_tests()
-		
-		logger.info('pym.xml parsed successfully')
-		return {'constants' : constants,\
-				'subprojects' : subprojects,\
-				'repositories' : repositories,\
-				'artifacts' : artifacts,\
-				'packages' : packages,\
-				'preprocessors' : preprocessors,\
-				'builders' : builders,\
-				'unit_tests' : unit_tests,\
-				'valgrind_tests' : valgrind_tests,\
-				'integration_tests' : integration_tests}

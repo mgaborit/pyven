@@ -1,7 +1,8 @@
-import logging, os, shutil, time
+import os, shutil, time
 from lxml import etree
 
 import pyven.constants
+from pyven.logging.logger import Logger
 
 from pyven.repositories.directory import DirectoryRepo
 from pyven.repositories.workspace import Workspace
@@ -23,311 +24,173 @@ from pyven.steps.retrieve import Retrieve
 from pyven.steps.deliver import Deliver
 from pyven.steps.clean import Clean
 
-logger = logging.getLogger('global')
-
-class Pyven:
+class Pyven:	
 	WORKSPACE = Workspace('workspace', 'workspace', os.path.join(os.getcwd(), 'pvn_workspace'))
+	if not os.path.isdir(WORKSPACE.url):
+		os.makedirs(WORKSPACE.url)
+	Logger.get().info('Workspace set at : ' + WORKSPACE.url)
+
 	if pyven.constants.PLATFORM == 'windows':
 		LOCAL_REPO = DirectoryRepo('local', 'file', os.path.join(os.environ.get('USERPROFILE'), 'pvn_repo'))
 	elif pyven.constants.PLATFORM == 'linux':
 		LOCAL_REPO = DirectoryRepo('local', 'file', os.path.join(os.environ.get('HOME'), 'pvn_repo'))
 	if not os.path.isdir(LOCAL_REPO.url):
 		os.makedirs(LOCAL_REPO.url)
-		
+
+	Step.WORKSPACE = WORKSPACE
 	Step.LOCAL_REPO = LOCAL_REPO
 
-	def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path=''):
+	STEPS = ['deliver', 'clean', 'retrieve', 'configure', 'preprocess', 'build', 'test', 'package', 'verify', 'install', 'deploy']
+	UTILS = ['parse', 'aggregate']
+	
+	def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path='', arguments={}):
 		self.pym = pym
 		self.path = path
 		self.step = step
 		self.verbose = verbose
 		if self.verbose:
-			logger.info(self._project_log() + 'Verbose mode enabled')
+			Logger.get().info('Verbose mode enabled')
 		self.release = release
 		if self.release:
-			logger.info(self._project_log() + 'Release mode enabled')
+			Logger.get().info('Release mode enabled')
 		self.warning_as_error = warning_as_error
 		if self.warning_as_error:
-			logger.info(self._project_log() + 'Warnings will be considered as errors')
-		self.subprojects = []
-		self.configure2 = Configure(self.path, self.verbose, self.pym)
-		self.preprocess = Preprocess(self.path, self.verbose)
-		self.build2 = Build(self.path, self.verbose, self.warning_as_error)
-		self.artifacts_checks = ArtifactsChecks(self.path, self.verbose)
-		self.unit_tests = UnitTests(self.path, self.verbose)
-		self.package2 = PackageStep(self.path, self.verbose)
-		self.integration_tests = IntegrationTests(self.path, self.verbose)
-		self.install2 = Install(self.path, self.verbose)
-		self.deploy2 = Deploy(self.path, self.verbose, self.release)
-		self.retrieve2 = Retrieve(self.path, self.verbose)
-		self.deliver2 = Deliver(self.path, self.verbose, '')
-		self.clean2 = Clean(self.path, self.verbose)
-		
+			Logger.get().info('Warnings will be considered as errors')
+
+		self.steps = []
+		if step in Pyven.STEPS:
+			self.steps.append(Configure(self.verbose, self.pym))
+			step_id = Pyven.STEPS.index(step)
+			if step_id > Pyven.STEPS.index('configure'):
+				self.steps.append(Preprocess(self.verbose))
+				
+			if step_id > Pyven.STEPS.index('preprocess'):
+				self.steps.append(Build(self.verbose, self.warning_as_error))
+				self.steps.append(ArtifactsChecks(self.verbose))
+				
+			if step_id > Pyven.STEPS.index('build'):
+				self.steps.append(UnitTests(self.verbose))
+			
+			if step_id > Pyven.STEPS.index('test'):
+				self.steps.append(PackageStep(self.verbose))
+			
+			if step_id > Pyven.STEPS.index('package'):
+				self.steps.append(IntegrationTests(self.verbose))
+			
+			if step_id > Pyven.STEPS.index('verify'):
+				if step_id > Pyven.STEPS.index('install'):
+					self.steps.append(Deploy(self.verbose, self.release))
+			
+				else:
+					self.steps.append(Install(self.verbose))
+			
+			
+			elif step_id < Pyven.STEPS.index('configure'):
+				if step_id == Pyven.STEPS.index('deliver'):
+					self.steps.append(Deliver(self.verbose, arguments['path']))
+					
+				elif step_id == Pyven.STEPS.index('clean'):
+					self.steps.append(Clean(self.verbose))
+				
+				elif step_id == Pyven.STEPS.index('retrieve'):
+					self.steps.append(Retrieve(self.verbose))
+					
+	def process(self):
+		ok = True
+		i = 0
+		while ok and i < len(self.steps):
+			if not self.steps[i].process():
+				ok = False
+			i += 1
+		return ok
+
 	def reportables(self):
 		reportables = []
 		if self.step in ['verify', 'install', 'deploy']:
-			if self.configure2.parser.checker.enabled():
-				reportables.append(self.configure2.parser.checker)
-			elif self.configure2.checker.enabled():
-				reportables.append(self.configure2.checker)
+			if self.configure.parser.checker.enabled():
+				reportables.append(self.configure.parser.checker)
+			elif self.configure.checker.enabled():
+				reportables.append(self.configure.checker)
 			else:
 				reportables.extend(self.preprocess.tools)
 				if self.preprocess.checker.enabled():
 					reportables.append(self.preprocess.checker)
-				reportables.extend(self.build2.tools)
-				if self.build2.checker.enabled():
-					reportables.append(self.build2.checker)
+				reportables.extend(self.build.tools)
+				if self.build.checker.enabled():
+					reportables.append(self.build.checker)
 				if self.artifacts_checks.checker.enabled():
 					reportables.append(self.artifacts_checks.checker)
 				reportables.extend(self.unit_tests.tests)
 				if self.unit_tests.checker.enabled():
 					reportables.append(self.unit_tests.checker)
-				if self.package2.checker.enabled():
-					reportables.append(self.package2.checker)
+				if self.package.checker.enabled():
+					reportables.append(self.package.checker)
 				reportables.extend(self.integration_tests.tests)
 				if self.integration_tests.checker.enabled():
 					reportables.append(self.integration_tests.checker)
-				if self.install2.checker.enabled():
-					reportables.append(self.install2.checker)
-				if self.deploy2.checker.enabled():
-					reportables.append(self.deploy2.checker)
+				if self.install.checker.enabled():
+					reportables.append(self.install.checker)
+				if self.deploy.checker.enabled():
+					reportables.append(self.deploy.checker)
 		elif self.step in ['test', 'package']:
-			if self.configure2.parser.checker.enabled():
-				reportables.append(self.configure2.parser.checker)
-			elif self.configure2.checker.enabled():
-				reportables.append(self.configure2.checker)
+			if self.configure.parser.checker.enabled():
+				reportables.append(self.configure.parser.checker)
+			elif self.configure.checker.enabled():
+				reportables.append(self.configure.checker)
 			else:
 				reportables.extend(self.preprocess.tools)
 				if self.preprocess.checker.enabled():
 					reportables.append(self.preprocess.checker)
-				reportables.extend(self.build2.tools)
-				if self.build2.checker.enabled():
-					reportables.append(self.build2.checker)
+				reportables.extend(self.build.tools)
+				if self.build.checker.enabled():
+					reportables.append(self.build.checker)
 				if self.artifacts_checks.checker.enabled():
 					reportables.append(self.artifacts_checks.checker)
 				reportables.extend(self.unit_tests.tests)
 				if self.unit_tests.checker.enabled():
 					reportables.append(self.unit_tests.checker)
-				if self.package2.checker.enabled():
-					reportables.append(self.package2.checker)
+				if self.package.checker.enabled():
+					reportables.append(self.package.checker)
 		elif self.step in ['build']:
-			if self.configure2.parser.checker.enabled():
-				reportables.append(self.configure2.parser.checker)
-			elif self.configure2.checker.enabled():
-				reportables.append(self.configure2.checker)
+			if self.configure.parser.checker.enabled():
+				reportables.append(self.configure.parser.checker)
+			elif self.configure.checker.enabled():
+				reportables.append(self.configure.checker)
 			else:
 				reportables.extend(self.preprocess.tools)
 				if self.preprocess.checker.enabled():
 					reportables.append(self.preprocess.checker)
-				reportables.extend(self.build2.tools)
-				if self.build2.checker.enabled():
-					reportables.append(self.build2.checker)
+				reportables.extend(self.build.tools)
+				if self.build.checker.enabled():
+					reportables.append(self.build.checker)
 				if self.artifacts_checks.checker.enabled():
 					reportables.append(self.artifacts_checks.checker)
 		elif self.step in ['retrieve']:
-			if self.configure2.parser.checker.enabled():
-				reportables.append(self.configure2.parser.checker)
-			elif self.configure2.checker.enabled():
-				reportables.append(self.configure2.checker)
+			if self.configure.parser.checker.enabled():
+				reportables.append(self.configure.parser.checker)
+			elif self.configure.checker.enabled():
+				reportables.append(self.configure.checker)
 			else:
-				reportables.append(self.retrieve2.checker)
+				reportables.append(self.retrieve.checker)
 		elif self.step in ['deliver']:
-			if self.configure2.parser.checker.enabled():
-				reportables.append(self.configure2.parser.checker)
-			elif self.configure2.checker.enabled():
-				reportables.append(self.configure2.checker)
+			if self.configure.parser.checker.enabled():
+				reportables.append(self.configure.parser.checker)
+			elif self.configure.checker.enabled():
+				reportables.append(self.configure.checker)
 			else:
-				reportables.append(self.deliver2.checker)
+				reportables.append(self.deliver.checker)
 		elif self.step in ['parse']:
 			reportables.extend(self.unit_tests.tests)
 		elif self.step in ['clean']:
-			reportables.append(self.configure2.parser.checker)
-			reportables.append(self.configure2.checker)
-			reportables.append(self.clean2.checker)
+			reportables.append(self.configure.parser.checker)
+			reportables.append(self.configure.checker)
+			reportables.append(self.clean.checker)
 		else:
-			reportables.append(self.configure2.parser.checker)
-			reportables.append(self.configure2.checker)
+			reportables.append(self.configure.parser.checker)
+			reportables.append(self.configure.checker)
 		return reportables
 	
-	def _set_workspace(self):
-		if not os.path.isdir(Pyven.WORKSPACE.url):
-			os.makedirs(Pyven.WORKSPACE.url)
-		logger.info('Workspace set at : ' + Pyven.WORKSPACE.url)
-		Step.WORKSPACE = Pyven.WORKSPACE
-	
 # ============================================================================================================		
-	
-	def _configure(self, arg=None):
-		ok = self.configure2.process()
-		for subproject in self.subprojects:
-			if not subproject.configure():
-				ok = False
-		if ok:
-			self.preprocess.tools = self.configure2.preprocessors
-			self.build2.tools = self.configure2.builders
-			self.artifacts_checks.artifacts = self.configure2.artifacts
-			self.unit_tests.tests = self.configure2.unit_tests
-			
-			self.package2.artifacts = self.configure2.artifacts
-			self.package2.packages = self.configure2.packages
-			self.package2.repositories = self.configure2.repositories
-			
-			self.integration_tests.tests = self.configure2.integration_tests
-			
-			self.install2.artifacts = self.configure2.artifacts
-			self.install2.packages = self.configure2.packages
-			
-			self.deploy2.artifacts = self.configure2.artifacts
-			self.deploy2.packages = self.configure2.packages
-			self.deploy2.repositories = self.configure2.repositories
-			
-			self.retrieve2.artifacts = self.configure2.artifacts
-			self.retrieve2.packages = self.configure2.packages
-			self.retrieve2.repositories = self.configure2.repositories
-			
-			self.deliver2.packages = self.configure2.packages
-			self.deliver2.repositories = self.configure2.repositories
-			
-			self.clean2.preprocessors = self.configure2.preprocessors
-			self.clean2.builders = self.configure2.builders
-			
-		if self.step != 'deliver':
-			self._set_workspace()
-		return ok
-		
-	def configure(self, arg=None):
-		return self._configure(arg)
-	
-# ============================================================================================================		
-
-		
-	def _build(self, arg=None):
-		ok = True
-		for subproject in self.subprojects:
-			if not subproject._build():
-				ok = False
-		return ok and self.preprocess.process() and self.build2.process() and self.artifacts_checks.process()
-		
-	def build(self, arg=None):
-		if self.configure():
-			return self._build(arg)
-			
-# ============================================================================================================		
-
-	
-	def _test(self, arg=None):
-		ok = True
-		for subproject in self.subprojects:
-			if not subproject._test():
-				ok = False
-		return ok and self.unit_tests.process()
-
-	def test(self, arg=None):
-		if self.build():
-			return self._test(arg)
-			
-# ============================================================================================================		
-
-	
-	def _package(self, arg=None):
-		ok = True
-		for subproject in self.subprojects:
-			if not subproject._package():
-				ok = False
-		return ok and self.package2.process()
-
-	def package(self, arg=None):
-		if self.test():
-			return self._package(arg)
-			
-# ============================================================================================================		
-
-	
-	def _verify(self, arg=None):
-		ok = True
-		for subproject in self.subprojects:
-			if not subproject._verify():
-				ok = False
-		return ok and self.integration_tests.process()
-		
-	def verify(self, arg=None):
-		if self.package():
-			return self._verify(arg)
-			
-# ============================================================================================================		
-
-	
-	def _install(self, arg=None):
-		ok = True
-		for subproject in self.subprojects:
-			if not subproject._install():
-				ok = False
-		return ok and self.install2.process()
-		
-	def install(self, arg=None):
-		if self.verify():
-			return self._install(arg)
-			
-# ============================================================================================================		
-
-	
-	def _deploy(self, repo=None):
-		ok = True
-		for subproject in self.subprojects:
-			if not subproject._deploy():
-				ok = False
-		return ok and self.deploy2.process()
-		
-	def deploy(self, arg=None):
-		if self.verify():
-			return self._deploy(arg)
-			
-# ============================================================================================================		
-
-	
-	def _deliver(self, path):
-		ok = True
-		for subproject in self.subprojects:
-			if not subproject._deliver(path):
-				ok = False
-		self.deliver2.location = path
-		return ok and self.deliver2.process()
-		
-	def deliver(self, arg=None):
-		if self.configure():
-			return self._deliver(arg)
-			
-# ============================================================================================================		
-
-	
-	def _clean(self, arg=None):
-		ok = True
-		for subproject in self.subprojects:
-			if not subproject._clean():
-				ok = False
-		return ok and self.clean2.process()
-	
-	def clean(self, arg=None):
-		if self.configure():
-			return self._clean(arg)
-			
-# ============================================================================================================		
-	
-	
-	def _retrieve(self, arg=None):
-		ok = self.retrieve2.process()
-		for subproject in self.subprojects:
-			if not subproject._retrieve():
-				ok = False
-		return ok
-
-	def retrieve(self, arg=None):
-		if self.configure():
-			return self._retrieve(arg)
-					
-# ============================================================================================================		
-
-	
 	def _parse(self, path, format='cppunit'):
 		ok = True
 		for report in [r for r in os.listdir(path) if r.endswith('.xml')]:

@@ -1,4 +1,4 @@
-import logging, time, os
+import os
 
 from pyven.exceptions.exception import PyvenException
 from pyven.exceptions.repository_exception import RepositoryException
@@ -6,24 +6,22 @@ from pyven.exceptions.repository_exception import RepositoryException
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
 class Install(Step):
-	def __init__(self, path, verbose):
-		super(Install, self).__init__(path, verbose)
+	def __init__(self, verbose):
+		super(Install, self).__init__(verbose)
 		self.name = 'install'
 		self.checker = Checker('Installation')
-		self.artifacts = {}
-		self.packages = {}
 
 	@Step.error_checks
-	def process(self):
+	def _process(self, project):
 		ok = True
-		for artifact in [a for a in self.artifacts.values() if a.publish]:
+		for artifact in [a for a in project.artifacts.values() if a.publish]:
 			Step.LOCAL_REPO.publish(artifact, Step.WORKSPACE)
-			logger.info(self.log_path() + 'Repository ' + Step.LOCAL_REPO.name + ' --> Published artifact ' + artifact.format_name())
-		for package in [p for p in self.packages.values() if p.publish]:
+			Logger.get().info('Repository ' + Step.LOCAL_REPO.name + ' --> Published artifact ' + artifact.format_name())
+		for package in [p for p in project.packages.values() if p.publish]:
 			Step.LOCAL_REPO.publish(package, Step.WORKSPACE)
-			logger.info(self.log_path() + 'Repository ' + Step.LOCAL_REPO.name + ' --> Published package ' + package.format_name())
+			Logger.get().info('Repository ' + Step.LOCAL_REPO.name + ' --> Published package ' + package.format_name())
 		return ok
 		

@@ -1,32 +1,31 @@
-import logging, time
+import time
 
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
 class UnitTests(Step):
-	def __init__(self, path, verbose):
-		super(UnitTests, self).__init__(path, verbose)
+	def __init__(self, verbose):
+		super(UnitTests, self).__init__(verbose)
 		self.name = 'test'
 		self.checker = Checker('Unit tests')
-		self.tests = []
 
 	@Step.error_checks
-	def process(self):
+	def _process(self, project):
 		ok = True
-		if len(self.tests) == 0:
-			logger.warning(self.log_path() + 'No unit tests found')
+		if len(project.unit_tests) == 0:
+			Logger.get().warning('No unit tests found')
 		else:
-			for test in self.tests:
+			for test in project.unit_tests:
 				tic = time.time()
 				if not test.process(self.verbose):
 					ok = False
 				else:
 					toc = time.time()
-					logger.info(self.log_path() + 'Time for test ' + test.filename + ' : ' + str(round(toc - tic, 3)) + ' seconds')
+					Logger.get().info('Time for test ' + test.filename + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 		if not ok:
-			logger.error('Unit tests failures found')
+			Logger.get().error('Unit tests failures found')
 		return ok
 	
 	

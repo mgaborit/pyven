@@ -1,4 +1,4 @@
-import logging, time, os
+import os
 
 from pyven.exceptions.exception import PyvenException
 from pyven.exceptions.repository_exception import RepositoryException
@@ -7,29 +7,26 @@ from pyven.steps.step import Step
 from pyven.steps.utils import retrieve
 from pyven.checkers.checker import Checker
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
 class PackageStep(Step):
-	def __init__(self, path, verbose):
-		super(PackageStep, self).__init__(path, verbose)
+	def __init__(self, verbose):
+		super(PackageStep, self).__init__(verbose)
 		self.name = 'package'
 		self.checker = Checker('Packaging')
-		self.repositories = {}
-		self.artifacts = {}
-		self.packages = {}
 
 	@Step.error_checks
-	def process(self):
-		ok = retrieve('artifact', self, self.artifacts) and retrieve('package', self, self.packages)
+	def _process(self, project):
+		ok = retrieve('artifact', project, project.artifacts, self.checker) and retrieve('package', project, project.packages, self.checker)
 		if ok:
-			for package in [p for p in self.packages.values() if not p.to_retrieve]:
+			for package in [p for p in project.packages.values() if not p.to_retrieve]:
 				try:
 					if not package.pack(Step.WORKSPACE):
 						ok = False
 				except PyvenException as e:
 					self.checker.errors.append(e.args)
 					for msg in e.args:
-						logger.error(self.log_path() + msg)
+						Logger.get().error(msg)
 					ok = False
 		return ok
 		

@@ -1,34 +1,33 @@
-import logging, time
+import time
 
 from pyven.exceptions.exception import PyvenException
 
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
 class Preprocess(Step):
-	def __init__(self, path, verbose):
-		super(Preprocess, self).__init__(path, verbose)
+	def __init__(self, verbose):
+		super(Preprocess, self).__init__(verbose)
 		self.name = 'preprocess'
 		self.checker = Checker('Preprocessing')
-		self.tools = []
 
 	@Step.error_checks
-	def process(self):
-		logger.info(self.log_path() + 'Starting ' + self.name)
+	def _process(self, project):
+		Logger.get().info('Starting ' + self.name)
 		ok = True
-		for tool in self.tools:
+		for tool in project.preprocessors:
 			tic = time.time()
 			if not tool.process(self.verbose):
 				ok = False
 			else:
 				toc = time.time()
-				logger.info(self.log_path() + 'Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
+				Logger.get().info('Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
 		if not ok:
-			logger.error(self.name + ' errors found')
+			Logger.get().error(self.name + ' errors found')
 		else:
-			logger.info(self.log_path() + self.name + ' completed')
+			Logger.get().info(self.name + ' completed')
 		return ok
 	
 	

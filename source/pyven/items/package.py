@@ -1,12 +1,10 @@
-import logging, zipfile, os, shutil
+import zipfile, os, shutil
 
 from pyven.exceptions.exception import PyvenException
-
-logger = logging.getLogger('global')
-
 from pyven.items.item import Item
 
-# pym.xml 'package' node
+from pyven.logging.logger import Logger
+
 class Package(Item):
 	EXTENSION = '.zip'
 
@@ -22,7 +20,7 @@ class Package(Item):
 		return self.format_name('_') + Package.EXTENSION
 		
 	def pack(self, repo):
-		logger.info('Package ' + self.format_name() + ' --> Creating archive ' + self.basename())
+		Logger.get().info('Package ' + self.format_name() + ' --> Creating archive ' + self.basename())
 		if not os.path.isdir(self.location(repo.url)):
 			os.makedirs(self.location(repo.url))
 		if os.path.isfile(os.path.join(self.location(repo.url), self.basename())):
@@ -38,10 +36,10 @@ class Package(Item):
 			try:
 				for item in self.items:
 					zf.write(os.path.join(item.location(repo.url), item.basename()), item.basename())
-					logger.info('Package ' + self.format_name() + ' --> Added artifact ' + item.format_name())
+					Logger.get().info('Package ' + self.format_name() + ' --> Added artifact ' + item.format_name())
 			finally:
 				zf.close()
-				logger.info('Package ' + self.format_name() + ' --> Created archive ' + self.basename())
+				Logger.get().info('Package ' + self.format_name() + ' --> Created archive ' + self.basename())
 		else:
 			e = PyvenException('')
 			e.args = tuple(errors)

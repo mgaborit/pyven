@@ -1,194 +1,198 @@
-import logging, os
+import os
 
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 from pyven.parser.pym_parser import PymParser
 from pyven.exceptions.exception import PyvenException
+from pyven.project import Project
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
 class Configure(Step):
-	def __init__(self, path, verbose, pym):
-		super(Configure, self).__init__(path, verbose)
+	def __init__(self, verbose, pym):
+		super(Configure, self).__init__(verbose)
+		self.pym = pym
 		self.name = 'configure'
 		self.checker = Checker('Configuration')
-		self.parser = PymParser(pym)
-		self.constants = {}
-		self.subprojects = []
-		self.repositories = {}
-		self.artifacts = {}
-		self.packages = {}
-		self.preprocessors = []
-		self.builders = []
-		self.unit_tests = []
-		self.valgrind_tests = []
-		self.integration_tests = []
+		self.parsers = []
 
-	@Step.error_checks
+	@Step.step
 	def process(self):
-		self.parser.parse_pym()
-		self.constants = self.parser.parse_constants()
-		return self._configure_subprojects()\
-			and self._configure_repositories()\
-			and self._configure_artifacts()\
-			and self._configure_packages()\
-			and self._configure_preprocessors()\
-			and self._configure_builders()\
-			and self._configure_unit_tests()\
-			and self._configure_valgrind_tests()\
-			and self._configure_integration_tests()
+		return self._process(Project('.'))
 	
-	def _replace_constants(self, str):
-		for name, value in self.constants.items():
+	@Step.error_checks
+	def _process(self, project):
+		parser = PymParser(self.pym)
+		self.parsers.append(parser)
+		parser.parse_pym()
+		project.constants = parser.parse_constants()
+		ok = self._configure_projects(project, parser)\
+			and self._configure_repositories(project, parser)\
+			and self._configure_artifacts(project, parser)\
+			and self._configure_packages(project, parser)\
+			and self._configure_preprocessors(project, parser)\
+			and self._configure_builders(project, parser)\
+			and self._configure_unit_tests(project, parser)\
+			and self._configure_valgrind_tests(project, parser)\
+			and self._configure_integration_tests(project, parser)
+		if ok:
+			Step.PROJECTS.append(project)
+		return ok
+	
+	@staticmethod
+	def _replace_constants(str, constants):
+		for name, value in constants.items():
 			str = str.replace('$('+name+')', value)
 		return str
 
 	def _configure_error_checks(function):
-		def __intern(self):
+		def __intern(self, project, parser):
 			ok = True
 			try:
-				function(self)
+				function(self, project, parser)
 			except PyvenException as e:
 				self.checker.errors.append(e.args)
 				for msg in e.args:
-					logger.error(self.log_path() + msg)
+					Logger.get().error(msg)
 				ok = False
 			return ok
 		return __intern
 		
 	@_configure_error_checks
-	def _configure_subprojects(self):
-		subprojects = self.parser.parse_subprojects()
-		for subdirectory in subprojects:
-			if not os.path.isdir(subdirectory):
-				raise PyvenException('Subproject directory does not exist : ' + subdirectory)
-			elif self.parser.pym not in os.listdir(subdirectory):
-				raise PyvenException('No ' + self.parser.pym + ' file found at ' + subdirectory)
+	def _configure_projects(self, project, parser):
+		directories = parser.parse_projects()
+		for directory in directories:
+			if not os.path.isdir(directory):
+				raise PyvenException('Subproject directory does not exist : ' + directory)
+			elif parser.pym not in os.listdir(directory):
+				raise PyvenException('No ' + parser.pym + ' file found at ' + directory)
 			else:
-				#subproject = Pyven(step=self.step, verbose=self.verbose, warning_as_error=self.warning_as_error, pym=self.pym, path=os.path.join(self.path, subdirectory))
-				self.subprojects.append(subdirectory)
-				logger.info(self.log_path() + 'Added subproject --> ' + subdirectory)
+				if project.path == '.':
+					self._process(Project(directory))
+				else:
+					self._process(Project(os.path.join(project.path, directory)))
+				Logger.get().info('Added subproject --> ' + directory)
 	
 	@_configure_error_checks
-	def _configure_repositories(self):
-		repositories = self.parser.parse_repositories()
+	def _configure_repositories(self, project, parser):
+		repositories = parser.parse_repositories()
 		for repo in repositories:
 			if repo.name == 'workspace' or repo.name == Step.LOCAL_REPO.name:
 				raise PyvenException('Repository name reserved --> ' + repo.name + ' : ' + repo.url)
 			else:
-				if repo.name in self.repositories.keys():
+				if repo.name in project.repositories.keys():
 					raise PyvenException('Repository already added --> ' + repo.name + ' : ' + repo.url)
 				else:
-					self.repositories[repo.name] = repo
+					project.repositories[repo.name] = repo
 					if repo.is_reachable():
 						if repo.release:
-							logger.info(self.log_path() + 'Release repository added --> ' + repo.name + ' : ' + repo.url)
+							Logger.get().info('Release repository added --> ' + repo.name + ' : ' + repo.url)
 						else:
-							logger.info(self.log_path() + 'Repository added --> ' + repo.name + ' : ' + repo.url)
+							Logger.get().info('Repository added --> ' + repo.name + ' : ' + repo.url)
 					else:
-						logger.warning('Repository not accessible --> ' + repo.name + ' : ' + repo.url)
+						Logger.get().warning('Repository not accessible --> ' + repo.name + ' : ' + repo.url)
 		
 	@_configure_error_checks
-	def _configure_artifacts(self):
-		artifacts = self.parser.parse_artifacts()
+	def _configure_artifacts(self, project, parser):
+		artifacts = parser.parse_artifacts()
 		for artifact in artifacts:
-			artifact.company = self._replace_constants(artifact.company)
-			artifact.name = self._replace_constants(artifact.name)
-			artifact.config = self._replace_constants(artifact.config)
-			artifact.version = self._replace_constants(artifact.version)
+			artifact.company = Configure._replace_constants(artifact.company, project.constants)
+			artifact.name = Configure._replace_constants(artifact.name, project.constants)
+			artifact.config = Configure._replace_constants(artifact.config, project.constants)
+			artifact.version = Configure._replace_constants(artifact.version, project.constants)
 			if not artifact.to_retrieve:
-				artifact.file = self._replace_constants(artifact.file)
-			if artifact.format_name() in self.artifacts.keys():
+				artifact.file = Configure._replace_constants(artifact.file, project.constants)
+			if artifact.format_name() in project.artifacts.keys():
 				raise PyvenException('Artifact already added --> ' + artifact.format_name())
-			elif artifact.to_retrieve and artifact.repo not in self.repositories.keys() and artifact.repo not in [Step.LOCAL_REPO.name, 'workspace']:
+			elif artifact.to_retrieve and artifact.repo not in project.repositories.keys() and artifact.repo not in [Step.LOCAL_REPO.name, 'workspace']:
 				raise PyvenException('Artifact repository not declared --> ' + artifact.format_name() + ' : repo ' + artifact.repo)
 			else:
-				self.artifacts[artifact.format_name()] = artifact
-				logger.info(self.log_path() + 'Artifact added --> ' + artifact.format_name())
+				project.artifacts[artifact.format_name()] = artifact
+				Logger.get().info('Artifact added --> ' + artifact.format_name())
 				if not artifact.publish:
-					logger.info(self.log_path() + 'Artifact ' + artifact.format_name() + ' --> publishment disabled')
+					Logger.get().info('Artifact ' + artifact.format_name() + ' --> publishment disabled')
 		
 	@_configure_error_checks
-	def _configure_packages(self):
-		packages = self.parser.parse_packages()
+	def _configure_packages(self, project, parser):
+		packages = parser.parse_packages()
 		for package in packages:
-			package.company = self._replace_constants(package.company)
-			package.name = self._replace_constants(package.name)
-			package.config = self._replace_constants(package.config)
-			package.version = self._replace_constants(package.version)
-			package.delivery = self._replace_constants(package.delivery)
+			package.company = Configure._replace_constants(package.company, project.constants)
+			package.name = Configure._replace_constants(package.name, project.constants)
+			package.config = Configure._replace_constants(package.config, project.constants)
+			package.version = Configure._replace_constants(package.version, project.constants)
+			package.delivery = Configure._replace_constants(package.delivery, project.constants)
 			items = []
 			items.extend(package.items)
 			package.items = []
-			if package.format_name() in self.packages.keys():
+			if package.format_name() in project.packages.keys():
 				raise PyvenException('Package already added --> ' + package.format_name())
-			elif package.to_retrieve and package.repo not in self.repositories.keys() and package.repo not in [Step.LOCAL_REPO.name, 'workspace']:
+			elif package.to_retrieve and package.repo not in project.repositories.keys() and package.repo not in [Step.LOCAL_REPO.name, 'workspace']:
 				raise PyvenException('Package repository not declared --> ' + package.format_name() + ' : repo ' + package.repo)
 			else:
 				for item in items:
-					item = self._replace_constants(item)
-					if item not in self.artifacts.keys():
+					item = Configure._replace_constants(item, project.constants)
+					if item not in project.artifacts.keys():
 						raise PyvenException('Package ' + package.format_name() + ' : Artifact not declared --> ' + item)
 					else:
-						package.items.append(self.artifacts[item])
-						logger.info(self.log_path() + 'Package ' + package.format_name() + ' : Artifact added --> ' + item)
-				self.packages[package.format_name()] = package
-				logger.info(self.log_path() + 'Package added --> ' + package.format_name())
+						package.items.append(project.artifacts[item])
+						Logger.get().info('Package ' + package.format_name() + ' : Artifact added --> ' + item)
+				project.packages[package.format_name()] = package
+				Logger.get().info('Package added --> ' + package.format_name())
 				if not package.publish:
-					logger.info(self.log_path() + 'Package ' + package.format_name() + ' --> publishment disabled')
+					Logger.get().info('Package ' + package.format_name() + ' --> publishment disabled')
 		
 	@_configure_error_checks
-	def _configure_preprocessors(self):
-		preprocessors = self.parser.parse_preprocessors()
+	def _configure_preprocessors(self, project, parser):
+		preprocessors = parser.parse_preprocessors()
 		checked = []
 		for preprocessor in preprocessors:
-			preprocessor.name = self._replace_constants(preprocessor.name)
+			preprocessor.name = Configure._replace_constants(preprocessor.name, project.constants)
 			checked.append(preprocessor)
-			logger.info(self.log_path() + 'Preprocessor added --> ' + preprocessor.type + ':' + preprocessor.name)
-		self.preprocessors = checked
+			Logger.get().info('Preprocessor added --> ' + preprocessor.type + ':' + preprocessor.name)
+		project.preprocessors = checked
 		
 	@_configure_error_checks
-	def _configure_builders(self):
-		builders = self.parser.parse_builders()
+	def _configure_builders(self, project, parser):
+		builders = parser.parse_builders()
 		checked = []
 		for builder in builders:
-			builder.name = self._replace_constants(builder.name)
+			builder.name = Configure._replace_constants(builder.name, project.constants)
 			checked.append(builder)
-			logger.info(self.log_path() + 'Builder added --> ' + builder.type + ':' + builder.name)
-		self.builders = checked
+			Logger.get().info('Builder added --> ' + builder.type + ':' + builder.name)
+		project.builders = checked
 		
 	@_configure_error_checks
-	def _configure_unit_tests(self):
-		unit_tests = self.parser.parse_unit_tests()
+	def _configure_unit_tests(self, project, parser):
+		unit_tests = parser.parse_unit_tests()
 		checked = []
 		for unit_test in unit_tests:
 			checked.append(unit_test)
-			logger.info(self.log_path() + 'Unit test added --> ' + os.path.join(unit_test.path, unit_test.filename))
-		self.unit_tests = checked
+			Logger.get().info('Unit test added --> ' + os.path.join(unit_test.path, unit_test.filename))
+		project.unit_tests = checked
 		
 	@_configure_error_checks
-	def _configure_valgrind_tests(self):
-		valgrind_tests = self.parser.parse_valgrind_tests()
+	def _configure_valgrind_tests(self, project, parser):
+		valgrind_tests = parser.parse_valgrind_tests()
 		checked = []
 		for valgrind_test in valgrind_tests:
 			checked.append(valgrind_test)
-			logger.info(self.log_path() + 'Valgrind test added --> ' + os.path.join(valgrind_test.path, valgrind_test.filename))
+			Logger.get().info('Valgrind test added --> ' + os.path.join(valgrind_test.path, valgrind_test.filename))
 		self.valgrind_tests = checked
 		
 	@_configure_error_checks
-	def _configure_integration_tests(self):
-		integration_tests = self.parser.parse_integration_tests()
+	def _configure_integration_tests(self, project, parser):
+		integration_tests = parser.parse_integration_tests()
 		checked = []
 		for integration_test in integration_tests:
-			integration_test.package = self._replace_constants(integration_test.package)
-			if integration_test.package not in self.packages.keys():
+			integration_test.package = Configure._replace_constants(integration_test.package, project.constants)
+			if integration_test.package not in project.packages.keys():
 				raise PyvenException('Integration test ' + os.path.join(integration_test.path, integration_test.filename)\
 							+ ' : Package not declared --> ' + integration_test.package)
 			else:
-				integration_test.package = self.packages[integration_test.package]
-				logger.info(self.log_path() + 'Integration test ' + os.path.join(integration_test.path, integration_test.filename)\
+				integration_test.package = project.packages[integration_test.package]
+				Logger.get().info('Integration test ' + os.path.join(integration_test.path, integration_test.filename)\
 							+ ' : Package added --> ' + integration_test.package.format_name())
 			checked.append(integration_test)
-			logger.info(self.log_path() + 'Integration test added --> ' + os.path.join(integration_test.path, integration_test.filename))
-		self.integration_tests = checked
+			Logger.get().info('Integration test added --> ' + os.path.join(integration_test.path, integration_test.filename))
+		project.integration_tests = checked
 		

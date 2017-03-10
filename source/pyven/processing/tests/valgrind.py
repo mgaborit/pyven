@@ -1,11 +1,11 @@
-import subprocess, logging, os, time
+import subprocess, os, time
 
 from pyven.exceptions.exception import PyvenException
 
 from pyven.processing.tests.test import Test
 
-logger = logging.getLogger('global')
-	
+from pyven.logging.logger import Logger
+
 class ValgrindTest(Test):
 
 	def __init__(self, type, path, filename, arguments, format):
@@ -26,6 +26,6 @@ class ValgrindTest(Test):
 			call.append('--xml-file="'+self._format_report_name()+'"')
 			call.append('./' + self.filename)
 			call = [' '.join(call)]
-			logger.info(call)
+			Logger.get().info(call)
 			return call
-		logger.error('Trying to execute Valgrind on a non-Linux platform')
+		Logger.get().error('Trying to execute Valgrind on a non-Linux platform')

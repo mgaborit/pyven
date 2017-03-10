@@ -1,10 +1,7 @@
-import os, logging, shutil
+import os, shutil
 
 from pyven.exceptions.exception import PyvenException
 
-logger = logging.getLogger('global')
-
-# pym.xml 'repository' node
 class Repository(object):
 	AVAILABLE_TYPES = ['file']
 	

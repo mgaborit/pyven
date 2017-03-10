@@ -1,5 +1,7 @@
 import subprocess, time
 
+from pyven.logging.logger import Logger
+
 class Processible(object):
 	
 	STATUS = {'default' : 'UNKNOWN', 'success' : 'SUCCESS', 'failure' : 'FAILURE'}

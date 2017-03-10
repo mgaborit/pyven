@@ -1,13 +1,12 @@
-import subprocess, os, logging, shutil, time
+import subprocess, os, shutil, time
 
 from pyven.exceptions.exception import PyvenException
 
 from pyven.processing.processible import Processible
 from pyven.reporting.reportable import Reportable
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
-# pym.xml 'tool' node
 class Tool(Processible, Reportable):
 	TYPES = ['cmake', 'msbuild', 'makefile']
 	SCOPES = ['preprocess', 'build']
