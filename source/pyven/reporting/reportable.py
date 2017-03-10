@@ -58,7 +58,7 @@ class Reportable(object):
 	def generator(self):
 		generators = []
 		generators.append(ErrorsGenerator(self.errors))
-		generators.append(WarningsGenerator(self.errors))
+		generators.append(WarningsGenerator(self.warnings))
 		return ListingGenerator(title=self.title(), properties=self.properties(), generators=generators)
 		
 	def title(self):
