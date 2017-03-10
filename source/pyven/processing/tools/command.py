@@ -16,23 +16,19 @@ class CommandTool(Tool):
 		self.command = command
 		self.directory = directory
 	
-	def report_summary(self):
-		return ['Command', self.name]
-
-	def report_identifiers(self):
-		return ['Command', self.name]
-	
-	def report_properties(self):
-		properties = []
-		properties.append(('Command', self.command))
-		properties.append(('Directory', self.directory))
-		properties.append(('Duration', str(self.duration) + ' seconds'))
+	def title(self):
+		return 'Command line'
+		
+	def properties(self):
+		properties = {}
+		properties['Status'] = self.status
+		properties['Command'] = self.command
+		properties['Workspace'] = self.directory
+		properties['Duration'] = str(self.duration) + ' seconds'
 		return properties
 	
 	def _format_call(self):
 		call = []
-		#if pyven.constants.PLATFORM == 'windows':
-		#	call.append('cmd')
 		if pyven.constants.PLATFORM == 'linux':
 			call.append('sh')
 		call.extend(self.command.split(' '))

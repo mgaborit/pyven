@@ -1,5 +1,9 @@
 from lxml import etree
 
+from pyven.reporting.listing_generator import ListingGenerator
+from pyven.reporting.errors_generator import ErrorsGenerator
+from pyven.reporting.warnings_generator import WarningsGenerator
+
 class Reportable(object):
 	
 	def __init__(self):
@@ -51,15 +55,14 @@ class Reportable(object):
 			result = Reportable._parse_xml_valgrind(doc_element)
 		return result
 			
-
-	def report_summary(self):
-		raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "report_summary"')
-
-	def report_identifiers(self):
-		raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "report_identifiers"')
-
-	def report_status(self):
-		raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "report_status"')
+	def generator(self):
+		generators = []
+		generators.append(ErrorsGenerator(self.errors))
+		generators.append(WarningsGenerator(self.errors))
+		return ListingGenerator(title=self.title(), properties=self.properties(), generators=generators)
 		
-	def report_properties(self):
-		raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "report_properties"')
+	def title(self):
+		raise NotImplementedError
+		
+	def properties(self):
+		raise NotImplementedError

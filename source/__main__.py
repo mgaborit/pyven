@@ -5,7 +5,7 @@ from pyven.exceptions.exception import PyvenException
 
 from pyven.pyven import Pyven
 from pyven.logging.logger import Logger
-from pyven.reporting.report import Report
+from pyven.reporting.html_utils import HTMLUtils
 
 def main(args):
 	tic = time.time()
@@ -33,9 +33,9 @@ def main(args):
 	try:
 		ok = True
 		if pyven.step == 'aggregate' and not args.display:
-			Report.aggregate()
+			HTMLUtils.aggregate()
 		
-		elif pyven.step == 'parse':
+		if pyven.step == 'parse':
 			ok = pyven.parse(arguments['path'])
 		
 		else:
@@ -50,11 +50,10 @@ def main(args):
 		sys.exit(1)
 	finally:
 		if pyven.step not in ['aggregate', 'clean']:
-#			Report(pyven, args.nb_lines).write()
-			Report.clean()
+			pyven.report(args.nb_lines)
 			if args.display:
-				Report.aggregate()
-				Report.display()
+				HTMLUtils.aggregate()
+				HTMLUtils.display()
 	
 		toc = time.time()
 		Logger.get().info('Total process time : ' + str(round(toc - tic, 3)) + ' seconds')

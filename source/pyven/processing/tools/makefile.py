@@ -16,16 +16,15 @@ class MakefileTool(Tool):
 		self.rules = rules
 		self.options = options
 		
-	def report_summary(self):
-		return ['Makefile', self.name]
-
-	def report_identifiers(self):
-		return ['Makefile', self.name]
-	
-	def report_properties(self):
-		properties = []
-		properties.append(('Rules', str(self.rules)))
-		properties.append(('Duration', str(self.duration) + ' seconds'))
+	def title(self):
+		return 'Makefile ' + self.name
+		
+	def properties(self):
+		properties = {}
+		properties['Status'] = self.status
+		properties['Workspace'] = self.workspace
+		properties['Rules'] = str(self.rules)
+		properties['Duration'] = str(self.duration) + ' seconds'
 		return properties
 	
 	def _format_call(self, clean=False):

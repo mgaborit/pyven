@@ -3,7 +3,7 @@ class Style(object):
 	def __init__(self, template='pyven/reporting/style_template.css'):
 		self.template = template
 		self.status = {'success' : 'success', 'failure' : 'failure', 'unknown' : 'unknown'}
-		self.step = {'div' : 'stepDiv', 'properties' : {'div' : 'propertiesDiv', 'property' : 'property'}}
+		self.listing = {'div' : 'listingDiv', 'properties' : {'div' : 'propertiesDiv', 'property' : 'property'}}
 		self.error = {'div' : 'errorDiv', 'error' : 'error'}
 		self.warning = {'div' : 'warningDiv', 'warning' : 'warning'}
 		self.go_top = 'goTop'
@@ -41,7 +41,7 @@ class Style(object):
 				font-family: Arial;
 			}
 		"""
-		css += '.' + self.step['div'] + """
+		css += '.' + self.listing['div'] + """
 			{
 				margin : 3px 25px;
 				padding-left : 25px;
@@ -50,13 +50,13 @@ class Style(object):
 				border : 1px solid #d9d9d9;
 			}
 		"""
-		css += '.' + self.step['properties']['div'] + """
+		css += '.' + self.listing['properties']['div'] + """
 			{
 				margin-bottom : 15px;
 				padding-left : 10px;
 			}
 		"""
-		css += '.' + self.step['properties']['property'] + """
+		css += '.' + self.listing['properties']['property'] + """
 			{
 				margin : 2px;
 				font-size : 16px;

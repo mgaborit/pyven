@@ -6,6 +6,7 @@ from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
 from pyven.logging.logger import Logger
+from pyven.reporting.listing_generator import ListingGenerator
 
 class Build(Step):
 	def __init__(self, verbose, warning_as_error=False):
@@ -31,4 +32,11 @@ class Build(Step):
 			Logger.get().info(self.name + ' completed')
 		return ok
 	
-	
+	def generator(self):
+		generators = []
+		for project in Step.PROJECTS:
+			for builder in project.builders:
+				generators.append(builder.generator())
+		if self.status in Step.STATUS[1:]:
+			generators.append(self.checker.generator())
+		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)

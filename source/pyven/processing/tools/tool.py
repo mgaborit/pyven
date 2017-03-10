@@ -18,9 +18,6 @@ class Tool(Processible, Reportable):
 		self.name = name
 		self.scope = scope
 
-	def report_status(self):
-		return self.status
-		
 	def _format_call(self):
 		raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "_format_call"')
 	
