@@ -7,6 +7,7 @@ from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
 from pyven.logging.logger import Logger
+from pyven.reporting.listing_generator import ListingGenerator
 
 class Install(Step):
 	def __init__(self, verbose):
@@ -25,3 +26,8 @@ class Install(Step):
 			Logger.get().info('Repository ' + Step.LOCAL_REPO.name + ' --> Published package ' + package.format_name())
 		return ok
 		
+	def generator(self):
+		generators = []
+		if self.status in Step.STATUS[1:]:
+			generators.append(self.checker.generator())
+		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)

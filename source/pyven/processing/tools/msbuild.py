@@ -17,6 +17,17 @@ class MSBuildTool(Tool):
 		self.project = project
 		self.options = options
 		
+	def title(self):
+		return 'MSBuild ' + os.path.basename(self.project)
+		
+	def properties(self):
+		properties = {}
+		properties['Status'] = self.status
+		properties['Configuration'] = self.configuration
+		properties['Platform'] = self.architecture
+		properties['Duration'] = str(self.duration) + ' seconds'
+		return properties
+	
 	def report_summary(self):
 		return ['MSBuild', os.path.basename(self.project), self.configuration, self.architecture]
 

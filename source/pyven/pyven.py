@@ -4,6 +4,9 @@ from lxml import etree
 import pyven.constants
 from pyven.logging.logger import Logger
 
+from pyven.reporting.html_utils import HTMLUtils
+from pyven.reporting.listing_generator import ListingGenerator
+
 from pyven.repositories.directory import DirectoryRepo
 from pyven.repositories.workspace import Workspace
 from pyven.reporting.reportable import Reportable
@@ -104,92 +107,15 @@ class Pyven:
 			i += 1
 		return ok
 
-	def reportables(self):
-		reportables = []
-		if self.step in ['verify', 'install', 'deploy']:
-			if self.configure.parser.checker.enabled():
-				reportables.append(self.configure.parser.checker)
-			elif self.configure.checker.enabled():
-				reportables.append(self.configure.checker)
-			else:
-				reportables.extend(self.preprocess.tools)
-				if self.preprocess.checker.enabled():
-					reportables.append(self.preprocess.checker)
-				reportables.extend(self.build.tools)
-				if self.build.checker.enabled():
-					reportables.append(self.build.checker)
-				if self.artifacts_checks.checker.enabled():
-					reportables.append(self.artifacts_checks.checker)
-				reportables.extend(self.unit_tests.tests)
-				if self.unit_tests.checker.enabled():
-					reportables.append(self.unit_tests.checker)
-				if self.package.checker.enabled():
-					reportables.append(self.package.checker)
-				reportables.extend(self.integration_tests.tests)
-				if self.integration_tests.checker.enabled():
-					reportables.append(self.integration_tests.checker)
-				if self.install.checker.enabled():
-					reportables.append(self.install.checker)
-				if self.deploy.checker.enabled():
-					reportables.append(self.deploy.checker)
-		elif self.step in ['test', 'package']:
-			if self.configure.parser.checker.enabled():
-				reportables.append(self.configure.parser.checker)
-			elif self.configure.checker.enabled():
-				reportables.append(self.configure.checker)
-			else:
-				reportables.extend(self.preprocess.tools)
-				if self.preprocess.checker.enabled():
-					reportables.append(self.preprocess.checker)
-				reportables.extend(self.build.tools)
-				if self.build.checker.enabled():
-					reportables.append(self.build.checker)
-				if self.artifacts_checks.checker.enabled():
-					reportables.append(self.artifacts_checks.checker)
-				reportables.extend(self.unit_tests.tests)
-				if self.unit_tests.checker.enabled():
-					reportables.append(self.unit_tests.checker)
-				if self.package.checker.enabled():
-					reportables.append(self.package.checker)
-		elif self.step in ['build']:
-			if self.configure.parser.checker.enabled():
-				reportables.append(self.configure.parser.checker)
-			elif self.configure.checker.enabled():
-				reportables.append(self.configure.checker)
-			else:
-				reportables.extend(self.preprocess.tools)
-				if self.preprocess.checker.enabled():
-					reportables.append(self.preprocess.checker)
-				reportables.extend(self.build.tools)
-				if self.build.checker.enabled():
-					reportables.append(self.build.checker)
-				if self.artifacts_checks.checker.enabled():
-					reportables.append(self.artifacts_checks.checker)
-		elif self.step in ['retrieve']:
-			if self.configure.parser.checker.enabled():
-				reportables.append(self.configure.parser.checker)
-			elif self.configure.checker.enabled():
-				reportables.append(self.configure.checker)
-			else:
-				reportables.append(self.retrieve.checker)
-		elif self.step in ['deliver']:
-			if self.configure.parser.checker.enabled():
-				reportables.append(self.configure.parser.checker)
-			elif self.configure.checker.enabled():
-				reportables.append(self.configure.checker)
-			else:
-				reportables.append(self.deliver.checker)
-		elif self.step in ['parse']:
-			reportables.extend(self.unit_tests.tests)
-		elif self.step in ['clean']:
-			reportables.append(self.configure.parser.checker)
-			reportables.append(self.configure.checker)
-			reportables.append(self.clean.checker)
-		else:
-			reportables.append(self.configure.parser.checker)
-			reportables.append(self.configure.checker)
-		return reportables
-	
+	def report(self, nb_lines):
+		HTMLUtils.NB_LINES = nb_lines
+		HTMLUtils.clean(Step.WORKSPACE.url)
+		step_generators = []
+		for step in self.steps:
+			step_generators.append(step.generator())
+		generator = ListingGenerator(title=pyven.constants.PLATFORM, generators=step_generators)
+		HTMLUtils.write(generator.generate(), Step.WORKSPACE.url)
+		
 # ============================================================================================================		
 	def _parse(self, path, format='cppunit'):
 		ok = True

@@ -7,6 +7,7 @@ from pyven.exceptions.exception import PyvenException
 from pyven.project import Project
 
 from pyven.logging.logger import Logger
+from pyven.reporting.listing_generator import ListingGenerator
 
 class Configure(Step):
 	def __init__(self, verbose, pym):
@@ -195,4 +196,14 @@ class Configure(Step):
 			checked.append(integration_test)
 			Logger.get().info('Integration test added --> ' + os.path.join(integration_test.path, integration_test.filename))
 		project.integration_tests = checked
+		
+	def generator(self):
+		generators = []
+		if self.status in Step.STATUS[1:]:
+			generators.append(self.checker.generator())
+		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
+		
+		
+		
+		
 		

@@ -56,7 +56,10 @@ def main():
 	zf.write('pyven/exceptions/parser_exception.py')
 	
 	zf.write('pyven/reporting/__init__.py')
-	zf.write('pyven/reporting/report.py')
+	zf.write('pyven/reporting/html_utils.py')
+	zf.write('pyven/reporting/listing_generator.py')
+	zf.write('pyven/reporting/errors_generator.py')
+	zf.write('pyven/reporting/warnings_generator.py')
 	zf.write('pyven/reporting/reportable.py')
 	zf.write('pyven/reporting/style.py')
 
@@ -84,6 +87,9 @@ def main():
 	
 	zf.write('pyven/logging/__init__.py')
 	zf.write('pyven/logging/logger.py')
+	
+	zf.write('pyven/utils/__init__.py')
+	zf.write('pyven/utils/utils.py')
 
 if __name__ == '__main__':
 	main()

@@ -7,11 +7,13 @@ class Step(object):
 	LOCAL_REPO = None
 	WORKSPACE = None
 	PROJECTS = []
+	STATUS = ['SUCCESS', 'FAILURE', 'UNKNOWN']
 
 	def __init__(self, verbose=False):
 		self.verbose = verbose
 		self.name = None
 		self.checker = None
+		self.status = Step.STATUS[2]
 
 	@staticmethod
 	def log_delimiter(path=None):
@@ -23,9 +25,11 @@ class Step(object):
 			Logger.get().info('STEP ' + self.name.replace('_', ' ').upper() + ' : STARTING')
 			ok = function(self)
 			if ok:
+				self.status = Step.STATUS[0]
 				Logger.get().info('STEP ' + self.name.replace('_', ' ').upper() + ' : SUCCESSFUL')
 				Step.log_delimiter()
 			else:
+				self.status = Step.STATUS[1]
 				Logger.get().info('STEP ' + self.name.replace('_', ' ').upper() + ' : FAILED')
 				Step.log_delimiter()
 			return ok
@@ -65,10 +69,17 @@ class Step(object):
 	@step
 	def process(self):
 		ok = True
+		self.checker.status = Step.STATUS[0]
 		for project in Step.PROJECTS:
 			if not self._process(project):
 				ok = False
 		return ok
 	
 	def _process(self, project):
+		raise NotImplementedError
+		
+	def reportables(self):
+		raise NotImplementedError
+		
+	def generator(self):
 		raise NotImplementedError

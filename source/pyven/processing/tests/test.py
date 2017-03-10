@@ -19,18 +19,13 @@ class Test(Processible, Reportable):
 		self.arguments = arguments
 		self.format = format
 	
-	def report_identifiers(self):
-		return ['Test', self.filename]
+	def title(self):
+		return self.type + ' test : ' + os.path.join(self.path, self.filename)
 		
-	def report_summary(self):
-		return self.report_identifiers()
-
-	def report_status(self):
-		return self.status
-		
-	def report_properties(self):
-		properties = []
-		properties.append(('Duration', str(self.duration) + ' seconds'))
+	def properties(self):
+		properties = {}
+		properties['Status'] = self.status
+		properties['Duration'] = str(self.duration) + ' seconds'
 		return properties
 	
 	def _format_report_name(self):

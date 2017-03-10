@@ -7,6 +7,7 @@ from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
 from pyven.logging.logger import Logger
+from pyven.reporting.listing_generator import ListingGenerator
 
 class Deploy(Step):
 	def __init__(self, verbose, release):
@@ -41,5 +42,9 @@ class Deploy(Step):
 					raise e
 		return ok
 		
-	
+	def generator(self):
+		generators = []
+		if self.status in Step.STATUS[1:]:
+			generators.append(self.checker.generator())
+		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
 	
