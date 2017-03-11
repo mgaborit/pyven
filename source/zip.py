@@ -57,6 +57,7 @@ def main():
 	
 	zf.write('pyven/reporting/__init__.py')
 	zf.write('pyven/reporting/html_utils.py')
+	zf.write('pyven/reporting/generator.py')
 	zf.write('pyven/reporting/listing_generator.py')
 	zf.write('pyven/reporting/errors_generator.py')
 	zf.write('pyven/reporting/warnings_generator.py')

@@ -37,6 +37,18 @@ class Build(Step):
 		for project in Step.PROJECTS:
 			for builder in project.builders:
 				generators.append(builder.generator())
-		if self.status in Step.STATUS[1:]:
+		if self.status in Step.STATUS[1]:
 			generators.append(self.checker.generator())
 		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
+		
+	def report(self):
+		report = super(Build, self).report()
+		if report:
+			i = 0
+			nb_builders = 0
+			while nb_builders == 0 and i < len(Step.PROJECTS):
+				nb_builders += len(Step.PROJECTS[i].builders)
+				i += 1
+			report = nb_builders > 0
+		return report
+		

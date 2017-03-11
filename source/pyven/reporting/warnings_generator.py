@@ -1,8 +1,13 @@
 from pyven.reporting.html_utils import HTMLUtils
 
-class WarningsGenerator(object):
+from pyven.reporting.generator import Generator
+
+class WarningsGenerator(Generator):
 
 	def __init__(self, warnings=[]):
+		super(WarningsGenerator, self).__init__()
+		if len(warnings) > Generator.NB_LINES:
+			warnings = warnings[:Generator.NB_LINES]
 		self.warnings = warnings
 		
 	def generate(self):

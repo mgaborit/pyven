@@ -1,4 +1,4 @@
-import os, webbrowser, codecs, shutil
+import os, webbrowser, shutil
 
 from pyven.exceptions.exception import PyvenException
 
@@ -6,16 +6,64 @@ from pyven.reporting.style import Style
 
 import pyven.constants
 from pyven.logging.logger import Logger
-from pyven.utils.utils import hash
+from pyven.utils.utils import str_to_file, file_to_str
+
+def html_layer(function):
+	def _intern(workspace):
+		html_str = HTMLUtils.ltag('html', {'xmlns' : 'http://www.w3.org/1999/xhtml', 'lang' : 'en-EN', 'xml:lang' : 'en-EN'})
+		try:
+			html_str += function(workspace)
+		finally:
+			html_str += HTMLUtils.rtag('html')
+		return html_str
+	return _intern
+
+def head(function):
+	def _intern():
+		html_str = HTMLUtils.ltag('head')
+		try:
+			html_str += HTMLUtils.ltag('meta', {'http-equiv' : 'Content-Type', 'content' : 'text/html; charset=utf-8'})
+			html_str += HTMLUtils.ltag('title')
+			try:
+				html_str += 'Pyven build report'
+			finally:
+				html_str += HTMLUtils.rtag('title')
+			html_str += HTMLUtils.ltag('style', {'type' : 'text/css'})
+			try:
+				html_str += function()
+			finally:
+				html_str += HTMLUtils.rtag('style')
+		finally:
+			html_str += HTMLUtils.rtag('head')
+		return html_str
+	return _intern
+
+def body(function):
+	def _intern(workspace):
+		html_str = HTMLUtils.ltag('body')
+		try:
+			html_str += HTMLUtils.ltag('h1')
+			try:
+				html_str += 'Build report'
+			finally:
+				html_str += HTMLUtils.rtag('h1')
+			html_str += function(workspace)
+		finally:
+			html_str += HTMLUtils.rtag('body')
+		return html_str
+	return _intern
 
 class HTMLUtils(object):
 	INDEX = 'index.html'
 	STYLE = Style()
-	NB_LINES=10
 	
 	def __init__(self, nb_lines=10):
 		self.nb_lines = nb_lines
 		
+	@staticmethod
+	def set_style(style):
+		HTMLUtils.STYLE.name = style
+			
 	@staticmethod
 	def ltag(name, attributes={}):
 		return '<' + name + ' ' + ' '.join([k + '="' + v + '"' for k, v in attributes.items()]) + '>\n'
@@ -109,13 +157,22 @@ class HTMLUtils(object):
 		return _intern
 	
 	@staticmethod
-	def write(html_str, workspace):
+	def listing_property_status(function):
+		def _intern(self, value):
+			html_str = HTMLUtils.ltag('span', {'class' : HTMLUtils.STYLE.status[value.lower()]})
+			try:
+				html_str += function(self, value)
+			finally:
+				html_str += HTMLUtils.rtag('span')
+			return html_str
+		return _intern
+	
+	@staticmethod
+	def write(html_str, workspace, step):
 		report_dir = os.path.join(workspace, 'report')
 		if not os.path.isdir(report_dir):
 			os.makedirs(report_dir)
-		html_file = codecs.open(os.path.join(report_dir, HTMLUtils.INDEX), 'w', 'utf-8')
-		html_file.write(html_str)
-		html_file.close()
+		str_to_file(html_str, os.path.join(report_dir, pyven.constants.PLATFORM + '-' + step + '.html'))
 
 	@staticmethod
 	def clean(workspace):
@@ -123,94 +180,6 @@ class HTMLUtils(object):
 		if os.path.isdir(report_dir):
 			shutil.rmtree(report_dir)
 	
-	# @div
-	# def write_reportable(self, reportable, title, properties):
-		# html_str = '<a name="' + self._write_ref(idx, '_'.join(reportable.report_summary())) + '"><div class="stepDiv">'
-		# try:
-			# html_str += '<h2>' + ' '.join(reportable.report_identifiers()) + '</h2>'
-			# html_str += '<div class="' + HTMLUtils.STYLE.reportable['properties']['div'] + '">'
-			# if reportable.report_status() == 'SUCCESS':
-				# status_style = HTMLUtils.STYLE.status['success']
-			# elif reportable.report_status() == 'FAILURE':
-				# status_style = HTMLUtils.STYLE.status['failure']
-			# else:
-				# status_style = HTMLUtils.STYLE.status['unknown']
-			# html_str += '<p class="' + HTMLUtils.STYLE.reportable['properties']['property'] + '">Status : <span class="' + status_style + '">' + reportable.report_status() + '</span></p>'
-			# for property in reportable.report_properties():
-				# html_str += '<p class="' + HTMLUtils.STYLE.reportable['properties']['property'] + '">' + property[0] + ' : ' + property[1] + '</p>'
-			# html_str += '</div>'
-			# displayed_errors = 0
-			# nb_errors = 0
-			# for error in reportable.errors:
-				# if displayed_errors < self.nb_lines:
-					# html_str += self._write_error(error)
-					# displayed_errors += 1
-				# nb_errors += 1
-			# if nb_errors > displayed_errors:
-				# html_str += self._write_error([str(nb_errors - displayed_errors) + ' more errors...'])
-			# displayed_warnings = 0
-			# nb_warnings = 0
-			# for warning in reportable.warnings:
-				# if displayed_warnings < self.nb_lines - displayed_errors:
-					# html_str += self._write_warning(warning)
-					# displayed_warnings += 1
-				# nb_warnings += 1
-			# if nb_warnings > displayed_warnings:
-				# html_str += self._write_warning([str(nb_warnings - displayed_warnings) + ' more warnings...'])
-		# finally:
-			# html_str += '</div></a>'
-		# return html_str
-	
-	# @staticmethod
-	# def _failure_comment():
-		# return '<!-- FAILURE -->'
-	
-	# @staticmethod
-	# def _report_name_to_path(name):
-		# name_platform = name.split('_PLATFORM_')
-		# if name_platform[0].startswith('root_project'):
-			# return 'Root project'
-		# if name_platform[1] == 'windows':
-			# return '\\'.join(name_platform[0].split('_SLASH_'))
-		# else:
-			# return '/'.join(name_platform[0].split('_SLASH_'))
-	
-	# @staticmethod
-	# def _path_to_report_name(path):
-		# return '_SLASH_'.join(path.split(os.sep)) + '_PLATFORM_' + pyven.constants.PLATFORM
-
-	# @staticmethod
-	# def _path_to_report_filename(path):
-		# return HTMLUtils._path_to_report_name(path) + '.html'
-	
-	# def _project_report_name(self):
-		# name = 'root_project_PLATFORM_' + pyven.constants.PLATFORM + '.html'
-		# if self.pyven.path != '':
-			# name = self._path_to_report_filename(self.pyven.path)
-		# return name
-
-	# def _write_error(self, error):
-		# html_str = '<div class="' + HTMLUtils.STYLE.error['div'] + '">'
-		# html_str += '<span class="' + HTMLUtils.STYLE.error['error'] + '"><p>' + '</p><p>'.join(error) + '</p></span>'
-		# html_str += '</div>'
-		# return html_str
-	
-	# def _write_warning(self, warning):
-		# html_str = '<div class="' + HTMLUtils.STYLE.warning['div'] + '">'
-		# html_str += '<span class="' + HTMLUtils.STYLE.warning['warning'] + '"><p>' + '</p><p>'.join(warning) + '</p></span>'
-		# html_str += '</div>'
-		# return html_str
-	
-	# def _write_head(self):
-		# html_str = '<head>'
-		# html_str += '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
-		# html_str += '<title>Build report</title>'
-		# html_str += '<style type="text/css">'
-		# html_str += HTMLUtils.STYLE.write()
-		# html_str += '</style>'
-		# html_str += '</head>'
-		# return html_str
-		
 	# def _write_ref(self, idx, path):
 		# return HTMLUtils._path_to_report_name(path) + '_' + str(idx)
 
@@ -251,22 +220,6 @@ class HTMLUtils(object):
 			# html_str += '</div></a>'
 		# return html_str
 		
-	# def _write_body(self):
-		# html_str = ''
-		# ok = True
-		# i = 0
-		# while ok and i < len(self.pyven.reportables()):
-			# ok = self.pyven.reportables()[i].report_status() == 'SUCCESS'
-			# i += 1
-		# if not ok:
-			# html_str = HTMLUtils._failure_comment()
-		# html_str += self._write_summary()
-		# count = 0
-		# for step in self.pyven.reportables():
-			# html_str += self._write_step(step, count)
-			# count += 1
-		# return html_str
-
 	# def _write_summary(self):
 		# html_str = '<div class="' + HTMLUtils.STYLE.step['div'] + '">'
 		# html_str += '<h2>Summary</h2>'
@@ -304,41 +257,37 @@ class HTMLUtils(object):
 		# html_str += '</div></div>'
 		# return html_str
 	
-	@staticmethod
-	def aggregate():
-		Logger.get().info('Aggregating build reports')
-		if Pyven.WORKSPACE is None:
-			Pyven._set_workspace()
-		report_dir = os.path.join(Pyven.WORKSPACE.url, 'report')
+	@html_layer
+	def write_html(workspace):
+		html_str = HTMLUtils.write_head()
+		html_str += HTMLUtils.write_body(workspace)
+		return html_str
+	
+	@head
+	def write_head():
+		return HTMLUtils.STYLE.write()
+	
+	@body
+	def write_body(workspace):
+		report_dir = os.path.join(workspace, 'report')
+		html_str = ''
 		if os.path.isdir(report_dir):
-			html_str = '<html xmlns="http://www.w3.org/1999/xhtml" lang="en-EN" xml:lang="en-EN">'
-			html_str += HTMLUtils._write_head()
-			html_str += '<body>'
-			html_str += '<h1>Build report</h1>'
-			tmp = [f for f in os.listdir(report_dir) if os.path.splitext(f)[1] == '.html' and f != HTMLUtils.index]
-			fragments = [f for f in tmp if f.startswith('root_project')]
-			fragments.extend([f for f in tmp if not f.startswith('root_project')])
-			projects = [os.path.splitext(f)[0] for f in fragments]
-			html_str += HTMLUtils._write_projects(projects)
-			for fragment in fragments:
-				html_str += '<a name="' + os.path.splitext(fragment)[0] + '">'
-				html_str += '<div class="' + HTMLUtils.STYLE.step['div'] + '">'
-				html_str += '<p class="' + HTMLUtils.STYLE.go_top + '"><a href="#">Top</a></p>'
-				html_str += '<h2>'+HTMLUtils._report_name_to_path(os.path.splitext(fragment)[0])+'</h2>'
-				file = codecs.open(os.path.join(report_dir, fragment), 'r', 'utf-8')
-				html_str += file.read()
-				file.close()
-				html_str += '</div></a>'
-				Logger.get().info(os.path.splitext(fragment)[0]+' report added')
-			html_str += '</body>'
-			html_str += '</html>'
-			
-			html_file = codecs.open(os.path.join(report_dir, HTMLUtils.index), 'w', 'utf-8')
-			html_file.write(html_str)
-			html_file.close()
-			Logger.get().info('HTMLUtils generated')
+			report_parts = [f for f in os.listdir(report_dir) if os.path.splitext(f)[1] == '.html' and f != HTMLUtils.INDEX]
+			for report_part in report_parts:
+				html_str += file_to_str(os.path.join(report_dir, report_part))
+		return html_str
 	
 	@staticmethod
-	def display():
-		webbrowser.open_new_tab(os.path.join(Pyven.WORKSPACE.url, 'report', HTMLUtils.index))
+	def aggregate(workspace):
+		report_dir = os.path.join(workspace, 'report')
+		if not os.path.isdir(report_dir):
+			os.makedirs(report_dir)
+		str_to_file(HTMLUtils.write_html(workspace), os.path.join(report_dir, HTMLUtils.INDEX))
+	
+	@staticmethod
+	def display(workspace):
+		webbrowser.open_new_tab(os.path.join(workspace, 'report', HTMLUtils.INDEX))
 		
+del html_layer
+del head
+del body

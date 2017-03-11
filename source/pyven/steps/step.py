@@ -83,3 +83,6 @@ class Step(object):
 		
 	def generator(self):
 		raise NotImplementedError
+		
+	def report(self):
+		return self.status != Step.STATUS[2]

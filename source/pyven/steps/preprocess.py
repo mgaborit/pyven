@@ -33,9 +33,13 @@ class Preprocess(Step):
 	
 	def generator(self):
 		generators = []
-		if self.status in Step.STATUS[1:]:
+		if self.status in Step.STATUS[1]:
 			for project in Step.PROJECTS:
 				for preprocessor in project.preprocessors:
 					generators.append(preprocessor.generator())
 			generators.append(self.checker.generator())
 		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
+		
+	def report(self):
+		return self.status == Step.STATUS[1]
+		

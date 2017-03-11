@@ -16,8 +16,9 @@ def main(args):
 	parser.add_argument('--verbose', '-v', action='store_true', help='increase verbosity level')
 	parser.add_argument('--warning-as-error', '-wae', dest='warning_as_error', action='store_true', help='consider warnings as errors')
 	parser.add_argument('--lines', '-l', dest='nb_lines', action='store', type=int, default=10, help='Number of errors/warnings to be displayed in the build report')
-	parser.add_argument('--custom-pym', '-cp', dest='pym', action='store', type=str, default='pym.xml', help='Pym file name')
-	parser.add_argument('--release', '-r', action='store_true', help='Enable deployment to release repositories')
+	parser.add_argument('--custom-pym', '-cp', dest='pym', action='store', type=str, default='pym.xml', help='pym file name')
+	parser.add_argument('--release', '-r', action='store_true', help='enable deployment to release repositories')
+	parser.add_argument('--report-style', '-rs', dest='report_style', action='store', type=str, default='default', help='Sets the HTML report style')
 	parser.add_argument('step', choices=Pyven.STEPS + Pyven.UTILS, help='pyven step to be achieved')
 	parser.add_argument('path', nargs='?', help='path to the delivery directory (used with "deliver" step only)')
 	args = parser.parse_args()
@@ -29,11 +30,11 @@ def main(args):
 		parser.error('Missing path argument for step ' + args.step)
 
 	
-	pyven = Pyven(args.step, args.verbose, args.warning_as_error, args.pym, args.release, arguments={'path' : args.path})
+	pyven = Pyven(args.step, args.verbose, args.warning_as_error, args.pym, args.release, arguments={'path' : args.path}, nb_lines=args.nb_lines)
 	try:
 		ok = True
 		if pyven.step == 'aggregate' and not args.display:
-			HTMLUtils.aggregate()
+			pyven.aggregate()
 		
 		if pyven.step == 'parse':
 			ok = pyven.parse(arguments['path'])
@@ -49,11 +50,10 @@ def main(args):
 			Logger.get().error(msg)
 		sys.exit(1)
 	finally:
-		if pyven.step not in ['aggregate', 'clean']:
-			pyven.report(args.nb_lines)
+		if pyven.step not in ['aggregate']:
+			pyven.report(args.report_style)
 			if args.display:
-				HTMLUtils.aggregate()
-				HTMLUtils.display()
+				pyven.display()
 	
 		toc = time.time()
 		Logger.get().info('Total process time : ' + str(round(toc - tic, 3)) + ' seconds')

@@ -34,6 +34,18 @@ class UnitTests(Step):
 		for project in Step.PROJECTS:
 			for test in project.unit_tests:
 				generators.append(test.generator())
-		if self.status in Step.STATUS[1:]:
+		if self.status in Step.STATUS[1]:
 			generators.append(self.checker.generator())
 		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
+		
+	def report(self):
+		report = super(UnitTests, self).report()
+		if report:
+			i = 0
+			nb_tests = 0
+			while nb_tests == 0 and i < len(Step.PROJECTS):
+				nb_tests += len(Step.PROJECTS[i].unit_tests)
+				i += 1
+			report = nb_tests > 0
+		return report
+		
