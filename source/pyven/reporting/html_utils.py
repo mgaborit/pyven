@@ -1,4 +1,5 @@
 import os, webbrowser, shutil
+from string import Template
 
 from pyven.exceptions.exception import PyvenException
 
@@ -8,54 +9,11 @@ import pyven.constants
 from pyven.logging.logger import Logger
 from pyven.utils.utils import str_to_file, file_to_str
 
-def html_layer(function):
-	def _intern(workspace):
-		html_str = HTMLUtils.ltag('html', {'xmlns' : 'http://www.w3.org/1999/xhtml', 'lang' : 'en-EN', 'xml:lang' : 'en-EN'})
-		try:
-			html_str += function(workspace)
-		finally:
-			html_str += HTMLUtils.rtag('html')
-		return html_str
-	return _intern
-
-def head(function):
-	def _intern():
-		html_str = HTMLUtils.ltag('head')
-		try:
-			html_str += HTMLUtils.ltag('meta', {'http-equiv' : 'Content-Type', 'content' : 'text/html; charset=utf-8'})
-			html_str += HTMLUtils.ltag('title')
-			try:
-				html_str += 'Pyven build report'
-			finally:
-				html_str += HTMLUtils.rtag('title')
-			html_str += HTMLUtils.ltag('style', {'type' : 'text/css'})
-			try:
-				html_str += function()
-			finally:
-				html_str += HTMLUtils.rtag('style')
-		finally:
-			html_str += HTMLUtils.rtag('head')
-		return html_str
-	return _intern
-
-def body(function):
-	def _intern(workspace):
-		html_str = HTMLUtils.ltag('body')
-		try:
-			html_str += HTMLUtils.ltag('h1')
-			try:
-				html_str += 'Build report'
-			finally:
-				html_str += HTMLUtils.rtag('h1')
-			html_str += function(workspace)
-		finally:
-			html_str += HTMLUtils.rtag('body')
-		return html_str
-	return _intern
-
 class HTMLUtils(object):
 	INDEX = 'index.html'
 	STYLE = Style()
+	TEMPLATE_DIR = os.path.join(os.environ.get('PVN_HOME'), 'report', 'html')
+	TEMPLATE_FILE = 'index-template.html'
 	
 	def __init__(self, nb_lines=10):
 		self.nb_lines = nb_lines
@@ -66,11 +24,14 @@ class HTMLUtils(object):
 			
 	@staticmethod
 	def ltag(name, attributes={}):
-		return '<' + name + ' ' + ' '.join([k + '="' + v + '"' for k, v in attributes.items()]) + '>\n'
+		tag = '<' + name
+		if len(attributes) > 0:
+			tag += ' '
+		return tag + ' '.join([k + '="' + v + '"' for k, v in attributes.items()]) + '>'
 	
 	@staticmethod
 	def rtag(name):
-		return '</' + name + '>\n'
+		return '</' + name + '>'
 	
 	@staticmethod
 	def error(function):
@@ -257,17 +218,6 @@ class HTMLUtils(object):
 		# html_str += '</div></div>'
 		# return html_str
 	
-	@html_layer
-	def write_html(workspace):
-		html_str = HTMLUtils.write_head()
-		html_str += HTMLUtils.write_body(workspace)
-		return html_str
-	
-	@head
-	def write_head():
-		return HTMLUtils.STYLE.write()
-	
-	@body
 	def write_body(workspace):
 		report_dir = os.path.join(workspace, 'report')
 		html_str = ''
@@ -278,16 +228,68 @@ class HTMLUtils(object):
 		return html_str
 	
 	@staticmethod
+	def generate_template():
+		template_dir = HTMLUtils.TEMPLATE_DIR
+		if not os.path.isdir(template_dir):
+			os.makedirs(template_dir)
+		str_to_file(HTMLUtils.generate_html(), os.path.join(template_dir, HTMLUtils.TEMPLATE_FILE))
+	
+	@staticmethod
+	def generate_html():
+		html_str = HTMLUtils.ltag('html', {'xmlns' : 'http://www.w3.org/1999/xhtml', 'lang' : 'en-EN', 'xml:lang' : 'en-EN'})
+		try:
+			html_str += HTMLUtils.generate_head()
+			html_str += HTMLUtils.generate_body()
+		finally:
+			html_str += HTMLUtils.rtag('html')
+		return html_str
+
+	@staticmethod
+	def generate_head():
+		html_str = HTMLUtils.ltag('head')
+		try:
+			html_str += HTMLUtils.ltag('meta', {'http-equiv' : 'Content-Type', 'content' : 'text/html; charset=utf-8'})
+			html_str += HTMLUtils.ltag('title')
+			try:
+				html_str += 'Pyven build report'
+			finally:
+				html_str += HTMLUtils.rtag('title')
+			html_str += HTMLUtils.ltag('style', {'type' : 'text/css'})
+			try:
+				html_str += '$STYLE'
+			finally:
+				html_str += HTMLUtils.rtag('style')
+		finally:
+			html_str += HTMLUtils.rtag('head')
+		return html_str
+
+	@staticmethod
+	def generate_body():
+		html_str = HTMLUtils.ltag('body')
+		try:
+			html_str += HTMLUtils.ltag('h1')
+			try:
+				html_str += 'Build report'
+			finally:
+				html_str += HTMLUtils.rtag('h1')
+			html_str += '$CONTENT'
+		finally:
+			html_str += HTMLUtils.rtag('body')
+		return html_str
+
+	@staticmethod
 	def aggregate(workspace):
 		report_dir = os.path.join(workspace, 'report')
 		if not os.path.isdir(report_dir):
 			os.makedirs(report_dir)
-		str_to_file(HTMLUtils.write_html(workspace), os.path.join(report_dir, HTMLUtils.INDEX))
+		template_file = os.path.join(HTMLUtils.TEMPLATE_DIR, HTMLUtils.TEMPLATE_FILE) 
+		if not os.path.isfile(template_file):
+			HTMLUtils.generate_template()
+		template = Template(file_to_str(template_file))
+		str = template.substitute(STYLE=HTMLUtils.STYLE.write(), CONTENT=HTMLUtils.write_body(workspace))
+		str_to_file(str, os.path.join(report_dir, HTMLUtils.INDEX))
 	
 	@staticmethod
 	def display(workspace):
 		webbrowser.open_new_tab(os.path.join(workspace, 'report', HTMLUtils.INDEX))
 		
-del html_layer
-del head
-del body

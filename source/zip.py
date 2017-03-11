@@ -1,7 +1,7 @@
-import zipfile
+import zipfile, os
 
 def main():
-	zf = zipfile.ZipFile('pvn.zip', mode='w')
+	zf = zipfile.ZipFile(os.path.join(os.environ.get('PVN_HOME'), 'pvn.zip'), mode='w')
 	zf.write('__main__.py')
 	zf.write('pyven/__init__.py')
 	zf.write('pyven/pyven.py')
@@ -60,7 +60,6 @@ def main():
 	zf.write('pyven/reporting/generator.py')
 	zf.write('pyven/reporting/listing_generator.py')
 	zf.write('pyven/reporting/errors_generator.py')
-	zf.write('pyven/reporting/warnings_generator.py')
 	zf.write('pyven/reporting/reportable.py')
 	zf.write('pyven/reporting/style.py')
 
