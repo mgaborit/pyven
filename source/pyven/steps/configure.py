@@ -21,6 +21,15 @@ class Configure(Step):
 	def process(self):
 		return self._process(Project('.'))
 	
+	def generator(self):
+		generators = []
+		if self.status in Step.STATUS[1]:
+			generators.append(self.checker.generator())
+		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
+		
+	def report(self):
+		return self.status == Step.STATUS[1]
+		
 	@Step.error_checks
 	def _process(self, project):
 		parser = PymParser(self.pym)
@@ -196,13 +205,6 @@ class Configure(Step):
 			checked.append(integration_test)
 			Logger.get().info('Integration test added --> ' + os.path.join(integration_test.path, integration_test.filename))
 		project.integration_tests = checked
-		
-	def generator(self):
-		generators = []
-		if self.status in Step.STATUS[1:]:
-			generators.append(self.checker.generator())
-		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
-		
 		
 		
 		

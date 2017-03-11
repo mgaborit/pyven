@@ -32,6 +32,18 @@ class ArtifactsChecks(Step):
 	
 	def generator(self):
 		generators = []
-		if self.status in Step.STATUS[1:]:
+		if self.status in Step.STATUS[1]:
 			generators.append(self.checker.generator())
 		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
+		
+	def report(self):
+		report = super(ArtifactsChecks, self).report()
+		if report:
+			i = 0
+			nb_artifacts = 0
+			while nb_artifacts == 0 and i < len(Step.PROJECTS):
+				nb_artifacts += len([a for a in Step.PROJECTS[i].artifacts.values() if not a.to_retrieve])
+				i += 1
+			report = nb_artifacts > 0
+		return report
+		

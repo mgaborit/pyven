@@ -1,19 +1,50 @@
+import os
+from pyven.utils.utils import str_to_file, file_to_str
+
 class Style(object):
+	DIR = os.path.join(os.environ.get('PVN_HOME'), 'style')
 	
-	def __init__(self, template='pyven/reporting/style_template.css'):
-		self.template = template
+	def __init__(self, name='default'):
+		self.name = name
 		self.status = {'success' : 'success', 'failure' : 'failure', 'unknown' : 'unknown'}
 		self.listing = {'div' : 'listingDiv', 'properties' : {'div' : 'propertiesDiv', 'property' : 'property'}}
 		self.error = {'div' : 'errorDiv', 'error' : 'error'}
 		self.warning = {'div' : 'warningDiv', 'warning' : 'warning'}
 		self.go_top = 'goTop'
 		
-	def write(self):
-		css = """
-			<!--/* <![CDATA[ */
-			"""
+	def inline_inserter(function):
+		def _intern(self):
+			str = """
+				<!--/* <![CDATA[ */
+				"""
+			try:
+				str += function(self)
+			finally:
+				str += """
+					/* ]]> */-->
+				"""
+			return str
+		return _intern
 		
-		css += '.' + self.go_top + """
+	@inline_inserter
+	def write(self):
+		if not os.path.isdir(Style.DIR):
+			os.makedirs(Style.DIR)
+		if not os.path.isfile(os.path.join(Style.DIR, self.name)):
+			self.name = 'default'
+			self.generate_default()
+			return self.default()
+		else:
+			return file_to_str(os.path.join(os.environ.get('PVN_HOME'), 'style', self.name + '.css'))
+	
+	def generate_default(self):
+		if not os.path.isdir(Style.DIR):
+			os.makedirs(Style.DIR)
+		str_to_file(self.default(), os.path.join(Style.DIR, 'default.css'))
+	
+	
+	def default(self):		
+		css = '.' + self.go_top + """
 			{
 				float: right;
 				clear: none;
@@ -123,8 +154,5 @@ class Style(object):
 				border-style : dotted;
 				border-color : #ffc299;
 			}
-		"""
-		css += """
-			/* ]]> */-->
 		"""
 		return css

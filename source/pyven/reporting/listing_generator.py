@@ -1,8 +1,11 @@
 from pyven.reporting.html_utils import HTMLUtils
 
-class ListingGenerator(object):
+from pyven.reporting.generator import Generator
+
+class ListingGenerator(Generator):
 
 	def __init__(self, title, properties={}, generators=[]):
+		super(ListingGenerator, self).__init__()
 		self.title = title
 		self.properties = properties
 		self.generators = generators
@@ -20,7 +23,10 @@ class ListingGenerator(object):
 	def _generate_properties(self):
 		str = ''
 		for name, value in self.properties.items():
-			str += self._generate_property(name, value)
+			if name.upper() == 'STATUS':
+				str += self._generate_property(name, self._generate_status(value))
+			else:
+				str += self._generate_property(name, value)
 		return str
 
 	@HTMLUtils.listing_title
@@ -30,6 +36,10 @@ class ListingGenerator(object):
 	@HTMLUtils.listing_property
 	def _generate_property(self, name, value):
 		return name + ' : ' + value
+	
+	@HTMLUtils.listing_property_status
+	def _generate_status(self, value):
+		return value
 	
 	def _generate_listing(self):
 		str = ''

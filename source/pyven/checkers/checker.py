@@ -16,6 +16,4 @@ class Checker(Reportable):
 		return self.type + ' checks'
 		
 	def properties(self):
-		properties = {}
-		properties['Status'] = self.status
-		return properties
+		return {}

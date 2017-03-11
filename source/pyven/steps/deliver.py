@@ -38,7 +38,7 @@ class Deliver(Step):
 		
 	def generator(self):
 		generators = []
-		if self.status in Step.STATUS[1:]:
+		if self.status in Step.STATUS[1]:
 			generators.append(self.checker.generator())
 		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
 	

@@ -1,8 +1,13 @@
 from pyven.reporting.html_utils import HTMLUtils
 
-class ErrorsGenerator(object):
+from pyven.reporting.generator import Generator
+
+class ErrorsGenerator(Generator):
 
 	def __init__(self, errors=[]):
+		super(ErrorsGenerator, self).__init__()
+		if len(errors) > Generator.NB_LINES:
+			errors = errors[:Generator.NB_LINES]
 		self.errors = errors
 		
 	def generate(self):

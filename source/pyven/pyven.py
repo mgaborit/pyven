@@ -5,6 +5,7 @@ import pyven.constants
 from pyven.logging.logger import Logger
 
 from pyven.reporting.html_utils import HTMLUtils
+from pyven.reporting.generator import Generator
 from pyven.reporting.listing_generator import ListingGenerator
 
 from pyven.repositories.directory import DirectoryRepo
@@ -46,11 +47,12 @@ class Pyven:
 	STEPS = ['deliver', 'clean', 'retrieve', 'configure', 'preprocess', 'build', 'test', 'package', 'verify', 'install', 'deploy']
 	UTILS = ['parse', 'aggregate']
 	
-	def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path='', arguments={}):
+	def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path='', arguments={}, nb_lines=10):
 		self.pym = pym
 		self.path = path
 		self.step = step
 		self.verbose = verbose
+		self.nb_lines = nb_lines
 		if self.verbose:
 			Logger.get().info('Verbose mode enabled')
 		self.release = release
@@ -106,16 +108,29 @@ class Pyven:
 				ok = False
 			i += 1
 		return ok
-
-	def report(self, nb_lines):
-		HTMLUtils.NB_LINES = nb_lines
-		HTMLUtils.clean(Step.WORKSPACE.url)
+		
+	def aggregate(function):
+		def _intern(self, report_style):
+			if self.step in Pyven.STEPS[Pyven.STEPS.index('configure'):]:
+				HTMLUtils.clean(Step.WORKSPACE.url)
+			function(self, report_style)
+			HTMLUtils.aggregate(Step.WORKSPACE.url)
+		return _intern
+	
+	@aggregate
+	def report(self, report_style):
+		HTMLUtils.set_style(report_style)
+		Generator.NB_LINES = self.nb_lines
 		step_generators = []
 		for step in self.steps:
-			step_generators.append(step.generator())
+			if step.report():
+				step_generators.append(step.generator())
 		generator = ListingGenerator(title=pyven.constants.PLATFORM, generators=step_generators)
-		HTMLUtils.write(generator.generate(), Step.WORKSPACE.url)
+		HTMLUtils.write(generator.generate(), Step.WORKSPACE.url, self.step)
 		
+	def display(self):
+		HTMLUtils.display(Step.WORKSPACE.url)
+
 # ============================================================================================================		
 	def _parse(self, path, format='cppunit'):
 		ok = True

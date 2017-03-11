@@ -28,6 +28,6 @@ class Clean(Step):
 		for project in Step.PROJECTS:
 			for builder in project.builders:
 				generators.append(builder.generator())
-		if self.status in Step.STATUS[1:]:
+		if self.status in Step.STATUS[1]:
 			generators.append(self.checker.generator())
 		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
