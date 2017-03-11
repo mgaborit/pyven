@@ -2,7 +2,7 @@ import os
 from pyven.utils.utils import str_to_file, file_to_str
 
 class Style(object):
-	DIR = os.path.join(os.environ.get('PVN_HOME'), 'style')
+	DIR = os.path.join(os.environ.get('PVN_HOME'), 'report', 'style')
 	
 	def __init__(self, name='default'):
 		self.name = name
@@ -14,15 +14,11 @@ class Style(object):
 		
 	def inline_inserter(function):
 		def _intern(self):
-			str = """
-				<!--/* <![CDATA[ */
-				"""
+			str = "<!--/* <![CDATA[ */"
 			try:
 				str += function(self)
 			finally:
-				str += """
-					/* ]]> */-->
-				"""
+				str += "/* ]]> */-->"
 			return str
 		return _intern
 		
@@ -30,12 +26,13 @@ class Style(object):
 	def write(self):
 		if not os.path.isdir(Style.DIR):
 			os.makedirs(Style.DIR)
-		if not os.path.isfile(os.path.join(Style.DIR, self.name)):
+		style_file = os.path.join(Style.DIR, self.name + '.css')
+		if not os.path.isfile(style_file):
 			self.name = 'default'
 			self.generate_default()
 			return self.default()
 		else:
-			return file_to_str(os.path.join(os.environ.get('PVN_HOME'), 'style', self.name + '.css'))
+			return file_to_str(style_file)
 	
 	def generate_default(self):
 		if not os.path.isdir(Style.DIR):

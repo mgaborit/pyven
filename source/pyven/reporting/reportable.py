@@ -2,7 +2,6 @@ from lxml import etree
 
 from pyven.reporting.listing_generator import ListingGenerator
 from pyven.reporting.errors_generator import ErrorsGenerator
-from pyven.reporting.warnings_generator import WarningsGenerator
 
 class Reportable(object):
 	
@@ -57,8 +56,7 @@ class Reportable(object):
 			
 	def generator(self):
 		generators = []
-		generators.append(ErrorsGenerator(self.errors))
-		generators.append(WarningsGenerator(self.warnings))
+		generators.append(ErrorsGenerator(self.errors, self.warnings))
 		return ListingGenerator(title=self.title(), properties=self.properties(), generators=generators)
 		
 	def title(self):

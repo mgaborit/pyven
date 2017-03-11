@@ -99,7 +99,7 @@ class Pyven:
 				
 				elif step_id == Pyven.STEPS.index('retrieve'):
 					self.steps.append(Retrieve(self.verbose))
-					
+				
 	def process(self):
 		ok = True
 		i = 0
@@ -126,7 +126,7 @@ class Pyven:
 			if step.report():
 				step_generators.append(step.generator())
 		generator = ListingGenerator(title=pyven.constants.PLATFORM, generators=step_generators)
-		HTMLUtils.write(generator.generate(), Step.WORKSPACE.url, self.step)
+		HTMLUtils.write(generator.write(), Step.WORKSPACE.url, self.step)
 		
 	def display(self):
 		HTMLUtils.display(Step.WORKSPACE.url)
