@@ -1,6 +1,8 @@
 from pyven.exceptions.exception import PyvenException
 
 from pyven.reporting.reportable import Reportable
+from pyven.reporting.content.success import Success
+from pyven.reporting.content.failure import Failure
 
 class Checker(Reportable):
 
@@ -17,3 +19,9 @@ class Checker(Reportable):
 		
 	def properties(self):
 		return {}
+	
+	def report_status(self):
+		if self.enabled():
+			return Failure()
+		else:
+			return Success()

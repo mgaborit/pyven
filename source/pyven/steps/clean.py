@@ -28,7 +28,7 @@ class Clean(Step):
 		for project in Step.PROJECTS:
 			for builder in project.builders:
 				listings.append(builder.content())
-		if self.status in Step.STATUS[1]:
+		if self.checker.enabled():
 			listings.append(self.checker.content())
-		return StepListing(title=self.title(), status=self.report_status(), listings=listings)
+		return StepListing(title=self.title(), status=self.report_status(), listings=listings, enable_summary=True)
 		

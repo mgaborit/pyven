@@ -39,7 +39,7 @@ class Preprocess(Step):
 					listings.append(preprocessor.content())
 			if self.checker.enabled():
 				listings.append(self.checker.content())
-		return StepListing(title=self.title(), status=self.report_status(), listings=listings)
+		return StepListing(title=self.title(), status=self.report_status(), listings=listings, enable_summary=True)
 		
 	def report(self):
 		return self.status == Step.STATUS[1]

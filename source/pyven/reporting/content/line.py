@@ -16,6 +16,7 @@ class Line(Content):
 		self.div_style = Style.get().line['div_style']
 		self.span_style = Style.get().line['span_style']
 		self.part_style = Style.get().line['part_style']
+		self.type_style = ''
 
 	def write(self):
 		Line.generate_template()
@@ -26,7 +27,9 @@ class Line(Content):
 		for part in self.line:
 			result += self.write_part(part)
 		template = Template(file_to_str(self.TEMPLATE_LINE))
-		return template.substitute(VALUE=part, DIV_STYLE=self.div_style, SPAN_STYLE=self.span_style)
+		return template.substitute(VALUE=result,\
+									DIV_STYLE=' '.join([self.div_style, self.type_style]),\
+									SPAN_STYLE=' '.join([self.span_style, self.type_style]))
 		
 	def write_part(self, part):
 		template = Template(file_to_str(self.TEMPLATE_PART))

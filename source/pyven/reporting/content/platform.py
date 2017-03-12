@@ -19,7 +19,7 @@ class Platform(Listing):
 		listings = ''
 		if self.listings is not None:
 			if self.status.status == pyven.constants.STATUS[1]:
-				listings += Summary(self.listings).write()
+				listings += Summary(self.status, self.listings).write()
 			for listing in self.listings:
 				listings += listing.write()
 		return template.substitute(TITLE=self.title.write(),\
@@ -27,5 +27,5 @@ class Platform(Listing):
 									PROPERTIES='',\
 									LINES='',\
 									LISTINGS=listings,\
-									DIV_STYLE=self.div_style)
+									DIV_STYLE=Listing.join_styles([Style.get().listing['div_style'], self.div_style, self.status_style]))
 		
