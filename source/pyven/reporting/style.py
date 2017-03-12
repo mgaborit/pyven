@@ -27,6 +27,7 @@ class Style(object):
 		self.platform = {'div_style' : 'platform'}
 		self.step = {'div_style' : 'step'}
 		self.reportable = {'div_style' : 'reportable'}
+		self.line_separator = 'line-separator'
 		
 	@staticmethod
 	def get():
@@ -70,6 +71,13 @@ class Style(object):
 				color : #4d4d4d;
 				font-weight : bold;
 				font-family: Arial;
+			}
+		"""
+		css += self.line_separator + """
+			{
+				height : 1px;
+				background : #FFFFFF;
+				border-bottom : 1px solid #FFFFFF;
 			}
 		"""
 		css += 'h2' + """
