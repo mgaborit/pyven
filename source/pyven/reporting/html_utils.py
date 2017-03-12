@@ -11,7 +11,6 @@ from pyven.utils.utils import str_to_file, file_to_str
 
 class HTMLUtils(object):
 	INDEX = 'index.html'
-	STYLE = Style()
 	TEMPLATE_DIR = os.path.join(os.environ.get('PVN_HOME'), 'report', 'html')
 	TEMPLATE_FILE = 'index-template.html'
 	
@@ -20,7 +19,7 @@ class HTMLUtils(object):
 		
 	@staticmethod
 	def set_style(style):
-		HTMLUtils.STYLE.name = style
+		Style.get().name = style
 			
 	@staticmethod
 	def ltag(name, attributes={}):
@@ -34,100 +33,23 @@ class HTMLUtils(object):
 		return '</' + name + '>'
 	
 	@staticmethod
-	def error(function):
-		def _intern(self, error):
-			html_str = HTMLUtils.ltag('div', {'class' : HTMLUtils.STYLE.error['div']})
-			try:
-				html_str += HTMLUtils.ltag('span', {'class' : HTMLUtils.STYLE.error['error']})
-				try:
-					for line in function(self, error):
-						html_str += HTMLUtils.ltag('p')
-						try:
-							html_str += line
-						finally:
-							html_str += HTMLUtils.rtag('p')
-				finally:
-					html_str += HTMLUtils.rtag('span')
-			finally:
-				html_str += HTMLUtils.rtag('div')
-			return html_str
-		return _intern
-
+	def link(str, ref):
+		html_str = HTMLUtils.ltag('a', {'href' : '#'+ref})
+		try:
+			html_str += str
+		finally:
+			html_str += HTMLUtils.rtag('a')
+		return html_str
+		
 	@staticmethod
-	def warning(function):
-		def _intern(self, warning):
-			html_str = HTMLUtils.ltag('div', {'class' : HTMLUtils.STYLE.warning['div']})
-			try:
-				html_str += HTMLUtils.ltag('span', {'class' : HTMLUtils.STYLE.warning['warning']})
-				try:
-					for line in function(self, warning):
-						html_str += HTMLUtils.ltag('p')
-						try:
-							html_str += line
-						finally:
-							html_str += HTMLUtils.rtag('p')
-				finally:
-					html_str += HTMLUtils.rtag('span')
-			finally:
-				html_str += HTMLUtils.rtag('div')
-			return html_str
-		return _intern
-	
-	@staticmethod
-	def listing(function):
-		def _intern(self):
-			html_str = HTMLUtils.ltag('div', {'class' : HTMLUtils.STYLE.listing['div']})
-			try:
-				html_str += function(self)
-			finally:
-				html_str += HTMLUtils.rtag('div')
-			return html_str
-		return _intern
-	
-	@staticmethod
-	def listing_title(function):
-		def _intern(self, title):
-			html_str = HTMLUtils.ltag('h2')
-			try:
-				html_str += function(self, title)
-			finally:
-				html_str += HTMLUtils.rtag('h2')
-			return html_str
-		return _intern
-	
-	@staticmethod
-	def listing_properties(function):
-		def _intern(self):
-			html_str = HTMLUtils.ltag('div', {'class' : HTMLUtils.STYLE.listing['properties']['div']})
-			try:
-				html_str += function(self)
-			finally:
-				html_str += HTMLUtils.rtag('div')
-			return html_str
-		return _intern
-
-	@staticmethod
-	def listing_property(function):
-		def _intern(self, name, value):
-			html_str = HTMLUtils.ltag('p', {'class' : HTMLUtils.STYLE.listing['properties']['property']})
-			try:
-				html_str += function(self, name, value)
-			finally:
-				html_str += HTMLUtils.rtag('p')
-			return html_str
-		return _intern
-	
-	@staticmethod
-	def listing_property_status(function):
-		def _intern(self, value):
-			html_str = HTMLUtils.ltag('span', {'class' : HTMLUtils.STYLE.status[value.lower()]})
-			try:
-				html_str += function(self, value)
-			finally:
-				html_str += HTMLUtils.rtag('span')
-			return html_str
-		return _intern
-	
+	def target(str, ref):
+		html_str = HTMLUtils.ltag('a', {'name' : ref})
+		try:
+			html_str += str
+		finally:
+			html_str += HTMLUtils.rtag('a')
+		return html_str
+		
 	@staticmethod
 	def write(html_str, workspace, step):
 		report_dir = os.path.join(workspace, 'report')
@@ -135,6 +57,22 @@ class HTMLUtils(object):
 			os.makedirs(report_dir)
 		str_to_file(html_str, os.path.join(report_dir, pyven.constants.PLATFORM + '-' + step + '.html'))
 
+	@staticmethod
+	def aggregate(workspace):
+		report_dir = os.path.join(workspace, 'report')
+		if not os.path.isdir(report_dir):
+			os.makedirs(report_dir)
+		template_file = os.path.join(HTMLUtils.TEMPLATE_DIR, HTMLUtils.TEMPLATE_FILE) 
+		if not os.path.isfile(template_file):
+			HTMLUtils.generate_template()
+		template = Template(file_to_str(template_file))
+		str = template.substitute(STYLE=Style.get().write(), CONTENT=HTMLUtils.write_body(workspace))
+		str_to_file(str, os.path.join(report_dir, HTMLUtils.INDEX))
+	
+	@staticmethod
+	def display(workspace):
+		webbrowser.open_new_tab(os.path.join(workspace, 'report', HTMLUtils.INDEX))
+		
 	@staticmethod
 	def clean(workspace):
 		report_dir = os.path.join(workspace, 'report')
@@ -148,16 +86,16 @@ class HTMLUtils(object):
 		# html_str = '<a name="' + self._write_ref(idx, '_'.join(reportable.report_summary())) + '"><div class="stepDiv">'
 		# try:
 			# html_str += '<h2>' + ' '.join(reportable.report_identifiers()) + '</h2>'
-			# html_str += '<div class="' + HTMLUtils.STYLE.reportable['properties']['div'] + '">'
+			# html_str += '<div class="' + Style.get().reportable['properties']['div'] + '">'
 			# if reportable.report_status() == 'SUCCESS':
-				# status_style = HTMLUtils.STYLE.status['success']
+				# status_style = Style.get().status['success']
 			# elif reportable.report_status() == 'FAILURE':
-				# status_style = HTMLUtils.STYLE.status['failure']
+				# status_style = Style.get().status['failure']
 			# else:
-				# status_style = HTMLUtils.STYLE.status['unknown']
-			# html_str += '<p class="' + HTMLUtils.STYLE.reportable['properties']['property'] + '">Status : <span class="' + status_style + '">' + reportable.report_status() + '</span></p>'
+				# status_style = Style.get().status['unknown']
+			# html_str += '<p class="' + Style.get().reportable['properties']['property'] + '">Status : <span class="' + status_style + '">' + reportable.report_status() + '</span></p>'
 			# for property in reportable.report_properties():
-				# html_str += '<p class="' + HTMLUtils.STYLE.reportable['properties']['property'] + '">' + property[0] + ' : ' + property[1] + '</p>'
+				# html_str += '<p class="' + Style.get().reportable['properties']['property'] + '">' + property[0] + ' : ' + property[1] + '</p>'
 			# html_str += '</div>'
 			# displayed_errors = 0
 			# nb_errors = 0
@@ -182,7 +120,7 @@ class HTMLUtils(object):
 		# return html_str
 		
 	# def _write_summary(self):
-		# html_str = '<div class="' + HTMLUtils.STYLE.step['div'] + '">'
+		# html_str = '<div class="' + Style.get().step['div'] + '">'
 		# html_str += '<h2>Summary</h2>'
 		# status = 'SUCCESS'
 		# for step in self.pyven.reportables():
@@ -195,29 +133,21 @@ class HTMLUtils(object):
 					# html_str += self._write_error([' '.join(step.report_summary()) + ' <a href="#' + self._write_ref(count, '_'.join(step.report_summary())) + '">Details</a>'])
 				# count += 1
 		# else:
-			# html_str += '<span class="' + HTMLUtils.STYLE.status['success'] + '">SUCCESS</span>'
+			# html_str += '<span class="' + Style.get().status['success'] + '">SUCCESS</span>'
 		# html_str += '</div>'
 		# return html_str
 	
-	# def write(self):
-		# html_str = self._write_body()
-		# report_dir = os.path.join(Pyven.WORKSPACE.url, 'report')
-		# if not os.path.isdir(report_dir):
-			# os.makedirs(report_dir)
-		# html_file = codecs.open(os.path.join(report_dir, self._project_report_name()), 'w', 'utf-8')
-		# html_file.write(html_str)
-		# html_file.close()
-	
 	# @staticmethod
 	# def _write_projects(projects):
-		# html_str = '<div class="' + HTMLUtils.STYLE.step['div'] + '">'
+		# html_str = '<div class="' + Style.get().step['div'] + '">'
 		# html_str += '<h2>Pyven projects</h2>'
-		# html_str += '<div class="' + HTMLUtils.STYLE.step['properties']['div'] + '">'
+		# html_str += '<div class="' + Style.get().step['properties']['div'] + '">'
 		# for project in projects:
-			# html_str += '<p class="' + HTMLUtils.STYLE.step['properties']['property'] + '"><a href="#' + project + '">' + HTMLUtils._report_name_to_path(project) + '</a></p>'
+			# html_str += '<p class="' + Style.get().step['properties']['property'] + '"><a href="#' + project + '">' + HTMLUtils._report_name_to_path(project) + '</a></p>'
 		# html_str += '</div></div>'
 		# return html_str
 	
+	@staticmethod
 	def write_body(workspace):
 		report_dir = os.path.join(workspace, 'report')
 		html_str = ''
@@ -276,20 +206,3 @@ class HTMLUtils(object):
 		finally:
 			html_str += HTMLUtils.rtag('body')
 		return html_str
-
-	@staticmethod
-	def aggregate(workspace):
-		report_dir = os.path.join(workspace, 'report')
-		if not os.path.isdir(report_dir):
-			os.makedirs(report_dir)
-		template_file = os.path.join(HTMLUtils.TEMPLATE_DIR, HTMLUtils.TEMPLATE_FILE) 
-		if not os.path.isfile(template_file):
-			HTMLUtils.generate_template()
-		template = Template(file_to_str(template_file))
-		str = template.substitute(STYLE=HTMLUtils.STYLE.write(), CONTENT=HTMLUtils.write_body(workspace))
-		str_to_file(str, os.path.join(report_dir, HTMLUtils.INDEX))
-	
-	@staticmethod
-	def display(workspace):
-		webbrowser.open_new_tab(os.path.join(workspace, 'report', HTMLUtils.INDEX))
-		

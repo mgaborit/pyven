@@ -10,3 +10,5 @@ elif os.name == 'posix':
 	PLATFORM = 'linux'
 else:
 	raise PyvenException('Unsupported platform : ' + os.name, 'Supported platforms : windows, linux')
+	
+STATUS = ['SUCCESS', 'FAILURE', 'UNKNOWN']

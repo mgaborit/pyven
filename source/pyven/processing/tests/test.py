@@ -1,9 +1,11 @@
 import subprocess, os, time
 
+import pyven.constants
 from pyven.exceptions.exception import PyvenException
 
 from pyven.processing.processible import Processible
 from pyven.reporting.reportable import Reportable
+from pyven.reporting.content.property import Property
 
 from pyven.logging.logger import Logger
 
@@ -23,9 +25,8 @@ class Test(Processible, Reportable):
 		return self.type + ' test : ' + os.path.join(self.path, self.filename)
 		
 	def properties(self):
-		properties = {}
-		properties['Status'] = self.status
-		properties['Duration'] = str(self.duration) + ' seconds'
+		properties = []
+		properties.append(Property(name='Duration', value=str(self.duration) + ' seconds'))
 		return properties
 	
 	def _format_report_name(self):
@@ -67,14 +68,14 @@ class Test(Processible, Reportable):
 					Logger.get().info(line)
 			
 			if returncode != 0:
-				self.status = Processible.STATUS['failure']
+				self.status = pyven.constants.STATUS[1]
 				if os.path.isfile(os.path.join(self.path, self._format_report_name())):
 					self.errors = Reportable.parse_xml(self.format, os.path.join(self.path, self._format_report_name()))
 				else:
 					Logger.get().error('Could not find XML test report = '+os.path.join(self.path, self._format_report_name()))
 				Logger.get().error('Test failed : ' + self.filename)
 			else:
-				self.status = Processible.STATUS['success']
+				self.status = pyven.constants.STATUS[0]
 				Logger.get().info('Test OK : ' + self.filename)
 			return returncode == 0
 		Logger.get().error('Unknown directory : ' + self.path)

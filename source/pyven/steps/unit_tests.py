@@ -4,7 +4,7 @@ from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
 from pyven.logging.logger import Logger
-from pyven.reporting.listing_generator import ListingGenerator
+from pyven.reporting.content.listing import Listing
 
 class UnitTests(Step):
 	def __init__(self, verbose):
@@ -29,14 +29,14 @@ class UnitTests(Step):
 			Logger.get().error('Unit tests failures found')
 		return ok
 	
-	def generator(self):
-		generators = []
+	def content(self):
+		listings = []
 		for project in Step.PROJECTS:
 			for test in project.unit_tests:
-				generators.append(test.generator())
-		if self.status in Step.STATUS[1]:
-			generators.append(self.checker.generator())
-		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
+				listings.append(test.content())
+		if self.status == Step.STATUS[1]:
+			listings.append(self.checker.content())
+		return Listing(title=self.title(), status=self.report_status(), listings=listings)
 		
 	def report(self):
 		report = super(UnitTests, self).report()
