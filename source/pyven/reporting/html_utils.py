@@ -18,6 +18,11 @@ class HTMLUtils(object):
 		self.nb_lines = nb_lines
 		
 	@staticmethod
+	def line_separator():
+		return HTMLUtils.ltag('div', {'class' : Style.get().line_separator}) + HTMLUtils.rtag('div')
+		
+		
+	@staticmethod
 	def set_style(style):
 		Style.get().name = style
 			

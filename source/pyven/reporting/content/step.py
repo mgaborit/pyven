@@ -18,12 +18,13 @@ class StepListing(Listing):
 	def write_listing(self):
 		template = Template(file_to_str(Listing.TEMPLATE))
 		listings = ''
+		title = self.title.write()
 		if self.listings is not None:
 			if self.status.status == pyven.constants.STATUS[1] and self.enable_summary:
 				listings += Summary(self.status, self.listings).write()
 			for listing in self.listings:
 				listings += listing.write()
-		return template.substitute(TITLE=self.title.write(),\
+		return template.substitute(TITLE=title,\
 									STATUS=self.status.write(),\
 									PROPERTIES='',\
 									LINES='',\
