@@ -6,7 +6,7 @@ from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
 from pyven.logging.logger import Logger
-from pyven.reporting.content.listing import Listing
+from pyven.reporting.content.step import StepListing
 
 class Preprocess(Step):
 	def __init__(self, verbose):
@@ -39,7 +39,7 @@ class Preprocess(Step):
 					listings.append(preprocessor.content())
 			if self.checker.enabled():
 				listings.append(self.checker.content())
-		return Listing(title=self.title(), status=self.report_status(), listings=listings)
+		return StepListing(title=self.title(), status=self.report_status(), listings=listings)
 		
 	def report(self):
 		return self.status == Step.STATUS[1]

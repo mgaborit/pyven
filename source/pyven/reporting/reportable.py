@@ -1,7 +1,7 @@
 from lxml import etree
 
 import pyven.constants
-from pyven.reporting.content.listing import Listing
+from pyven.reporting.content.reportable import ReportableListing
 from pyven.reporting.content.lines import Lines
 from pyven.reporting.content.error import Error
 from pyven.reporting.content.warning import Warning
@@ -73,10 +73,10 @@ class Reportable(object):
 		for warning in self.warnings:
 			lines.append(Warning(warning))
 		content_lines = Lines(lines)
-		return Listing(title=Title(self.title()),\
-				status=self.report_status(),\
-				properties=Properties(self.properties()),\
-				lines=content_lines)
+		return ReportableListing(title=Title(self.title()),\
+								status=self.report_status(),\
+								properties=Properties(self.properties()),\
+								lines=content_lines)
 		
 	def title(self):
 		raise NotImplementedError

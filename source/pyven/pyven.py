@@ -12,7 +12,7 @@ from pyven.reporting.reportable import Reportable
 from pyven.processing.processible import Processible
 from pyven.processing.tests.test import Test
 
-from pyven.reporting.content.listing import Listing
+from pyven.reporting.content.platform import Platform
 from pyven.reporting.content.success import Success
 from pyven.reporting.content.failure import Failure
 from pyven.reporting.content.unknown import Unknown
@@ -138,7 +138,7 @@ class Pyven:
 			status = Failure()
 		else:
 			status = Unknown()
-		content = Listing(title=Title(pyven.constants.PLATFORM), status=status, listings=listings)
+		content = Platform(title=Title(pyven.constants.PLATFORM), status=status, listings=listings)
 		HTMLUtils.write(content.write(), Step.WORKSPACE.url, self.step)
 		
 	def display(self):

@@ -7,7 +7,7 @@ from pyven.exceptions.exception import PyvenException
 from pyven.project import Project
 
 from pyven.logging.logger import Logger
-from pyven.reporting.content.listing import Listing
+from pyven.reporting.content.step import StepListing
 
 class Configure(Step):
 	def __init__(self, verbose, pym):
@@ -25,7 +25,7 @@ class Configure(Step):
 		listings = []
 		if self.status in Step.STATUS[1]:
 			listings.append(self.checker.content())
-		return Listing(title=self.title(), status=self.report_status(), listings=listings)
+		return StepListing(title=self.title(), status=self.report_status(), listings=listings)
 		
 	def report(self):
 		return self.status == Step.STATUS[1]

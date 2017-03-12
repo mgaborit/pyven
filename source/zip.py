@@ -1,7 +1,8 @@
 import zipfile, os
+import pyven.constants
 
 def main():
-	zf = zipfile.ZipFile(os.path.join(os.environ.get('PVN_HOME'), 'pvn.zip'), mode='w')
+	zf = zipfile.ZipFile(os.path.join(os.environ.get('PVN_HOME'), 'pvn_' + pyven.constants.VERSION + '.zip'), mode='w')
 	zf.write('__main__.py')
 	zf.write('pyven/__init__.py')
 	zf.write('pyven/pyven.py')
@@ -72,8 +73,12 @@ def main():
 	zf.write('pyven/reporting/content/lines.py')
 	zf.write('pyven/reporting/content/properties.py')
 	zf.write('pyven/reporting/content/property.py')
-	zf.write('pyven/reporting/content/listing.py')
 	zf.write('pyven/reporting/content/title.py')
+	zf.write('pyven/reporting/content/listing.py')
+	zf.write('pyven/reporting/content/platform.py')
+	zf.write('pyven/reporting/content/step.py')
+	zf.write('pyven/reporting/content/reportable.py')
+	zf.write('pyven/reporting/content/summary.py')
 
 	zf.write('pyven/parser/__init__.py')
 	zf.write('pyven/parser/pym_parser.py')
