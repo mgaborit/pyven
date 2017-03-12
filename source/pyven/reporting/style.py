@@ -9,25 +9,24 @@ class Style(object):
 	def __init__(self, name='default'):
 		Style.COUNT += 1
 		self.name = name
-		self.line = {'div_style' : 'lineDiv',\
-					'span_style' : 'lineSpan',\
+		self.line = {'div_style' : 'line',\
 					'part_style' : 'linePart',\
 					'error' : 'error',\
 					'warning' : 'warning'}
-		self.lines = {'div_style' : 'linesDiv'}
-		self.status = {'div_style' : 'statusDiv',\
-						'span_style' : 'statusSpan',\
+		self.lines = {'div_style' : 'lines'}
+		self.status = {'div_style' : 'status',\
+						'span_style' : 'status',\
 						'success' : 'success',\
 						'failure' : 'failure',\
 						'unknown' : 'unknown'}
-		self.title = {'title_style' : 'titleH2'}
-		self.property = {'p_style' : 'propertyP'}
-		self.properties = {'div_style' : 'propertiesDiv'}
-		self.listing = {'div_style' : 'listingDiv'}
-		self.summary = {'div_style' : 'summaryDiv'}
-		self.platform = {'div_style' : 'platformDiv'}
-		self.step = {'div_style' : 'stepDiv'}
-		self.reportable = {'div_style' : 'reportableDiv'}
+		self.title = {'title_style' : 'title'}
+		self.property = {'p_style' : 'property'}
+		self.properties = {'div_style' : 'properties'}
+		self.listing = {'div_style' : 'listing'}
+		self.summary = {'div_style' : 'summary'}
+		self.platform = {'div_style' : 'platform'}
+		self.step = {'div_style' : 'step'}
+		self.reportable = {'div_style' : 'reportable'}
 		
 	@staticmethod
 	def get():
@@ -144,7 +143,7 @@ class Style(object):
 				border-color : #ffc299;
 			}
 		"""
-		css += '.' + self.line['span_style'] + """
+		css += '.' + self.line['part_style'] + """
 			{
 				font-size : 16px;
 				font-family: Arial;
