@@ -1,15 +1,13 @@
-import os, logging, shutil
+import os, shutil
 
 from pyven.exceptions.repository_exception import RepositoryException
 
 from pyven.repositories.directory import DirectoryRepo
 
-logger = logging.getLogger('global')
-
 class Workspace(DirectoryRepo):
 
 	def __init__(self, name, type, url):
-		super(Workspace, self, ).__init__(name, type, url)
+		super(Workspace, self).__init__(name, type, url)
 		
 	def is_reachable(self):
 		if not os.path.isdir(self.url):

@@ -1,9 +1,6 @@
-import logging
 from lxml import etree
 
 from pyven.exceptions.parser_exception import ParserException
-
-logger = logging.getLogger('global')
 
 class ElementsParser(object):
 	

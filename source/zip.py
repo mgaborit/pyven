@@ -1,11 +1,29 @@
-import zipfile
+import zipfile, os
+import pyven.constants
 
 def main():
-	zf = zipfile.ZipFile('pvn.zip', mode='w')
+	zf = zipfile.ZipFile(os.path.join(os.environ.get('PVN_HOME'), 'pvn_' + pyven.constants.VERSION + '.zip'), mode='w')
 	zf.write('__main__.py')
 	zf.write('pyven/__init__.py')
 	zf.write('pyven/pyven.py')
+	zf.write('pyven/project.py')
 	zf.write('pyven/constants.py')
+	
+	zf.write('pyven/steps/__init__.py')
+	zf.write('pyven/steps/step.py')
+	zf.write('pyven/steps/configure.py')
+	zf.write('pyven/steps/preprocess.py')
+	zf.write('pyven/steps/build.py')
+	zf.write('pyven/steps/artifacts_checks.py')
+	zf.write('pyven/steps/unit_tests.py')
+	zf.write('pyven/steps/package.py')
+	zf.write('pyven/steps/integration_tests.py')
+	zf.write('pyven/steps/install.py')
+	zf.write('pyven/steps/deploy.py')
+	zf.write('pyven/steps/retrieve.py')
+	zf.write('pyven/steps/deliver.py')
+	zf.write('pyven/steps/clean.py')
+	zf.write('pyven/steps/utils.py')
 	
 	zf.write('pyven/items/__init__.py')
 	zf.write('pyven/items/item.py')
@@ -39,9 +57,28 @@ def main():
 	zf.write('pyven/exceptions/parser_exception.py')
 	
 	zf.write('pyven/reporting/__init__.py')
-	zf.write('pyven/reporting/report.py')
+	zf.write('pyven/reporting/html_utils.py')
 	zf.write('pyven/reporting/reportable.py')
 	zf.write('pyven/reporting/style.py')
+	
+	zf.write('pyven/reporting/content/__init__.py')
+	zf.write('pyven/reporting/content/content.py')
+	zf.write('pyven/reporting/content/line.py')
+	zf.write('pyven/reporting/content/error.py')
+	zf.write('pyven/reporting/content/warning.py')
+	zf.write('pyven/reporting/content/status.py')
+	zf.write('pyven/reporting/content/unknown.py')
+	zf.write('pyven/reporting/content/success.py')
+	zf.write('pyven/reporting/content/failure.py')
+	zf.write('pyven/reporting/content/lines.py')
+	zf.write('pyven/reporting/content/properties.py')
+	zf.write('pyven/reporting/content/property.py')
+	zf.write('pyven/reporting/content/title.py')
+	zf.write('pyven/reporting/content/listing.py')
+	zf.write('pyven/reporting/content/platform.py')
+	zf.write('pyven/reporting/content/step.py')
+	zf.write('pyven/reporting/content/reportable.py')
+	zf.write('pyven/reporting/content/summary.py')
 
 	zf.write('pyven/parser/__init__.py')
 	zf.write('pyven/parser/pym_parser.py')
@@ -52,6 +89,7 @@ def main():
 	zf.write('pyven/parser/packages_parser.py')
 	zf.write('pyven/parser/tools_parser.py')
 	zf.write('pyven/parser/msbuild_parser.py')
+	zf.write('pyven/parser/makefile_parser.py')
 	zf.write('pyven/parser/cmake_parser.py')
 	zf.write('pyven/parser/command_parser.py')
 	zf.write('pyven/parser/repositories_parser.py')
@@ -63,6 +101,12 @@ def main():
 	
 	zf.write('pyven/checkers/__init__.py')
 	zf.write('pyven/checkers/checker.py')
+	
+	zf.write('pyven/logging/__init__.py')
+	zf.write('pyven/logging/logger.py')
+	
+	zf.write('pyven/utils/__init__.py')
+	zf.write('pyven/utils/utils.py')
 
 if __name__ == '__main__':
 	main()

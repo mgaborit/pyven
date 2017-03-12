@@ -1,12 +1,14 @@
-import subprocess, os, logging, shutil, time
+import subprocess, os, shutil, time
 
+import pyven.constants
 from pyven.exceptions.exception import PyvenException
 
 from pyven.processing.processible import Processible
 from pyven.processing.tools.tool import Tool
 from pyven.reporting.reportable import Reportable
+from pyven.reporting.content.property import Property
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
 class MSBuildTool(Tool):
 
@@ -17,6 +19,16 @@ class MSBuildTool(Tool):
 		self.project = project
 		self.options = options
 		
+	def title(self):
+		return 'MSBuild ' + os.path.basename(self.project)
+		
+	def properties(self):
+		properties = []
+		properties.append(Property(name='Configuration', value=self.configuration))
+		properties.append(Property(name='Platform', value=self.architecture))
+		properties.append(Property(name='Duration', value=str(self.duration) + ' seconds'))
+		return properties
+	
 	def report_summary(self):
 		return ['MSBuild', os.path.basename(self.project), self.configuration, self.architecture]
 
@@ -51,53 +63,53 @@ class MSBuildTool(Tool):
 		for option in self.options:
 			call.append(option)
 			
-		logger.info(' '.join(call))
+		Logger.get().info(' '.join(call))
 		return call
 	
 	def process(self, verbose=False, warning_as_error=False):
-		logger.info('Building : ' + self.type + ':' + self.name)
+		Logger.get().info('Building : ' + self.type + ':' + self.name)
 		self.duration, out, err, returncode = self._call_command(self._format_call(self.project))
 		
 		if verbose:
 			for line in out.splitlines():
-				logger.info('[' + self.type + ']' + line)
+				Logger.get().info('[' + self.type + ']' + line)
 			for line in err.splitlines():
-				logger.info('[' + self.type + ']' + line)
+				Logger.get().info('[' + self.type + ']' + line)
 		
 		warnings = Reportable.parse_logs(out.splitlines(), ['Warning', 'warning', 'Avertissement', 'avertissement'], ['0 Avertissement(s)', '0 Warning(s)'])
 		for w in warnings:
 			self.warnings.append([w[0].replace(w[0].split()[-1], '')])
 		
 		if returncode != 0:
-			self.status = Processible.STATUS['failure']
+			self.status = pyven.constants.STATUS[1]
 			errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error', 'Erreur', 'erreur'], ['0 Erreur(s)', '0 Error(s)'])
 			for e in errors:
 				if e[0].split()[-1].startswith('[') and e[0].split()[-1].endswith(']'):
 					self.errors.append([e[0].replace(e[0].split()[-1], '')])
 				else:
 					self.errors.append([e[0]])
-			logger.error('Build failed : ' + self.type + ':' + self.name)
+			Logger.get().error('Build failed : ' + self.type + ':' + self.name)
 		elif warning_as_error and len(warnings) > 0:
-			self.status = Processible.STATUS['failure']
-			logger.error('Build failed : ' + self.type + ':' + self.name)
+			self.status = pyven.constants.STATUS[1]
+			Logger.get().error('Build failed : ' + self.type + ':' + self.name)
 		else:
-			self.status = Processible.STATUS['success']
+			self.status = pyven.constants.STATUS[0]
 		return returncode == 0 and (not warning_as_error or len(warnings) == 0)
 
 	def clean(self, verbose=False):
-		logger.info('Cleaning : ' + self.type + ':' + self.name)
+		Logger.get().info('Cleaning : ' + self.type + ':' + self.name)
 		if os.path.isfile(self.project):
 			self.duration, out, err, returncode = self._call_command(self._format_call(self.project, clean=True))
 			
 			if verbose:
 				for line in out.splitlines():
-					logger.info('[' + self.type + ']' + line)
+					Logger.get().info('[' + self.type + ']' + line)
 				for line in err.splitlines():
-					logger.info('[' + self.type + ']' + line)
+					Logger.get().info('[' + self.type + ']' + line)
 					
 			if returncode != 0:
-				logger.error('Clean failed : ' + self.type + ':' + self.name)
+				Logger.get().error('Clean failed : ' + self.type + ':' + self.name)
 			return returncode == 0
-		logger.info('No project to be cleaned : ' + self.project)
+		Logger.get().info('No project to be cleaned : ' + self.project)
 		return True
 		

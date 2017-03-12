@@ -1,7 +1,7 @@
-import logging, os
+import os
 from pyven.exceptions.exception import PyvenException
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
 class Item(object):
 	if os.name == 'nt':

@@ -1,13 +1,14 @@
-import subprocess, logging, os, time
+import subprocess, os, time
 
+import pyven.constants
 from pyven.exceptions.exception import PyvenException
 
 from pyven.processing.processible import Processible
 from pyven.reporting.reportable import Reportable
+from pyven.reporting.content.property import Property
 
-logger = logging.getLogger('global')
+from pyven.logging.logger import Logger
 
-# pym.xml 'test' node
 class Test(Processible, Reportable):
 	AVAILABLE_TYPES = ['unit', 'integration', 'valgrind']
 
@@ -20,18 +21,12 @@ class Test(Processible, Reportable):
 		self.arguments = arguments
 		self.format = format
 	
-	def report_identifiers(self):
-		return ['Test', self.filename]
+	def title(self):
+		return self.type + ' test : ' + os.path.join(self.path, self.filename)
 		
-	def report_summary(self):
-		return self.report_identifiers()
-
-	def report_status(self):
-		return self.status
-		
-	def report_properties(self):
+	def properties(self):
 		properties = []
-		properties.append(('Duration', str(self.duration) + ' seconds'))
+		properties.append(Property(name='Duration', value=str(self.duration) + ' seconds'))
 		return properties
 	
 	def _format_report_name(self):
@@ -45,7 +40,7 @@ class Test(Processible, Reportable):
 			call = ['./'+self.filename+' '+self._format_report_name()]
 		for argument in self.arguments:
 			call.append(argument)
-		logger.info(' '.join(call))
+		Logger.get().info(' '.join(call))
 		return call
 
 	def _copy_resources(self, repo=None):
@@ -58,9 +53,9 @@ class Test(Processible, Reportable):
 		FNULL = open(os.devnull, 'w')
 		cwd = os.getcwd()
 		if os.path.isdir(self.path):
-			logger.info('Entering test directory : ' + self.path)
+			Logger.get().info('Entering test directory : ' + self.path)
 			os.chdir(self.path)
-			logger.info('Running test : ' + self.filename)
+			Logger.get().info('Running test : ' + self.filename)
 			
 			self.duration, out, err, returncode = self._call_command(self._format_call())
 		
@@ -68,22 +63,22 @@ class Test(Processible, Reportable):
 			
 			if verbose:
 				for line in out.splitlines():
-					logger.info(line)
+					Logger.get().info(line)
 				for line in err.splitlines():
-					logger.info(line)
+					Logger.get().info(line)
 			
 			if returncode != 0:
-				self.status = Processible.STATUS['failure']
+				self.status = pyven.constants.STATUS[1]
 				if os.path.isfile(os.path.join(self.path, self._format_report_name())):
 					self.errors = Reportable.parse_xml(self.format, os.path.join(self.path, self._format_report_name()))
 				else:
-					logger.error('Could not find XML test report = '+os.path.join(self.path, self._format_report_name()))
-				logger.error('Test failed : ' + self.filename)
+					Logger.get().error('Could not find XML test report = '+os.path.join(self.path, self._format_report_name()))
+				Logger.get().error('Test failed : ' + self.filename)
 			else:
-				self.status = Processible.STATUS['success']
-				logger.info('Test OK : ' + self.filename)
+				self.status = pyven.constants.STATUS[0]
+				Logger.get().info('Test OK : ' + self.filename)
 			return returncode == 0
-		logger.error('Unknown directory : ' + self.path)
+		Logger.get().error('Unknown directory : ' + self.path)
 		return False
 
 	
