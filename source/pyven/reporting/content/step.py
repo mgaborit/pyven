@@ -10,16 +10,17 @@ from pyven.reporting.content.summary import Summary
 
 class StepListing(Listing):
 
-	def __init__(self, title, status, listings):
+	def __init__(self, title, status, listings, enable_summary=False):
 		super(StepListing, self).__init__(title=title, status=status, properties=None, lines=None, listings=listings)
+		self.enable_summary = enable_summary
 		self.div_style = Style.get().step['div_style']
 
 	def write_listing(self):
 		template = Template(file_to_str(Listing.TEMPLATE))
 		listings = ''
 		if self.listings is not None:
-			if self.status.status == pyven.constants.STATUS[1]:
-				listings += Summary(self.listings).write()
+			if self.status.status == pyven.constants.STATUS[1] and self.enable_summary:
+				listings += Summary(self.status, self.listings).write()
 			for listing in self.listings:
 				listings += listing.write()
 		return template.substitute(TITLE=self.title.write(),\
@@ -27,5 +28,5 @@ class StepListing(Listing):
 									PROPERTIES='',\
 									LINES='',\
 									LISTINGS=listings,\
-									DIV_STYLE=self.div_style)
+									DIV_STYLE=Listing.join_styles([Style.get().listing['div_style'], self.div_style, self.status_style]))
 		

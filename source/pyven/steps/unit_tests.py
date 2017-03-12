@@ -34,9 +34,9 @@ class UnitTests(Step):
 		for project in Step.PROJECTS:
 			for test in project.unit_tests:
 				listings.append(test.content())
-		if self.status == Step.STATUS[1]:
+		if self.checker.enabled():
 			listings.append(self.checker.content())
-		return StepListing(title=self.title(), status=self.report_status(), listings=listings)
+		return StepListing(title=self.title(), status=self.report_status(), listings=listings, enable_summary=True)
 		
 	def report(self):
 		report = super(UnitTests, self).report()

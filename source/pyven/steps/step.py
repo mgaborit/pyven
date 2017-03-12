@@ -75,7 +75,7 @@ class Step(object):
 	@step
 	def process(self):
 		ok = True
-		self.checker.status = Step.STATUS[0]
+		self.checker.status = Step.STATUS[2]
 		for project in Step.PROJECTS:
 			if not self._process(project):
 				ok = False

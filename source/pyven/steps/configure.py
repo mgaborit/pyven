@@ -23,7 +23,7 @@ class Configure(Step):
 	
 	def content(self):
 		listings = []
-		if self.status in Step.STATUS[1]:
+		if self.checker.enabled():
 			listings.append(self.checker.content())
 		return StepListing(title=self.title(), status=self.report_status(), listings=listings)
 		

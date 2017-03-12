@@ -12,8 +12,8 @@ from pyven.reporting.content.lines import Lines
 
 class Summary(Listing):
 
-	def __init__(self, listings):
-		super(Summary, self).__init__(title=Title('Failures summary'), status=None, properties=None, lines=None, listings=listings)
+	def __init__(self, status, listings):
+		super(Summary, self).__init__(title=Title('Failures summary'), status=status, properties=None, lines=None, listings=listings)
 		self.div_style = Style.get().summary['div_style']
 
 	def write_listing(self):
@@ -22,11 +22,11 @@ class Summary(Listing):
 		if self.listings is not None:
 			for listing in self.listings:
 				if listing.status.status == pyven.constants.STATUS[1]:
-					failures.append(Error([listing.title.title]))
+					failures.append(Error([HTMLUtils.link(listing.title.title, listing.href())]))
 		lines = Lines(failures)
 		return template.substitute(TITLE=self.title.write(),\
 									STATUS='',\
 									PROPERTIES='',\
 									LINES=lines.write(),\
 									LISTINGS='',\
-									DIV_STYLE=self.div_style)
+									DIV_STYLE=Listing.join_styles([Style.get().listing['div_style'], self.div_style, self.status_style]))

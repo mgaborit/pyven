@@ -6,5 +6,5 @@ class Success(Status):
 
 	def __init__(self):
 		super(Success, self).__init__(pyven.constants.STATUS[0])
-		self.span_style = Style.get().success['span_style']
+		self.status_style = Style.get().status['success']
 		

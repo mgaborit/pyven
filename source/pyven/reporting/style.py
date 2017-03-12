@@ -9,15 +9,17 @@ class Style(object):
 	def __init__(self, name='default'):
 		Style.COUNT += 1
 		self.name = name
-		self.go_top = 'goTop'
-		
-		self.line = {'div_style' : 'lineDiv', 'span_style' : 'lineSpan', 'part_style' : 'linePart'}
-		self.error = {'div_style' : 'errorDiv', 'span_style' : 'errorSpan'}
-		self.warning = {'div_style' : 'warningDiv', 'span_style' : 'warningSpan'}
+		self.line = {'div_style' : 'lineDiv',\
+					'span_style' : 'lineSpan',\
+					'part_style' : 'linePart',\
+					'error' : 'error',\
+					'warning' : 'warning'}
 		self.lines = {'div_style' : 'linesDiv'}
-		self.status = {'div_style' : 'statusDiv', 'span_style' : 'statusSpan'}
-		self.failure = {'span_style' : 'failureSpan'}
-		self.success = {'span_style' : 'successSpan'}
+		self.status = {'div_style' : 'statusDiv',\
+						'span_style' : 'statusSpan',\
+						'success' : 'success',\
+						'failure' : 'failure',\
+						'unknown' : 'unknown'}
 		self.title = {'title_style' : 'titleH2'}
 		self.property = {'p_style' : 'propertyP'}
 		self.properties = {'div_style' : 'propertiesDiv'}
@@ -62,20 +64,8 @@ class Style(object):
 		str_to_file(self.default(), os.path.join(Style.DIR, 'default.css'))
 	
 	
-	def default(self):		
-		css = '.' + self.go_top + """
-			{
-				float: right;
-				clear: none;
-				font-size : 16px;
-				font-weight : bold;
-				font-family: Arial;
-				padding-right : 5px;
-				padding-top : 5px;
-			}
-		"""
-		
-		css += 'h1' + """
+	def default(self):
+		css = 'h1' + """
 			{
 				font-size : 32px;
 				color : #4d4d4d;
@@ -85,13 +75,19 @@ class Style(object):
 		"""
 		css += 'h2' + """
 			{
-				font-size : 18px;
+				font-size : 20px;
 				color : #0047b3;
 				font-weight : bold;
 				font-family: Arial;
 			}
 		"""
-		css += '.' + self.listing['div'] + """
+		css += 'a' + """
+			{
+				font-size : 16px;
+				font-family: Arial;
+			}
+		"""
+		css += '.' + self.listing['div_style'] + """
 			{
 				margin : 3px 25px;
 				padding-left : 25px;
@@ -100,13 +96,13 @@ class Style(object):
 				border : 1px solid #d9d9d9;
 			}
 		"""
-		css += '.' + self.listing['properties']['div'] + """
+		css += '.' + self.properties['div_style'] + """
 			{
 				margin-bottom : 15px;
 				padding-left : 10px;
 			}
 		"""
-		css += '.' + self.listing['properties']['property'] + """
+		css += '.' + self.property['p_style'] + """
 			{
 				margin : 2px;
 				font-size : 16px;
@@ -116,54 +112,45 @@ class Style(object):
 		"""
 		css += '.' + self.status['success'] + """
 			{
-				font-size : 16px;
 				color : #00b33c;
-				font-family: Arial;
-				font-weight : bold;
 			}
 		"""
 		css += '.' + self.status['failure'] + """
 			{
-				font-size : 16px;
 				color : #990000;
-				font-family: Arial;
-				font-weight : bold;
 			}
 		"""
 		css += '.' + self.status['unknown'] + """
 			{
-				font-size : 16px;
 				color : #666666;
+			}
+		"""
+		css += '.' + self.status['span_style'] + """
+			{
+				font-size : 16px;
 				font-family: Arial;
 				font-weight : bold;
 			}
 		"""
-		css += '.' + self.error['error'] + """
+		css += '.' + self.line['error'] + """
 			{
-				font-size : 14px;
 				color : #990000;
-				font-family: Arial;
-			}
-		"""
-		css += '.' + self.error['div'] + """
-			{
-				margin-bottom : 2px;
-				margin-left : 20px;
-				margin-right : 20px;
-				padding : 4px;
-				border-width : 1px;
-				border-style : dotted;
 				border-color : #ffcccc;
 			}
 		"""
-		css += '.' + self.warning['warning'] + """
+		css += '.' + self.line['warning'] + """
 			{
-				font-size : 14px;
 				color : #cc4400;
+				border-color : #ffc299;
+			}
+		"""
+		css += '.' + self.line['span_style'] + """
+			{
+				font-size : 16px;
 				font-family: Arial;
 			}
 		"""
-		css += '.' + self.warning['div'] + """
+		css += '.' + self.line['div_style'] + """
 			{
 				margin-bottom : 2px;
 				margin-left : 20px;
@@ -171,7 +158,6 @@ class Style(object):
 				padding : 4px;
 				border-width : 1px;
 				border-style : dotted;
-				border-color : #ffc299;
 			}
 		"""
 		return css

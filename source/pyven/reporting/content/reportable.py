@@ -25,5 +25,5 @@ class ReportableListing(Listing):
 									PROPERTIES=properties,\
 									LINES=lines,\
 									LISTINGS='',\
-									DIV_STYLE=self.div_style)
+									DIV_STYLE=Listing.join_styles([Style.get().listing['div_style'], self.div_style, self.status_style]))
 		

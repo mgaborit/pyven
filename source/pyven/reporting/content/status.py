@@ -14,6 +14,7 @@ class Status(Content):
 		self.status = status
 		self.div_style = Style.get().status['div_style']
 		self.span_style = Style.get().status['span_style']
+		self.status_style = ''
 		
 	def write(self):
 		Status.generate_template()
@@ -21,7 +22,9 @@ class Status(Content):
 	
 	def write_status(self):
 		template = Template(file_to_str(Status.TEMPLATE))
-		result = template.substitute(VALUE=self.status, DIV_STYLE=self.div_style, SPAN_STYLE=self.span_style)
+		result = template.substitute(VALUE=self.status,\
+									DIV_STYLE=' '.join([self.div_style, self.status.lower()]),\
+									SPAN_STYLE=' '.join([self.span_style, self.status.lower()]))
 		return result
 	
 	@staticmethod
