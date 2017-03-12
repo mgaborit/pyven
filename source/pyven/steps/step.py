@@ -1,13 +1,19 @@
 import os, time
 from pyven.logging.logger import Logger
 
+import pyven.constants
+from pyven.reporting.content.success import Success
+from pyven.reporting.content.failure import Failure
+from pyven.reporting.content.unknown import Unknown
+from pyven.reporting.content.title import Title
+
 from pyven.exceptions.exception import PyvenException
 
 class Step(object):
 	LOCAL_REPO = None
 	WORKSPACE = None
 	PROJECTS = []
-	STATUS = ['SUCCESS', 'FAILURE', 'UNKNOWN']
+	STATUS = pyven.constants.STATUS
 
 	def __init__(self, verbose=False):
 		self.verbose = verbose
@@ -75,14 +81,25 @@ class Step(object):
 				ok = False
 		return ok
 	
+	def report_status(self):
+		if self.status == pyven.constants.STATUS[0]:
+			return Success()
+		elif self.status == pyven.constants.STATUS[1]:
+			return Failure()
+		else:
+			return Unknown()
+	
 	def _process(self, project):
 		raise NotImplementedError
 		
 	def reportables(self):
 		raise NotImplementedError
 		
-	def generator(self):
+	def content(self):
 		raise NotImplementedError
 		
 	def report(self):
 		return self.status != Step.STATUS[2]
+		
+	def title(self):
+		return Title(self.name)

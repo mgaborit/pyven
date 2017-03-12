@@ -5,14 +5,18 @@ import pyven.constants
 from pyven.logging.logger import Logger
 
 from pyven.reporting.html_utils import HTMLUtils
-from pyven.reporting.generator import Generator
-from pyven.reporting.listing_generator import ListingGenerator
 
 from pyven.repositories.directory import DirectoryRepo
 from pyven.repositories.workspace import Workspace
 from pyven.reporting.reportable import Reportable
 from pyven.processing.processible import Processible
 from pyven.processing.tests.test import Test
+
+from pyven.reporting.content.listing import Listing
+from pyven.reporting.content.success import Success
+from pyven.reporting.content.failure import Failure
+from pyven.reporting.content.unknown import Unknown
+from pyven.reporting.content.title import Title
 
 from pyven.steps.step import Step
 from pyven.steps.configure import Configure
@@ -53,6 +57,7 @@ class Pyven:
 		self.step = step
 		self.verbose = verbose
 		self.nb_lines = nb_lines
+		self.status = pyven.constants.STATUS[2]
 		if self.verbose:
 			Logger.get().info('Verbose mode enabled')
 		self.release = release
@@ -103,9 +108,11 @@ class Pyven:
 	def process(self):
 		ok = True
 		i = 0
+		self.status = pyven.constants.STATUS[0]
 		while ok and i < len(self.steps):
 			if not self.steps[i].process():
 				ok = False
+				self.status = pyven.constants.STATUS[1]
 			i += 1
 		return ok
 		
@@ -120,13 +127,19 @@ class Pyven:
 	@aggregate
 	def report(self, report_style):
 		HTMLUtils.set_style(report_style)
-		Generator.NB_LINES = self.nb_lines
-		step_generators = []
+		listings = []
 		for step in self.steps:
 			if step.report():
-				step_generators.append(step.generator())
-		generator = ListingGenerator(title=pyven.constants.PLATFORM, generators=step_generators)
-		HTMLUtils.write(generator.write(), Step.WORKSPACE.url, self.step)
+				listings.append(step.content())
+		status = None
+		if self.status == pyven.constants.STATUS[0]:
+			status = Success()
+		elif self.status == pyven.constants.STATUS[1]:
+			status = Failure()
+		else:
+			status = Unknown()
+		content = Listing(title=Title(pyven.constants.PLATFORM), status=status, listings=listings)
+		HTMLUtils.write(content.write(), Step.WORKSPACE.url, self.step)
 		
 	def display(self):
 		HTMLUtils.display(Step.WORKSPACE.url)

@@ -2,15 +2,33 @@ import os
 from pyven.utils.utils import str_to_file, file_to_str
 
 class Style(object):
-	DIR = os.path.join(os.environ.get('PVN_HOME'), 'report', 'style')
+	DIR = os.path.join(os.environ.get('PVN_HOME'), 'report', 'css')
+	COUNT = 0
+	SINGLETON = None
 	
 	def __init__(self, name='default'):
+		Style.COUNT += 1
 		self.name = name
-		self.status = {'success' : 'success', 'failure' : 'failure', 'unknown' : 'unknown'}
-		self.listing = {'div' : 'listingDiv', 'properties' : {'div' : 'propertiesDiv', 'property' : 'property'}}
-		self.error = {'div' : 'errorDiv', 'error' : 'error'}
-		self.warning = {'div' : 'warningDiv', 'warning' : 'warning'}
 		self.go_top = 'goTop'
+		
+		self.line = {'div_style' : 'lineDiv', 'span_style' : 'lineSpan', 'part_style' : 'linePart'}
+		self.error = {'div_style' : 'errorDiv', 'span_style' : 'errorSpan'}
+		self.warning = {'div_style' : 'warningDiv', 'span_style' : 'warningSpan'}
+		self.lines = {'div_style' : 'linesDiv'}
+		self.status = {'div_style' : 'statusDiv', 'span_style' : 'statusSpan'}
+		self.failure = {'span_style' : 'failureSpan'}
+		self.success = {'span_style' : 'successSpan'}
+		self.title = {'title_style' : 'titleH2'}
+		self.property = {'p_style' : 'propertyP'}
+		self.properties = {'div_style' : 'propertiesDiv'}
+		self.listing = {'div_style' : 'listingDiv'}
+		
+	@staticmethod
+	def get():
+		if Style.COUNT == 0 or Style.SINGLETON is None:
+			Style.SINGLETON = Style()
+
+		return Style.SINGLETON
 		
 	def inline_inserter(function):
 		def _intern(self):

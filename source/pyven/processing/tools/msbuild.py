@@ -1,10 +1,12 @@
 import subprocess, os, shutil, time
 
+import pyven.constants
 from pyven.exceptions.exception import PyvenException
 
 from pyven.processing.processible import Processible
 from pyven.processing.tools.tool import Tool
 from pyven.reporting.reportable import Reportable
+from pyven.reporting.content.property import Property
 
 from pyven.logging.logger import Logger
 
@@ -21,11 +23,10 @@ class MSBuildTool(Tool):
 		return 'MSBuild ' + os.path.basename(self.project)
 		
 	def properties(self):
-		properties = {}
-		properties['Status'] = self.status
-		properties['Configuration'] = self.configuration
-		properties['Platform'] = self.architecture
-		properties['Duration'] = str(self.duration) + ' seconds'
+		properties = []
+		properties.append(Property(name='Configuration', value=self.configuration))
+		properties.append(Property(name='Platform', value=self.architecture))
+		properties.append(Property(name='Duration', value=str(self.duration) + ' seconds'))
 		return properties
 	
 	def report_summary(self):
@@ -80,7 +81,7 @@ class MSBuildTool(Tool):
 			self.warnings.append([w[0].replace(w[0].split()[-1], '')])
 		
 		if returncode != 0:
-			self.status = Processible.STATUS['failure']
+			self.status = pyven.constants.STATUS[1]
 			errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error', 'Erreur', 'erreur'], ['0 Erreur(s)', '0 Error(s)'])
 			for e in errors:
 				if e[0].split()[-1].startswith('[') and e[0].split()[-1].endswith(']'):
@@ -89,10 +90,10 @@ class MSBuildTool(Tool):
 					self.errors.append([e[0]])
 			Logger.get().error('Build failed : ' + self.type + ':' + self.name)
 		elif warning_as_error and len(warnings) > 0:
-			self.status = Processible.STATUS['failure']
+			self.status = pyven.constants.STATUS[1]
 			Logger.get().error('Build failed : ' + self.type + ':' + self.name)
 		else:
-			self.status = Processible.STATUS['success']
+			self.status = pyven.constants.STATUS[0]
 		return returncode == 0 and (not warning_as_error or len(warnings) == 0)
 
 	def clean(self, verbose=False):

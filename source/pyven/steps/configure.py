@@ -7,7 +7,7 @@ from pyven.exceptions.exception import PyvenException
 from pyven.project import Project
 
 from pyven.logging.logger import Logger
-from pyven.reporting.listing_generator import ListingGenerator
+from pyven.reporting.content.listing import Listing
 
 class Configure(Step):
 	def __init__(self, verbose, pym):
@@ -21,11 +21,11 @@ class Configure(Step):
 	def process(self):
 		return self._process(Project('.'))
 	
-	def generator(self):
-		generators = []
+	def content(self):
+		listings = []
 		if self.status in Step.STATUS[1]:
-			generators.append(self.checker.generator())
-		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
+			listings.append(self.checker.content())
+		return Listing(title=self.title(), status=self.report_status(), listings=listings)
 		
 	def report(self):
 		return self.status == Step.STATUS[1]

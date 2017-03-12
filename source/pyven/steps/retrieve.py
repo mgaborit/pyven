@@ -8,7 +8,7 @@ from pyven.steps.utils import retrieve
 from pyven.checkers.checker import Checker
 
 from pyven.logging.logger import Logger
-from pyven.reporting.listing_generator import ListingGenerator
+from pyven.reporting.content.listing import Listing
 
 class Retrieve(Step):
 	def __init__(self, verbose):
@@ -30,9 +30,9 @@ class Retrieve(Step):
 						shutil.copy(os.path.join(item.location(Step.WORKSPACE.url), item.basename()), os.path.join(dir, item.basename()))
 		return ok
 		
-	def generator(self):
-		generators = []
+	def content(self):
+		listings = []
 		if self.status in Step.STATUS[1]:
-			generators.append(self.checker.generator())
-		return ListingGenerator(title=self.name, properties={'Status' : self.status}, generators=generators)
+			listings.append(self.checker.content())
+		return Listing(title=self.title(), status=self.report_status(), listings=listings)
 	
