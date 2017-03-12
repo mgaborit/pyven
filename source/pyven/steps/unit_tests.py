@@ -4,7 +4,7 @@ from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
 from pyven.logging.logger import Logger
-from pyven.reporting.content.listing import Listing
+from pyven.reporting.content.step import StepListing
 
 class UnitTests(Step):
 	def __init__(self, verbose):
@@ -36,7 +36,7 @@ class UnitTests(Step):
 				listings.append(test.content())
 		if self.status == Step.STATUS[1]:
 			listings.append(self.checker.content())
-		return Listing(title=self.title(), status=self.report_status(), listings=listings)
+		return StepListing(title=self.title(), status=self.report_status(), listings=listings)
 		
 	def report(self):
 		report = super(UnitTests, self).report()

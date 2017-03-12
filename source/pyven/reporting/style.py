@@ -22,6 +22,10 @@ class Style(object):
 		self.property = {'p_style' : 'propertyP'}
 		self.properties = {'div_style' : 'propertiesDiv'}
 		self.listing = {'div_style' : 'listingDiv'}
+		self.summary = {'div_style' : 'summaryDiv'}
+		self.platform = {'div_style' : 'platformDiv'}
+		self.step = {'div_style' : 'stepDiv'}
+		self.reportable = {'div_style' : 'reportableDiv'}
 		
 	@staticmethod
 	def get():
