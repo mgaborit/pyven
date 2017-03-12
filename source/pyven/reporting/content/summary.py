@@ -7,7 +7,7 @@ from pyven.utils.utils import file_to_str, str_to_file
 from pyven.reporting.style import Style
 from pyven.reporting.content.listing import Listing
 from pyven.reporting.content.title import Title
-from pyven.reporting.content.error import Error
+from pyven.reporting.content.line import Line
 from pyven.reporting.content.lines import Lines
 
 class Summary(Listing):
@@ -22,7 +22,7 @@ class Summary(Listing):
 		if self.listings is not None:
 			for listing in self.listings:
 				if listing.status.status == pyven.constants.STATUS[1]:
-					failures.append(Error([HTMLUtils.link(listing.title.title, listing.href())]))
+					failures.append(Line([HTMLUtils.link(listing.title.title, listing.href())]))
 		lines = Lines(failures)
 		return template.substitute(TITLE=self.title.write(),\
 									STATUS='',\

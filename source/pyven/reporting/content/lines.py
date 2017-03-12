@@ -8,6 +8,7 @@ from pyven.reporting.style import Style
 
 class Lines(Content):
 	TEMPLATE = os.path.join(Content.TEMPLATE_DIR, 'lines-template.html')
+	NB_LINES = 10
 
 	def __init__(self, lines=[]):
 		super(Lines, self).__init__()
@@ -21,8 +22,10 @@ class Lines(Content):
 	def write_lines(self):
 		result = ''
 		if len(self.lines) > 0:
-			for line in self.lines:
-				result += line.write()
+			i = 0
+			while i < Lines.NB_LINES and i < len(self.lines):
+				result += self.lines[i].write()
+				i += 1
 			template = Template(file_to_str(Lines.TEMPLATE))
 			result = template.substitute(VALUE=result, DIV_STYLE=self.div_style)
 		return result

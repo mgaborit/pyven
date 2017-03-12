@@ -14,7 +14,6 @@ class Line(Content):
 		super(Line, self).__init__()
 		self.line = line
 		self.div_style = Style.get().line['div_style']
-		self.span_style = Style.get().line['span_style']
 		self.part_style = Style.get().line['part_style']
 		self.type_style = ''
 
@@ -28,12 +27,11 @@ class Line(Content):
 			result += self.write_part(part)
 		template = Template(file_to_str(self.TEMPLATE_LINE))
 		return template.substitute(VALUE=result,\
-									DIV_STYLE=' '.join([self.div_style, self.type_style]),\
-									SPAN_STYLE=' '.join([self.span_style, self.type_style]))
+									DIV_STYLE=' '.join([self.div_style, self.type_style]))
 		
 	def write_part(self, part):
 		template = Template(file_to_str(self.TEMPLATE_PART))
-		return template.substitute(VALUE=part, PART_STYLE=self.part_style)
+		return template.substitute(VALUE=part, PART_STYLE=' '.join([self.part_style, self.type_style]))
 		
 	@staticmethod
 	def generate_template():
@@ -47,11 +45,7 @@ class Line(Content):
 	def generate_template_line():
 		html_str = HTMLUtils.ltag('div', {'class' : '$DIV_STYLE'})
 		try:
-			html_str += HTMLUtils.ltag('span', {'class' : '$SPAN_STYLE'})
-			try:
-				html_str += '$VALUE'
-			finally:
-				html_str += HTMLUtils.rtag('span')
+			html_str += '$VALUE'
 		finally:
 			html_str += HTMLUtils.rtag('div')
 		return html_str

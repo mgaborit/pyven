@@ -17,6 +17,7 @@ from pyven.reporting.content.success import Success
 from pyven.reporting.content.failure import Failure
 from pyven.reporting.content.unknown import Unknown
 from pyven.reporting.content.title import Title
+from pyven.reporting.content.lines import Lines
 
 from pyven.steps.step import Step
 from pyven.steps.configure import Configure
@@ -127,6 +128,7 @@ class Pyven:
 	@aggregate
 	def report(self, report_style):
 		HTMLUtils.set_style(report_style)
+		Lines.NB_LINES = self.nb_lines
 		listings = []
 		for step in self.steps:
 			if step.report():
