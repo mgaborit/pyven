@@ -17,6 +17,9 @@ class Configure(Step):
 		self.checker = Checker('Configuration')
 		self.parsers = []
 
+	def project_title(self):
+		return self.parsers[0].parse_project_title()
+		
 	@Step.step
 	def process(self):
 		return self._process(Project('.'))
