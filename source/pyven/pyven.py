@@ -68,9 +68,11 @@ class Pyven:
 		if self.warning_as_error:
 			Logger.get().info('Warnings will be considered as errors')
 
+		self.configure = None
 		self.steps = []
 		if step in Pyven.STEPS:
-			self.steps.append(Configure(self.verbose, self.pym))
+			self.configure = Configure(self.verbose, self.pym)
+			self.steps.append(self.configure)
 			step_id = Pyven.STEPS.index(step)
 			if step_id > Pyven.STEPS.index('configure'):
 				self.steps.append(Preprocess(self.verbose))
@@ -140,7 +142,12 @@ class Pyven:
 			status = Failure()
 		else:
 			status = Unknown()
-		content = Platform(title=Title(pyven.constants.PLATFORM), status=status, listings=listings)
+		title = ''
+		if self.configure is not None:
+			title = self.configure.project_title()
+			if title != '':
+				title += ' - '
+		content = Platform(title=Title(title + pyven.constants.PLATFORM), status=status, listings=listings)
 		HTMLUtils.write(content.write(), Step.WORKSPACE.url, self.step)
 		
 	def display(self):

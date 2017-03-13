@@ -71,7 +71,10 @@ class HTMLUtils(object):
 		if not os.path.isfile(template_file):
 			HTMLUtils.generate_template()
 		template = Template(file_to_str(template_file))
-		str = template.substitute(STYLE=Style.get().write(), CONTENT=HTMLUtils.write_body(workspace))
+		title = 'Build report'
+		if 'BUILD_NUMBER' in os.environ:
+			title = 'Jenkins - Build #' + os.environ.get('BUILD_NUMBER')
+		str = template.substitute(STYLE=Style.get().write(), TITLE=title, CONTENT=HTMLUtils.write_body(workspace))
 		str_to_file(str, os.path.join(report_dir, HTMLUtils.INDEX))
 	
 	@staticmethod
@@ -83,74 +86,6 @@ class HTMLUtils(object):
 		report_dir = os.path.join(workspace, 'report')
 		if os.path.isdir(report_dir):
 			shutil.rmtree(report_dir)
-	
-	# def _write_ref(self, idx, path):
-		# return HTMLUtils._path_to_report_name(path) + '_' + str(idx)
-
-	# def _write_reportable(self, reportable, idx):
-		# html_str = '<a name="' + self._write_ref(idx, '_'.join(reportable.report_summary())) + '"><div class="stepDiv">'
-		# try:
-			# html_str += '<h2>' + ' '.join(reportable.report_identifiers()) + '</h2>'
-			# html_str += '<div class="' + Style.get().reportable['properties']['div'] + '">'
-			# if reportable.report_status() == 'SUCCESS':
-				# status_style = Style.get().status['success']
-			# elif reportable.report_status() == 'FAILURE':
-				# status_style = Style.get().status['failure']
-			# else:
-				# status_style = Style.get().status['unknown']
-			# html_str += '<p class="' + Style.get().reportable['properties']['property'] + '">Status : <span class="' + status_style + '">' + reportable.report_status() + '</span></p>'
-			# for property in reportable.report_properties():
-				# html_str += '<p class="' + Style.get().reportable['properties']['property'] + '">' + property[0] + ' : ' + property[1] + '</p>'
-			# html_str += '</div>'
-			# displayed_errors = 0
-			# nb_errors = 0
-			# for error in reportable.errors:
-				# if displayed_errors < self.nb_lines:
-					# html_str += self._write_error(error)
-					# displayed_errors += 1
-				# nb_errors += 1
-			# if nb_errors > displayed_errors:
-				# html_str += self._write_error([str(nb_errors - displayed_errors) + ' more errors...'])
-			# displayed_warnings = 0
-			# nb_warnings = 0
-			# for warning in reportable.warnings:
-				# if displayed_warnings < self.nb_lines - displayed_errors:
-					# html_str += self._write_warning(warning)
-					# displayed_warnings += 1
-				# nb_warnings += 1
-			# if nb_warnings > displayed_warnings:
-				# html_str += self._write_warning([str(nb_warnings - displayed_warnings) + ' more warnings...'])
-		# finally:
-			# html_str += '</div></a>'
-		# return html_str
-		
-	# def _write_summary(self):
-		# html_str = '<div class="' + Style.get().step['div'] + '">'
-		# html_str += '<h2>Summary</h2>'
-		# status = 'SUCCESS'
-		# for step in self.pyven.reportables():
-			# if step.report_status() != 'SUCCESS':
-				# status = 'FAILURE'
-		# if status == 'FAILURE':
-			# count = 0
-			# for step in self.pyven.reportables():
-				# if step.report_status() != 'SUCCESS':
-					# html_str += self._write_error([' '.join(step.report_summary()) + ' <a href="#' + self._write_ref(count, '_'.join(step.report_summary())) + '">Details</a>'])
-				# count += 1
-		# else:
-			# html_str += '<span class="' + Style.get().status['success'] + '">SUCCESS</span>'
-		# html_str += '</div>'
-		# return html_str
-	
-	# @staticmethod
-	# def _write_projects(projects):
-		# html_str = '<div class="' + Style.get().step['div'] + '">'
-		# html_str += '<h2>Pyven projects</h2>'
-		# html_str += '<div class="' + Style.get().step['properties']['div'] + '">'
-		# for project in projects:
-			# html_str += '<p class="' + Style.get().step['properties']['property'] + '"><a href="#' + project + '">' + HTMLUtils._report_name_to_path(project) + '</a></p>'
-		# html_str += '</div></div>'
-		# return html_str
 	
 	@staticmethod
 	def write_body(workspace):
@@ -204,7 +139,7 @@ class HTMLUtils(object):
 		try:
 			html_str += HTMLUtils.ltag('h1')
 			try:
-				html_str += 'Build report'
+				html_str += '$TITLE'
 			finally:
 				html_str += HTMLUtils.rtag('h1')
 			html_str += '$CONTENT'
