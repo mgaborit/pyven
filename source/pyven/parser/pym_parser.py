@@ -83,9 +83,10 @@ class PymParser(object):
 	@check_errors
 	def parse_project_title(self):
 		title = ''
-		nodes = self.tree.xpath('/pyven/project')
-		if len(nodes) > 0:
-			title += nodes[0].text
+		if self.tree is not None:
+			nodes = self.tree.xpath('/pyven/project')
+			if len(nodes) > 0:
+				title += nodes[0].text
 		return title
 		
 	@check_errors

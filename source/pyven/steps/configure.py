@@ -89,6 +89,8 @@ class Configure(Step):
 	@_configure_error_checks
 	def _configure_repositories(self, project, parser):
 		repositories = parser.parse_repositories()
+		project.repositories[Step.WORKSPACE.name] = Step.WORKSPACE
+		project.repositories[Step.LOCAL_REPO.name] = Step.LOCAL_REPO
 		for repo in repositories:
 			if repo.name == 'workspace' or repo.name == Step.LOCAL_REPO.name:
 				raise PyvenException('Repository name reserved --> ' + repo.name + ' : ' + repo.url)
