@@ -20,7 +20,7 @@ class Deliver(Step):
 	def _process(self, project):
 		ok = True
 		Logger.get().info('Delivering to directory ' + self.location)
-		packages = [p for p in project.packages.values() if p.publish]
+		packages = [p for p in project.packages.values()]
 		for repo in [project.repositories[p.repo] for p in packages if p.to_retrieve]:
 			if not repo.is_reachable():
 				msg = 'Repository ' + repo.name + ' --> unreachable for delivery'
