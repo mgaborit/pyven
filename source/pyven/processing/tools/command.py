@@ -22,7 +22,7 @@ class CommandTool(Tool):
 		
 	def properties(self):
 		properties = []
-		properties.append(Property(name='Command', value=elf.command))
+		properties.append(Property(name='Command', value=self.command))
 		properties.append(Property(name='Workspace', value=self.directory))
 		properties.append(Property(name='Duration', value=str(self.duration) + ' seconds'))
 		return properties
