@@ -6,6 +6,7 @@ from pyven.exceptions.exception import PyvenException
 from pyven.processing.processible import Processible
 from pyven.reporting.reportable import Reportable
 from pyven.reporting.content.property import Property
+from pyven.results.xml_parser import XMLParser
 
 from pyven.logging.logger import Logger
 
@@ -19,7 +20,7 @@ class Test(Processible, Reportable):
 		self.path = path
 		self.filename = filename
 		self.arguments = arguments
-		self.format = format
+		self.parser = XMLParser(format)
 	
 	def title(self):
 		return self.type + ' test : ' + os.path.join(self.path, self.filename)
@@ -67,12 +68,15 @@ class Test(Processible, Reportable):
 				for line in err.splitlines():
 					Logger.get().info(line)
 			
+			self.parser.parse(os.path.join(self.path, self._format_report_name()))
 			if returncode != 0:
 				self.status = pyven.constants.STATUS[1]
 				if os.path.isfile(os.path.join(self.path, self._format_report_name())):
-					self.errors = Reportable.parse_xml(self.format, os.path.join(self.path, self._format_report_name()))
+					self.errors = self.parser.errors
 				else:
-					Logger.get().error('Could not find XML test report = '+os.path.join(self.path, self._format_report_name()))
+					msg = 'Could not find XML test report = '+os.path.join(self.path, self._format_report_name())
+					self.errors.append([msg])
+					Logger.get().error(msg)
 				Logger.get().error('Test failed : ' + self.filename)
 			else:
 				self.status = pyven.constants.STATUS[0]

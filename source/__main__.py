@@ -34,10 +34,10 @@ def main(args):
 	try:
 		ok = True
 		if pyven.step == 'aggregate' and not args.display:
-			pyven.aggregate()
+			pyven.report(args.report_style)
 		
 		if pyven.step == 'parse':
-			ok = pyven.parse(arguments['path'])
+			ok = pyven.parse()
 		
 		else:
 			ok = pyven.process()

@@ -33,6 +33,8 @@ from pyven.steps.retrieve import Retrieve
 from pyven.steps.deliver import Deliver
 from pyven.steps.clean import Clean
 
+from pyven.results.xml_parser import XMLParser
+
 class Pyven:	
 	WORKSPACE = Workspace('workspace', 'workspace', os.path.join(os.getcwd(), 'pvn_workspace'))
 	if not os.path.isdir(WORKSPACE.url):
@@ -55,6 +57,7 @@ class Pyven:
 	def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path='', arguments={}, nb_lines=10):
 		self.pym = pym
 		self.path = path
+		self.arguments = arguments
 		self.step = step
 		self.verbose = verbose
 		self.nb_lines = nb_lines
@@ -154,18 +157,20 @@ class Pyven:
 		HTMLUtils.display(Step.WORKSPACE.url)
 
 # ============================================================================================================		
-	def _parse(self, path, format='cppunit'):
+	def _parse(self, format='cppunit'):
 		ok = True
-		for report in [r for r in os.listdir(path) if r.endswith('.xml')]:
-			test = Test('', path, report, [], format)
-			test.errors = Reportable.parse_xml(format, os.path.join(path, report))
+		for report in [r for r in os.listdir(self.arguments['path']) if r.endswith('.xml')]:
+			parser = XMLParser(format)
+			parser.parse(os.path.join(self.arguments['path'], report))
+			test = Test('', self.arguments['path'], report, [], format)
+			test.errors = parser.errors
 			if len(test.errors) > 0:
-				test.status = Processible.STATUS['failure']
+				test.status = Step.STATUS[1]
 			else:
-				test.status = Processible.STATUS['success']
+				test.status = Step.STATUS[0]
 			self.unit_tests.tests.append(test)
 		return ok
 		
-	def parse(self, arg=None):
-		return self._parse(arg)
+	def parse(self):
+		return self._parse()
 			

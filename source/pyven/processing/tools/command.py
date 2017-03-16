@@ -7,6 +7,7 @@ from pyven.processing.processible import Processible
 from pyven.processing.tools.tool import Tool
 from pyven.reporting.reportable import Reportable
 from pyven.reporting.content.property import Property
+from pyven.results.line_logs_parser import LineLogsParser
 
 from pyven.logging.logger import Logger
 
@@ -16,6 +17,10 @@ class CommandTool(Tool):
 		super(CommandTool, self).__init__(type, name, scope)
 		self.command = command
 		self.directory = directory
+		self.parser = LineLogsParser(error_patterns=['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'],\
+									error_exceptions=[],\
+									warning_patterns=['Warning', 'warning', 'WARNING', 'Avertissement', 'avertissement', 'AVERTISSEMENT'],\
+									warning_exceptions=[])
 	
 	def title(self):
 		return 'Command line'
@@ -53,11 +58,12 @@ class CommandTool(Tool):
 			for line in err.splitlines():
 				Logger.get().info('[' + self.type + ']' + line)
 		
-		self.warnings = Reportable.parse_logs(out.splitlines(), ['Warning', 'warning'], [])
+		self.parser.parse(out.splitlines() + err.splitlines())
+		self.warnings = self.parser.warnings
 		
 		if returncode != 0:
 			self.status = pyven.constants.STATUS[1]
-			self.errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error'], [])
+			self.errors = self.parser.errors
 			Logger.get().error('Preprocessing failed : ' + self.type + ':' + self.name)
 		else:
 			self.status = pyven.constants.STATUS[0]

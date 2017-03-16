@@ -7,6 +7,7 @@ from pyven.processing.processible import Processible
 from pyven.reporting.reportable import Reportable
 from pyven.processing.tools.tool import Tool
 from pyven.reporting.content.property import Property
+from pyven.results.line_logs_parser import LineLogsParser
 
 from pyven.logging.logger import Logger
 
@@ -17,6 +18,10 @@ class MakefileTool(Tool):
 		self.workspace = workspace
 		self.rules = rules
 		self.options = options
+		self.parser = LineLogsParser(error_patterns=['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'],\
+									error_exceptions=[],\
+									warning_patterns=['Warning', 'warning', 'WARNING', 'Avertissement', 'avertissement', 'AVERTISSEMENT'],\
+									warning_exceptions=[])
 		
 	def title(self):
 		return 'Makefile ' + self.name
@@ -56,20 +61,20 @@ class MakefileTool(Tool):
 				for line in err.splitlines():
 					Logger.get().info('[' + self.type + ']' + line)
 			
-			warnings = Reportable.parse_logs(out.splitlines(), ['Warning', 'warning', 'WARNING', 'Avertissement', 'avertissement', 'AVERTISSEMENT'], [])
-			warnings.extend(Reportable.parse_logs(err.splitlines(), ['Warning', 'warning', 'WARNING', 'Avertissement', 'avertissement', 'AVERTISSEMENT'], []))
+			self.parser.parse(out.splitlines() + err.splitlines())
+			self.warnings = self.parser.warnings
 			
 			if returncode != 0:
 				self.status = pyven.constants.STATUS[1]
-				errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'], [])
-				errors.extend(Reportable.parse_logs(err.splitlines(), ['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'], []))
+				self.parser.parse(out.splitlines() + err.splitlines())
+				self.errors = self.parser.errors
 				Logger.get().error('Build failed : ' + self.type + ':' + self.name)
-			elif warning_as_error and len(warnings) > 0:
+			elif warning_as_error and len(self.warnings) > 0:
 				self.status = pyven.constants.STATUS[1]
 				Logger.get().error('Build failed : ' + self.type + ':' + self.name)
 			else:
 				self.status = pyven.constants.STATUS[0]
-			return returncode == 0 and (not warning_as_error or len(warnings) == 0)
+			return returncode == 0 and (not warning_as_error or len(self.warnings) == 0)
 		Logger.get().error('Unknown directory : ' + self.workspace)
 		return False
 		
