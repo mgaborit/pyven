@@ -107,6 +107,13 @@ def main():
 	
 	zf.write('pyven/utils/__init__.py')
 	zf.write('pyven/utils/utils.py')
+	
+	zf.write('pyven/results/__init__.py')
+	zf.write('pyven/results/results_parser.py')
+	zf.write('pyven/results/logs_parser.py')
+	zf.write('pyven/results/line_logs_parser.py')
+	zf.write('pyven/results/block_logs_parser.py')
+	zf.write('pyven/results/xml_parser.py')
 
 if __name__ == '__main__':
 	main()

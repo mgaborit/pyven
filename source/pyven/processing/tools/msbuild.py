@@ -7,6 +7,7 @@ from pyven.processing.processible import Processible
 from pyven.processing.tools.tool import Tool
 from pyven.reporting.reportable import Reportable
 from pyven.reporting.content.property import Property
+from pyven.results.line_logs_parser import LineLogsParser
 
 from pyven.logging.logger import Logger
 
@@ -18,6 +19,10 @@ class MSBuildTool(Tool):
 		self.architecture = architecture
 		self.project = project
 		self.options = options
+		self.parser = LineLogsParser(error_patterns=['error', 'Error', 'erreur', 'Erreur'],\
+									error_exceptions=['Erreur interne'],\
+									warning_patterns=['warning', 'Warning', 'avertissement', 'Avertissement'],\
+									warning_exceptions=[])
 		
 	def title(self):
 		return 'MSBuild ' + os.path.basename(self.project)
@@ -76,25 +81,26 @@ class MSBuildTool(Tool):
 			for line in err.splitlines():
 				Logger.get().info('[' + self.type + ']' + line)
 		
-		warnings = Reportable.parse_logs(out.splitlines(), ['Warning', 'warning', 'Avertissement', 'avertissement'], ['0 Avertissement(s)', '0 Warning(s)'])
+		self.parser.parse(out.splitlines())
+		warnings = self.parser.warnings
 		for w in warnings:
 			self.warnings.append([w[0].replace(w[0].split()[-1], '')])
 		
 		if returncode != 0:
 			self.status = pyven.constants.STATUS[1]
-			errors = Reportable.parse_logs(out.splitlines(), ['Error', 'error', 'Erreur', 'erreur'], ['0 Erreur(s)', '0 Error(s)'])
+			errors = self.parser.errors
 			for e in errors:
 				if e[0].split()[-1].startswith('[') and e[0].split()[-1].endswith(']'):
 					self.errors.append([e[0].replace(e[0].split()[-1], '')])
 				else:
 					self.errors.append([e[0]])
 			Logger.get().error('Build failed : ' + self.type + ':' + self.name)
-		elif warning_as_error and len(warnings) > 0:
+		elif warning_as_error and len(self.warnings) > 0:
 			self.status = pyven.constants.STATUS[1]
 			Logger.get().error('Build failed : ' + self.type + ':' + self.name)
 		else:
 			self.status = pyven.constants.STATUS[0]
-		return returncode == 0 and (not warning_as_error or len(warnings) == 0)
+		return returncode == 0 and (not warning_as_error or len(self.warnings) == 0)
 
 	def clean(self, verbose=False):
 		Logger.get().info('Cleaning : ' + self.type + ':' + self.name)
