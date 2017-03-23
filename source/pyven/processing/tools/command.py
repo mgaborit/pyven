@@ -50,6 +50,7 @@ class CommandTool(Tool):
 		cwd = os.getcwd()
 		os.chdir(self.directory)
 		self.duration, out, err, returncode = self._call_command(self._format_call())
+		Logger.get().info('Leaving directory : ' + self.directory)
 		os.chdir(cwd)
 		
 		if verbose:

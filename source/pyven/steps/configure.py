@@ -45,6 +45,7 @@ class Configure(Step):
 			and self._configure_packages(project, parser)\
 			and self._configure_preprocessors(project, parser)\
 			and self._configure_builders(project, parser)\
+			and self._configure_postprocessors(project, parser)\
 			and self._configure_unit_tests(project, parser)\
 			and self._configure_valgrind_tests(project, parser)\
 			and self._configure_integration_tests(project, parser)
@@ -163,7 +164,7 @@ class Configure(Step):
 		for preprocessor in preprocessors:
 			preprocessor.name = Configure._replace_constants(preprocessor.name, project.constants)
 			checked.append(preprocessor)
-			Logger.get().info('Preprocessor added --> ' + preprocessor.type + ':' + preprocessor.name)
+			Logger.get().info('Pre-processor added --> ' + preprocessor.type + ':' + preprocessor.name)
 		project.preprocessors = checked
 		
 	@_configure_error_checks
@@ -175,6 +176,16 @@ class Configure(Step):
 			checked.append(builder)
 			Logger.get().info('Builder added --> ' + builder.type + ':' + builder.name)
 		project.builders = checked
+		
+	@_configure_error_checks
+	def _configure_postprocessors(self, project, parser):
+		postprocessors = parser.parse_postprocessors()
+		checked = []
+		for postprocessor in postprocessors:
+			postprocessor.name = Configure._replace_constants(postprocessor.name, project.constants)
+			checked.append(postprocessor)
+			Logger.get().info('Post-processor added --> ' + postprocessor.type + ':' + postprocessor.name)
+		project.postprocessors = checked
 		
 	@_configure_error_checks
 	def _configure_unit_tests(self, project, parser):

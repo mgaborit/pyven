@@ -4,12 +4,13 @@ from pyven.processing.tools.command import CommandTool
 
 class CommandParser(ToolsParser):
 	
-	def __init__(self, query):
+	def __init__(self, query, scope='build'):
 		super(CommandParser, self).__init__(query)
+		self.scope = scope
 	
 	def _parse(self, node):
 		objects = []
-		for tool_node in node.xpath('tool[@type="command"]'):
+		for tool_node in node.xpath('tool[@type="command" and @scope="' + self.scope + '"]'):
 			members = super(CommandParser, self)._parse(tool_node)
 			errors = []
 			directory_node = tool_node.find('directory')

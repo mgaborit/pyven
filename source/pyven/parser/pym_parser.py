@@ -33,7 +33,9 @@ class PymParser(object):
 		self.artifacts_parser = ArtifactsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/artifacts/artifact')
 		self.packages_parser = PackagesParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/packages/package')
 		self.cmake_parser = CMakeParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
-		self.command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
+		self.preprocess_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', 'preprocess')
+		self.build_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', 'build')
+		self.postprocess_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', 'postprocess')
 		self.msbuild_parser = MSBuildParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
 		self.makefile_parser = MakefileParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
 		self.unit_tests_parser = UnitTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="unit"]')
@@ -122,6 +124,8 @@ class PymParser(object):
 		preprocessors = []
 		for cmake_tools in self.cmake_parser.parse(self.tree):
 			preprocessors.extend(cmake_tools)
+		for command_tools in self.preprocess_command_parser.parse(self.tree):
+			preprocessors.extend(command_tools)
 		return preprocessors
 		
 	@check_errors
@@ -131,9 +135,16 @@ class PymParser(object):
 			builders.extend(msbuild_tools)
 		for makefile_tools in self.makefile_parser.parse(self.tree):
 			builders.extend(makefile_tools)
-		for command_tools in self.command_parser.parse(self.tree):
+		for command_tools in self.build_command_parser.parse(self.tree):
 			builders.extend(command_tools)
 		return builders
+		
+	@check_errors
+	def parse_postprocessors(self):
+		postprocessors = []
+		for command_tools in self.postprocess_command_parser.parse(self.tree):
+			postprocessors.extend(command_tools)
+		return postprocessors
 		
 	@check_errors
 	def parse_unit_tests(self):
