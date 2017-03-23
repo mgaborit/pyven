@@ -12,5 +12,6 @@ class Project:
 		self.packages = {}
 		self.preprocessors = []
 		self.builders = []
+		self.postprocessors = []
 		self.unit_tests = []
 		self.integration_tests = []

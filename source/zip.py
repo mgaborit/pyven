@@ -14,6 +14,7 @@ def main():
 	zf.write('pyven/steps/configure.py')
 	zf.write('pyven/steps/preprocess.py')
 	zf.write('pyven/steps/build.py')
+	zf.write('pyven/steps/postprocess.py')
 	zf.write('pyven/steps/artifacts_checks.py')
 	zf.write('pyven/steps/unit_tests.py')
 	zf.write('pyven/steps/package.py')

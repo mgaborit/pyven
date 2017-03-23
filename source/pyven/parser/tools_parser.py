@@ -4,7 +4,7 @@ from pyven.parser.elements_parser import ElementsParser
 
 class ToolsParser(ElementsParser):
 	TYPES = ['msbuild', 'cmake', 'makefile', 'command']
-	SCOPES = ['preprocess', 'build']
+	SCOPES = ['preprocess', 'build', 'postprocess']
 	
 	def __init__(self, query):
 		super(ToolsParser, self).__init__(query)

@@ -1,5 +1,4 @@
-import os, shutil, time
-from lxml import etree
+import os
 
 import pyven.constants
 from pyven.logging.logger import Logger
@@ -8,8 +7,6 @@ from pyven.reporting.html_utils import HTMLUtils
 
 from pyven.repositories.directory import DirectoryRepo
 from pyven.repositories.workspace import Workspace
-from pyven.reporting.reportable import Reportable
-from pyven.processing.processible import Processible
 from pyven.processing.tests.test import Test
 
 from pyven.reporting.content.platform import Platform
@@ -23,6 +20,7 @@ from pyven.steps.step import Step
 from pyven.steps.configure import Configure
 from pyven.steps.preprocess import Preprocess
 from pyven.steps.build import Build
+from pyven.steps.postprocess import Postprocess
 from pyven.steps.artifacts_checks import ArtifactsChecks
 from pyven.steps.unit_tests import UnitTests
 from pyven.steps.package import PackageStep
@@ -82,6 +80,7 @@ class Pyven:
 				
 			if step_id > Pyven.STEPS.index('preprocess'):
 				self.steps.append(Build(self.verbose, self.warning_as_error))
+				self.steps.append(Postprocess(self.verbose))
 				self.steps.append(ArtifactsChecks(self.verbose))
 				
 			if step_id > Pyven.STEPS.index('build'):
