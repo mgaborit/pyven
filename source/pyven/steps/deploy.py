@@ -19,7 +19,9 @@ class Deploy(Step):
 	@Step.error_checks
 	def _process(self, project):
 		ok = True
-		repositories = [r for r in project.repositories.values() if (not r.release or (r.release and self.release)) and r.name != Step.WORKSPACE.name]
+		repositories = [r for r in project.repositories.values() if (not r.release or (r.release and self.release))\
+																	and r.name != Step.WORKSPACE.name\
+																	and r.name != Step.LOCAL_REPO.name]
 		for repo in repositories:
 			if not repo.is_reachable():
 				msg = 'Repository ' + repo.name + ' --> unreachable for deployment'
