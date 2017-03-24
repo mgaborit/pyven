@@ -29,6 +29,9 @@ class MSBuildTool(Tool):
 			return self.report
 		return 'MSBuild'
 		
+	def summary(self):
+		return self.title() + ' : ' + os.path.basename(self.project)
+	
 	def properties(self):
 		properties = []
 		properties.append(Property(name='Project', value=os.path.basename(self.project)))

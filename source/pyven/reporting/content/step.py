@@ -11,7 +11,7 @@ from pyven.reporting.content.summary import Summary
 class StepListing(Listing):
 
 	def __init__(self, title, status, listings, enable_summary=False):
-		super(StepListing, self).__init__(title=title, status=status, properties=None, lines=None, listings=listings)
+		super(StepListing, self).__init__(title=title, status=status, properties=None, lines=None, listings=listings, summary=None)
 		self.enable_summary = enable_summary
 		self.div_style = Style.get().step['div_style']
 
