@@ -31,8 +31,12 @@ class Reportable(object):
 		return ReportableListing(title=Title(self.title()),\
 								status=self.report_status(),\
 								properties=Properties(self.properties()),\
-								lines=content_lines)
-		
+								lines=content_lines,\
+								summary=self.summary())
+
+	def summary(self):
+		return self.title()
+	
 	def title(self):
 		raise NotImplementedError
 		

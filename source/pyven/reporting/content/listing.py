@@ -10,7 +10,7 @@ from pyven.reporting.content.title import Title
 class Listing(Content):
 	TEMPLATE = os.path.join(Content.TEMPLATE_DIR, 'listing-template.html')
 
-	def __init__(self, title, status, properties=None, lines=None, listings=None):
+	def __init__(self, title, status, properties=None, lines=None, listings=None, summary=None):
 		super(Listing, self).__init__()
 		self.title = title
 		self.status = status
@@ -19,7 +19,10 @@ class Listing(Content):
 		self.listings = listings
 		self.div_style = Style.get().listing['div_style']
 		self.status_style = Style.get().status[self.status.status.lower()]
-
+		self.summary = summary
+		if self.summary is None:
+			self.summary = self.title.title
+		
 	def write(self):
 		Listing.generate_template()
 		return HTMLUtils.target(self.write_listing(), self.href())

@@ -11,7 +11,7 @@ from pyven.reporting.content.summary import Summary
 class Platform(Listing):
 
 	def __init__(self, title, status, listings):
-		super(Platform, self).__init__(title=title, status=status, properties=None, lines=None, listings=listings)
+		super(Platform, self).__init__(title=title, status=status, properties=None, lines=None, listings=listings, summary=None)
 		self.div_style = Style.get().platform['div_style']
 
 	def write_listing(self):

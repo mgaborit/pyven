@@ -8,8 +8,8 @@ from pyven.reporting.content.listing import Listing
 
 class ReportableListing(Listing):
 
-	def __init__(self, title, status, properties, lines):
-		super(ReportableListing, self).__init__(title, status, properties, lines, listings=None)
+	def __init__(self, title, status, properties, lines, summary):
+		super(ReportableListing, self).__init__(title, status, properties, lines, listings=None, summary=summary)
 		self.div_style = Style.get().reportable['div_style']
 
 	def write_listing(self):

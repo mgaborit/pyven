@@ -22,7 +22,7 @@ class Summary(Listing):
 		if self.listings is not None:
 			for listing in self.listings:
 				if listing.status.status == pyven.constants.STATUS[1]:
-					failures.append(Line([HTMLUtils.link(listing.title.title, listing.href())]))
+					failures.append(Line([HTMLUtils.link(listing.summary, listing.href())]))
 		lines = Lines(failures)
 		return template.substitute(TITLE=self.title.write(),\
 									STATUS='',\
