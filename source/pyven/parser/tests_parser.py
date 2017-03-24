@@ -35,4 +35,5 @@ class TestsParser(ElementsParser):
 		members['filename'] = filename
 		members['arguments'] = arguments
 		members['format'] = format
+		members['report'] = node.get('report')
 		return members

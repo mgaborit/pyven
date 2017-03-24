@@ -33,7 +33,7 @@ class MakefileParser(ToolsParser):
 				e = ParserException('')
 				e.args = tuple(errors)
 				raise e
-			objects.append(MakefileTool(members['type'], members['name'], members['scope'], workspace, rules, options))
+			objects.append(MakefileTool(members['type'], members['report'], members['name'], members['scope'], workspace, rules, options))
 		return objects
 		
 		

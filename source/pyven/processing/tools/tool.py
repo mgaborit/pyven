@@ -11,9 +11,9 @@ class Tool(Processible, Reportable):
 	TYPES = ['cmake', 'msbuild', 'makefile']
 	SCOPES = ['preprocess', 'build']
 	
-	def __init__(self, type, name, scope):
+	def __init__(self, type, report, name, scope):
 		Processible.__init__(self)
-		Reportable.__init__(self)
+		Reportable.__init__(self, report)
 		self.type = type
 		self.name = name
 		self.scope = scope

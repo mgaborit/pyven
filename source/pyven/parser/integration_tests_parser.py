@@ -27,4 +27,4 @@ class IntegrationTestsParser(TestsParser):
 			e = ParserException('')
 			e.args = tuple(errors)
 			raise e
-		return IntegrationTest(members['type'], members['path'], members['filename'], members['arguments'], members['format'], package)
+		return IntegrationTest(members['type'], members['report'], members['path'], members['filename'], members['arguments'], members['format'], package)

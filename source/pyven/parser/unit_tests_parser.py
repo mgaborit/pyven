@@ -13,4 +13,4 @@ class UnitTestsParser(TestsParser):
 		
 	def _parse(self, node):
 		members = super(UnitTestsParser, self)._parse(node)
-		return UnitTest(members['type'], members['path'], members['filename'], members['arguments'], members['format'])
+		return UnitTest(members['type'], members['report'], members['path'], members['filename'], members['arguments'], members['format'])

@@ -13,8 +13,8 @@ from pyven.logging.logger import Logger
 
 class CommandTool(Tool):
 
-	def __init__(self, type, name, scope, command, directory):
-		super(CommandTool, self).__init__(type, name, scope)
+	def __init__(self, type, report, name, scope, command, directory):
+		super(CommandTool, self).__init__(type, report, name, scope)
 		self.command = command
 		self.directory = directory
 		self.parser = LineLogsParser(error_patterns=['Error', 'error', 'ERROR', 'Erreur', 'erreur', 'ERREUR'],\
@@ -23,6 +23,8 @@ class CommandTool(Tool):
 									warning_exceptions=[])
 	
 	def title(self):
+		if self.report is not None:
+			return self.report
 		return 'Command line'
 		
 	def properties(self):

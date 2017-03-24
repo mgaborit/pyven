@@ -13,9 +13,9 @@ from pyven.logging.logger import Logger
 class Test(Processible, Reportable):
 	AVAILABLE_TYPES = ['unit', 'integration', 'valgrind']
 
-	def __init__(self, type, path, filename, arguments, format):
+	def __init__(self, type, report, path, filename, arguments, format):
 		Processible.__init__(self)
-		Reportable.__init__(self)
+		Reportable.__init__(self, report)
 		self.type = type
 		self.path = path
 		self.filename = filename
@@ -23,10 +23,13 @@ class Test(Processible, Reportable):
 		self.parser = XMLParser(format)
 	
 	def title(self):
-		return self.type + ' test : ' + os.path.join(self.path, self.filename)
+		if self.report is not None:
+			return self.report
+		return self.type + ' test'
 		
 	def properties(self):
 		properties = []
+		properties.append(Property(name='Executable', value=os.path.join(self.path, self.filename)))
 		properties.append(Property(name='Duration', value=str(self.duration) + ' seconds'))
 		return properties
 	

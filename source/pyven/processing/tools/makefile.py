@@ -13,8 +13,8 @@ from pyven.logging.logger import Logger
 
 class MakefileTool(Tool):
 
-	def __init__(self, type, name, scope, workspace, rules, options):
-		super(MakefileTool, self).__init__(type, name, scope)
+	def __init__(self, type, report, name, scope, workspace, rules, options):
+		super(MakefileTool, self).__init__(type, report, name, scope)
 		self.workspace = workspace
 		self.rules = rules
 		self.options = options
@@ -24,6 +24,8 @@ class MakefileTool(Tool):
 									warning_exceptions=[])
 		
 	def title(self):
+		if self.report is not None:
+			return self.report
 		return 'Makefile ' + self.name
 		
 	def properties(self):

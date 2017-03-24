@@ -39,7 +39,7 @@ class MSBuildParser(ToolsParser):
 				e.args = tuple(errors)
 				raise e
 			for project in projects:
-				objects.append(MSBuildTool(members['type'], members['name'], members['scope'], configuration, architecture, project, options))
+				objects.append(MSBuildTool(members['type'], members['report'], members['name'], members['scope'], configuration, architecture, project, options))
 		return objects
 		
 		
