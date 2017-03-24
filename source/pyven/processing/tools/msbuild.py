@@ -54,7 +54,7 @@ class MSBuildTool(Tool):
 		call = ['msbuild.exe', project]
 		call.append('/consoleLoggerParameters:NoSummary;ErrorsOnly;WarningsOnly')
 		if project.endswith('.sln'):
-			call.append('/m')
+			call.append('/maxcpucount:2')
 			call.append('/property:Configuration='+self.configuration)
 			call.append('/property:Platform='+self.architecture)
 			if clean:
