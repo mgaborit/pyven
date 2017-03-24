@@ -13,8 +13,8 @@ from pyven.logging.logger import Logger
 
 class MSBuildTool(Tool):
 
-	def __init__(self, type, name, scope, configuration, architecture, project, options):
-		super(MSBuildTool, self).__init__(type, name, scope)
+	def __init__(self, type, report, name, scope, configuration, architecture, project, options):
+		super(MSBuildTool, self).__init__(type, report, name, scope)
 		self.configuration = configuration
 		self.architecture = architecture
 		self.project = project
@@ -25,10 +25,13 @@ class MSBuildTool(Tool):
 									warning_exceptions=[])
 		
 	def title(self):
-		return 'MSBuild ' + os.path.basename(self.project)
+		if self.report is not None:
+			return self.report
+		return 'MSBuild'
 		
 	def properties(self):
 		properties = []
+		properties.append(Property(name='Project', value=os.path.basename(self.project)))
 		properties.append(Property(name='Configuration', value=self.configuration))
 		properties.append(Property(name='Platform', value=self.architecture))
 		properties.append(Property(name='Duration', value=str(self.duration) + ' seconds'))

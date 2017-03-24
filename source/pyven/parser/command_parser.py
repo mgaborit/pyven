@@ -26,7 +26,7 @@ class CommandParser(ToolsParser):
 				e = ParserException('')
 				e.args = tuple(errors)
 				raise e
-			objects.append(CommandTool(members['type'], members['name'], members['scope'], command, directory))
+			objects.append(CommandTool(members['type'], members['report'], members['name'], members['scope'], command, directory))
 		return objects
 		
 		

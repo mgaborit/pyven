@@ -31,7 +31,7 @@ class CMakeParser(ToolsParser):
 				e = ParserException('')
 				e.args = tuple(errors)
 				raise e
-			objects.append(CMakeTool(members['type'], members['name'], members['scope'], generator, output_path, definitions))
+			objects.append(CMakeTool(members['type'], members['report'], members['name'], members['scope'], generator, output_path, definitions))
 		return objects
 		
 		

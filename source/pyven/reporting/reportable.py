@@ -11,7 +11,8 @@ from pyven.reporting.content.unknown import Unknown
 
 class Reportable(object):
 	
-	def __init__(self):
+	def __init__(self, report=None):
+		self.report = report
 		self.status = pyven.constants.STATUS[2]
 		self.errors = []
 		self.warnings = []

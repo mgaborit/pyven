@@ -13,8 +13,8 @@ from pyven.logging.logger import Logger
 
 class CMakeTool(Tool):
 
-	def __init__(self, type, name, scope, generator, output_path, definitions):
-		super(CMakeTool, self).__init__(type, name, scope)
+	def __init__(self, type, report, name, scope, generator, output_path, definitions):
+		super(CMakeTool, self).__init__(type, report, name, scope)
 		self.target_generator = generator
 		self.output_path = output_path
 		self.definitions = definitions
@@ -24,6 +24,8 @@ class CMakeTool(Tool):
 									end_warning_patterns=[])
 	
 	def title(self):
+		if self.report is not None:
+			return self.report
 		return 'CMake ' + self.name
 		
 	def properties(self):

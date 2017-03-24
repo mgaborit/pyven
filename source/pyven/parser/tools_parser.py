@@ -28,6 +28,7 @@ class ToolsParser(ElementsParser):
 		members['type'] = type
 		members['name'] = name
 		members['scope'] = scope
+		members['report'] = node.get('report')
 		if len(errors) > 0:
 			e = ParserException('')
 			e.args = tuple(errors)
