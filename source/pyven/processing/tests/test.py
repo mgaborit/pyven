@@ -77,7 +77,7 @@ class Test(Processible, Reportable):
 				if os.path.isfile(os.path.join(self.path, self._format_report_name())):
 					self.errors = self.parser.errors
 				else:
-					msg = 'Could not find XML test report = '+os.path.join(self.path, self._format_report_name())
+					msg = 'Could not find XML report --> '+os.path.join(self.path, self._format_report_name())
 					self.errors.append([msg])
 					Logger.get().error(msg)
 				Logger.get().error('Test failed : ' + self.filename)

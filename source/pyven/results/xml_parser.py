@@ -1,3 +1,4 @@
+import os
 from lxml import etree
 
 from pyven.results.results_parser import ResultsParser
@@ -12,12 +13,16 @@ class XMLParser(ResultsParser):
 	
 	def parse(self, file):
 		result = []
-		tree = etree.parse(file)
-		doc_element = tree.getroot()
-		if self.format == 'cppunit':
-			result = self._parse_xml_cppunit(doc_element)
+		if os.path.isfile(file):
+			tree = etree.parse(file)
+			doc_element = tree.getroot()
+			if self.format == 'cppunit':
+				result = self._parse_xml_cppunit(doc_element)
+			else:
+				raise PyvenException('Invalid XML format : ' + self.format)
 		else:
-			raise PyvenException('Invalid XML format : ' + self.format)
+			msg = ['XML report not found']
+			self.errors.append(msg)
 		return result
 		
 	def _parse_xml_cppunit(self, node):
