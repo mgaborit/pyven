@@ -1,7 +1,7 @@
 import zipfile, os
 import pyven.constants
 
-def main():
+def zip_pvn():
 	zf = zipfile.ZipFile(os.path.join(os.environ.get('PVN_HOME'), 'pvn_' + pyven.constants.VERSION + '.zip'), mode='w')
 	zf.write('__main__.py')
 	zf.write('pyven/__init__.py')
@@ -117,4 +117,4 @@ def main():
 	zf.write('pyven/results/xml_parser.py')
 
 if __name__ == '__main__':
-	main()
+	zip_pvn()
