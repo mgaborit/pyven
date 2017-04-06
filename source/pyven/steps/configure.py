@@ -160,6 +160,17 @@ class Configure(Step):
                 Logger.get().info('Package added --> ' + package.format_name())
                 if not package.publish:
                     Logger.get().info('Package ' + package.format_name() + ' --> publishment disabled')
+        for package in packages:
+            for extension in package.extensions:
+                extension = Configure._replace_constants(extension, project.constants)
+                if extension not in project.packages.keys():
+                    raise PyvenException('Package ' + package.format_name() + ' : Package extension not declared --> ' + extension)
+                elif project.packages[extension].to_retrieve:
+                    raise PyvenException('Package ' + package.format_name() + ' : Cannot extend a package to be retrieved --> ' + extension)
+                else:
+                    package.items.extend(project.packages[extension].items)
+                    Logger.get().info('Package ' + package.format_name() + ' : Package extension added --> ' + extension)
+                
         
     @_configure_error_checks
     def _configure_preprocessors(self, project, parser):
