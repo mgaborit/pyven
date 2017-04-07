@@ -28,19 +28,19 @@ class PymParser(object):
 		self.repo_config = 'repositories.xml'
 		self.tree = None
 		self.checker = Checker('Parser')
-		self.constants_parser = ConstantsParser('/pyven/constants/constant')
-		self.directory_repo_parser = DirectoryRepoParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/repositories/repository')
-		self.artifacts_parser = ArtifactsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/artifacts/artifact')
-		self.packages_parser = PackagesParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/packages/package')
-		self.cmake_parser = CMakeParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
-		self.preprocess_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', 'preprocess')
-		self.build_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', 'build')
-		self.postprocess_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', 'postprocess')
-		self.msbuild_parser = MSBuildParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
-		self.makefile_parser = MakefileParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools')
-		self.unit_tests_parser = UnitTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="unit"]')
-		self.valgrind_tests_parser = ValgrindTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="valgrind"]')
-		self.integration_tests_parser = IntegrationTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="integration"]')
+		self.constants_parser = ConstantsParser('/pyven/constants/constant', os.path.dirname(self.pym))
+		self.directory_repo_parser = DirectoryRepoParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/repositories/repository', os.path.dirname(self.pym))
+		self.artifacts_parser = ArtifactsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/artifacts/artifact', os.path.dirname(self.pym))
+		self.packages_parser = PackagesParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/packages/package', os.path.dirname(self.pym))
+		self.cmake_parser = CMakeParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym))
+		self.preprocess_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym), 'preprocess')
+		self.build_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym), 'build')
+		self.postprocess_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym), 'postprocess')
+		self.msbuild_parser = MSBuildParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym))
+		self.makefile_parser = MakefileParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym))
+		self.unit_tests_parser = UnitTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="unit"]', os.path.dirname(self.pym))
+		self.valgrind_tests_parser = ValgrindTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="valgrind"]', os.path.dirname(self.pym))
+		self.integration_tests_parser = IntegrationTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="integration"]', os.path.dirname(self.pym))
 	
 	@staticmethod
 	def check_version(tree, file):

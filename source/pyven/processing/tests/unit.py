@@ -1,16 +1,12 @@
-import subprocess, os, time
-
-from pyven.exceptions.exception import PyvenException
+import os
 
 from pyven.processing.tests.test import Test
 
-from pyven.logging.logger import Logger
-
 class UnitTest(Test):
 
-	def __init__(self, type, report, path, filename, arguments, format):
-		super(UnitTest,self).__init__(type, report, path, filename, arguments, format)
+    def __init__(self, cwd, type, report, path, filename, arguments, format):
+        super(UnitTest,self).__init__(cwd, type, report, path, filename, arguments, format)
 
-	def report_identifiers(self):
-		return ['Unit', 'test', os.path.join(self.path, self.filename)]
-	
+    def report_identifiers(self):
+        return ['Unit', 'test', os.path.join(self.cwd, self.filename)]
+    
