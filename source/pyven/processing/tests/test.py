@@ -11,8 +11,6 @@ from pyven.results.xml_parser import XMLParser
 from pyven.logging.logger import Logger
 
 class Test(Processible, Reportable):
-    AVAILABLE_TYPES = ['unit', 'integration', 'valgrind']
-
     def __init__(self, cwd, type, report, path, filename, arguments, format):
         Processible.__init__(self, cwd)
         Reportable.__init__(self, report)

@@ -108,7 +108,7 @@ class MSBuildTool(Tool):
 
     def clean(self, verbose=False):
         Logger.get().info('Cleaning : ' + self.type + ':' + self.name)
-        if os.path.isfile(self.project):
+        if os.path.isfile(os.path.join(self.cwd, self.project)):
             self.duration, out, err, returncode = self._call_command(self._format_call(self.project, clean=True))
             
             if verbose:

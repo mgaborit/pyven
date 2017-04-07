@@ -1,12 +1,10 @@
 import time
-from threading import Thread
 
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
 from pyven.logging.logger import Logger
 from pyven.reporting.content.step import StepListing
-from pyven.utils.parallelizer import Parallelizer
 
 class Build(Step):
     def __init__(self, verbose, warning_as_error=False, nb_threads=1):
@@ -16,17 +14,10 @@ class Build(Step):
         self.warning_as_error = warning_as_error
         self.nb_threads = nb_threads
 
-    @Step.step
     def process(self):
-        self.checker.status = Step.STATUS[2]
-        threads = []
-        for project in Step.PROJECTS:
-            threads.append(Thread(target=self._process, args=(project,)))
-        parallelizer = Parallelizer(threads, self.nb_threads)
-        parallelizer.run()
-        return self.status not in Step.STATUS[1:]
+        return self._process_parallel()
     
-    @Step.error_checks_abs_path
+    @Step.error_checks
     def _process(self, project):
         Logger.get().info('Starting ' + self.name)
         ok = True

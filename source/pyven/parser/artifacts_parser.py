@@ -1,3 +1,5 @@
+import os
+
 from pyven.parser.items_parser import ItemsParser
 from pyven.exceptions.parser_exception import ParserException
 from pyven.items.artifact import Artifact
@@ -14,6 +16,8 @@ class ArtifactsParser(ItemsParser):
             members['file'] = node.text
             if members['file'] is None:
                 raise ParserException('Artifact ' + members['company'] + ':' + members['name'] + ':' + members['config'] + ':' + members['version'] + ' --> No repository nor filepath specified')
+            else:
+                members['file'] = os.path.join(self.path, members['file'])
         return Artifact(members['company'],\
                         members['name'],\
                         members['config'],\
