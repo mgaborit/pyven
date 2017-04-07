@@ -1,4 +1,6 @@
 import os, time
+from threading import Thread
+
 from pyven.logging.logger import Logger
 
 import pyven.constants
@@ -6,6 +8,8 @@ from pyven.reporting.content.success import Success
 from pyven.reporting.content.failure import Failure
 from pyven.reporting.content.unknown import Unknown
 from pyven.reporting.content.title import Title
+
+from pyven.utils.parallelizer import Parallelizer
 
 from pyven.exceptions.exception import PyvenException
 
@@ -48,49 +52,13 @@ class Step(object):
             Logger.set_format(project)
             try:
                 try:
-                    if project.path != '.':
-                        if not os.path.isdir(project.path):
-                            raise PyvenException('Subproject path does not exist : ' + project.path)
-                        Logger.get().info('Entering directory')
-                        os.chdir(project.path)
-                        Logger.set_format(project)
-                    try:
-                        tic = time.time()
-                        ok = function(self, project)
-                        toc = time.time()
-                        Logger.get().info('Step time : ' + str(round(toc - tic, 3)) + ' seconds')
-                    finally:
-                        if project.path != '.':
-                            for dir in project.path.split(os.sep):
-                                os.chdir('..')
-                            Logger.get().info('Leaving directory')
-                except PyvenException as e:
-                    self.checker.errors.append(e.args)
-                    ok = False
-            finally:
-                Logger.set_format()
-            return ok
-        return _intern
-    
-    def error_checks_abs_path(function):
-        def _intern(self, project):
-            ok = True
-            Logger.set_format(project)
-            try:
-                try:
                     if project.path != os.getcwd():
                         if not os.path.isdir(project.path):
                             raise PyvenException('Subproject path does not exist : ' + project.path)
-                        Logger.get().info('Entering directory')
-                        Logger.set_format(project)
-                    try:
-                        tic = time.time()
-                        ok = function(self, project)
-                        toc = time.time()
-                        Logger.get().info('Step time : ' + str(round(toc - tic, 3)) + ' seconds')
-                    finally:
-                        if project.path != os.getcwd():
-                            Logger.get().info('Leaving directory')
+                    tic = time.time()
+                    ok = function(self, project)
+                    toc = time.time()
+                    Logger.get().info('Step time : ' + str(round(toc - tic, 3)) + ' seconds')
                 except PyvenException as e:
                     self.checker.errors.append(e.args)
                     ok = False
@@ -100,7 +68,17 @@ class Step(object):
         return _intern
     
     @step
-    def process(self):
+    def _process_parallel(self):
+        self.checker.status = Step.STATUS[2]
+        threads = []
+        for project in Step.PROJECTS:
+            threads.append(Thread(target=self._process, args=(project,)))
+        parallelizer = Parallelizer(threads, self.nb_threads)
+        parallelizer.run()
+        return self.status not in Step.STATUS[1:]
+    
+    @step
+    def _process_sequential(self):
         ok = True
         self.checker.status = Step.STATUS[2]
         for project in Step.PROJECTS:
@@ -108,6 +86,9 @@ class Step(object):
                 ok = False
         return ok
     
+    def process(self):
+        raise NotImplementedError('Step process method not implemented')
+        
     def report_status(self):
         if self.status == pyven.constants.STATUS[0]:
             return Success()

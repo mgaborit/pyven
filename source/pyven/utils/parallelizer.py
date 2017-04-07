@@ -1,4 +1,3 @@
-import time
 class Parallelizer(object):
     
     def __init__(self, threads=[], max_concurrent=1):

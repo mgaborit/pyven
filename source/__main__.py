@@ -17,7 +17,7 @@ def main(args):
     parser.add_argument('--custom-pym', '-cp', dest='pym', action='store', type=str, default='pym.xml', help='pym file name')
     parser.add_argument('--release', '-r', action='store_true', help='enable deployment to release repositories')
     parser.add_argument('--report-style', '-rs', dest='report_style', action='store', type=str, default='default', help='Sets the HTML report style')
-    parser.add_argument('--multithread', '-m', dest='nb_threads', action='store', type=int, default=1, help='Number threads for parallel build')
+    parser.add_argument('--multithread', '-m', dest='nb_threads', action='store', type=int, default=1, help='Number of threads for parallel build')
     parser.add_argument('step', choices=Pyven.STEPS + Pyven.UTILS, help='pyven step to be achieved')
     parser.add_argument('path', nargs='?', help='path to the delivery directory (used with "deliver" step only)')
     args = parser.parse_args()

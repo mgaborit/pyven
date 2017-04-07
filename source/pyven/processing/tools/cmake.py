@@ -67,7 +67,7 @@ class CMakeTool(Tool):
     
     def clean(self, verbose=False):
         Logger.get().info('Cleaning : ' + self.type + ':' + self.name)
-        if os.path.isdir(self.output_path):
-            shutil.rmtree(self.output_path)
+        if os.path.isdir(os.path.join(self.cwd, self.output_path)):
+            shutil.rmtree(os.path.join(self.cwd, self.output_path))
         return True
         
