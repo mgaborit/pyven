@@ -4,8 +4,8 @@ from pyven.processing.tools.makefile import MakefileTool
 
 class MakefileParser(ToolsParser):
 	
-	def __init__(self, query):
-		super(MakefileParser, self).__init__(query)
+	def __init__(self, query, path):
+		super(MakefileParser, self).__init__(query, path)
 	
 	def _parse(self, node):
 		objects = []
@@ -33,7 +33,7 @@ class MakefileParser(ToolsParser):
 				e = ParserException('')
 				e.args = tuple(errors)
 				raise e
-			objects.append(MakefileTool(members['type'], members['report'], members['name'], members['scope'], workspace, rules, options))
+			objects.append(MakefileTool(self.path, members['type'], members['report'], members['name'], members['scope'], workspace, rules, options))
 		return objects
 		
 		

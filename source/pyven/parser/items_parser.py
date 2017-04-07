@@ -3,8 +3,8 @@ from pyven.exceptions.parser_exception import ParserException
 
 class ItemsParser(ElementsParser):
 	
-	def __init__(self, query):
-		super(ItemsParser, self).__init__(query)
+	def __init__(self, query, path):
+		super(ItemsParser, self).__init__(query, path)
 	
 	def _parse(self, node):
 		errors = []

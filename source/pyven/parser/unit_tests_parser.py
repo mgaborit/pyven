@@ -8,9 +8,9 @@ from pyven.processing.tests.unit import UnitTest
 class UnitTestsParser(TestsParser):
 	TYPES = ['file']
 	
-	def __init__(self, query):
-		super(UnitTestsParser, self).__init__(query)
+	def __init__(self, query, path):
+		super(UnitTestsParser, self).__init__(query, path)
 		
 	def _parse(self, node):
 		members = super(UnitTestsParser, self)._parse(node)
-		return UnitTest(members['type'], members['report'], members['path'], members['filename'], members['arguments'], members['format'])
+		return UnitTest(self.path, members['type'], members['report'], members['path'], members['filename'], members['arguments'], members['format'])

@@ -20,10 +20,6 @@ class Configure(Step):
     def project_title(self):
         return self.parsers[0].parse_project_title()
         
-    @Step.step
-    def process(self):
-        return self._process(Project('.'))
-    
     def content(self):
         listings = []
         if self.checker.enabled():
@@ -32,10 +28,14 @@ class Configure(Step):
         
     def report(self):
         return self.status == Step.STATUS[1]
-        
+       
+    @Step.step
+    def process(self):
+        return self._process(Project(os.getcwd()))
+     
     @Step.error_checks
     def _process(self, project):
-        parser = PymParser(self.pym)
+        parser = PymParser(os.path.join(project.path, self.pym))
         self.parsers.append(parser)
         parser.parse_pym()
         for k, v in parser.parse_constants().items():
@@ -77,14 +77,10 @@ class Configure(Step):
     def _configure_projects(self, project, parser):
         directories = parser.parse_projects()
         for directory in directories:
-            if not os.path.isdir(directory):
+            if not os.path.isdir(os.path.join(project.path, directory)):
                 raise PyvenException('Subproject directory does not exist : ' + directory)
-            elif parser.pym not in os.listdir(directory):
-                raise PyvenException('No ' + parser.pym + ' file found at ' + directory)
             else:
-                full_path =  directory
-                if project.path != '.':
-                  full_path = os.path.join(project.path, directory)
+                full_path = os.path.join(project.path, directory)
                 subproject = Project(full_path)
                 subproject.constants = project.constants.copy()
                 if not self._process(subproject):

@@ -4,8 +4,8 @@ from pyven.items.package import Package
 
 class PackagesParser(ItemsParser):
     
-    def __init__(self, query):
-        super(PackagesParser, self).__init__(query)
+    def __init__(self, query, path):
+        super(PackagesParser, self).__init__(query, path)
         
     def _parse(self, node):
         members = super(PackagesParser, self)._parse(node)

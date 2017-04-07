@@ -52,13 +52,14 @@ class Pyven:
 	STEPS = ['deliver', 'clean', 'retrieve', 'configure', 'preprocess', 'build', 'test', 'package', 'verify', 'install', 'deploy']
 	UTILS = ['parse', 'aggregate']
 	
-	def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path='', arguments={}, nb_lines=10):
+	def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path='', arguments={}, nb_lines=10, nb_threads=1):
 		self.pym = pym
 		self.path = path
 		self.arguments = arguments
 		self.step = step
 		self.verbose = verbose
 		self.nb_lines = nb_lines
+		self.nb_threads = nb_threads
 		self.status = pyven.constants.STATUS[2]
 		if self.verbose:
 			Logger.get().info('Verbose mode enabled')
@@ -76,21 +77,21 @@ class Pyven:
 			self.steps.append(self.configure)
 			step_id = Pyven.STEPS.index(step)
 			if step_id > Pyven.STEPS.index('configure'):
-				self.steps.append(Preprocess(self.verbose))
+				self.steps.append(Preprocess(self.verbose, self.nb_threads))
 				
 			if step_id > Pyven.STEPS.index('preprocess'):
-				self.steps.append(Build(self.verbose, self.warning_as_error))
-				self.steps.append(Postprocess(self.verbose))
-				self.steps.append(ArtifactsChecks(self.verbose))
+				self.steps.append(Build(self.verbose, self.warning_as_error, self.nb_threads))
+				self.steps.append(Postprocess(self.verbose, self.nb_threads))
+				self.steps.append(ArtifactsChecks(self.verbose, self.nb_threads))
 				
 			if step_id > Pyven.STEPS.index('build'):
-				self.steps.append(UnitTests(self.verbose))
+				self.steps.append(UnitTests(self.verbose, self.nb_threads))
 			
 			if step_id > Pyven.STEPS.index('test'):
 				self.steps.append(PackageStep(self.verbose))
 			
 			if step_id > Pyven.STEPS.index('package'):
-				self.steps.append(IntegrationTests(self.verbose))
+				self.steps.append(IntegrationTests(self.verbose, self.nb_threads))
 			
 			if step_id > Pyven.STEPS.index('verify'):
 				if step_id > Pyven.STEPS.index('install'):
@@ -105,7 +106,7 @@ class Pyven:
 					self.steps.append(Deliver(self.verbose, arguments['path']))
 					
 				elif step_id == Pyven.STEPS.index('clean'):
-					self.steps.append(Clean(self.verbose))
+					self.steps.append(Clean(self.verbose, self.nb_threads))
 				
 				elif step_id == Pyven.STEPS.index('retrieve'):
 					self.steps.append(Retrieve(self.verbose))

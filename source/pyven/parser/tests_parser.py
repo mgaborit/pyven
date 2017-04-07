@@ -7,8 +7,8 @@ from pyven.parser.elements_parser import ElementsParser
 class TestsParser(ElementsParser):
 	TYPES = ['unit', 'integration', 'valgrind']
 	
-	def __init__(self, query):
-		super(TestsParser, self).__init__(query)
+	def __init__(self, query, path):
+		super(TestsParser, self).__init__(query, path)
 	
 	def _parse(self, node):
 		errors = []
