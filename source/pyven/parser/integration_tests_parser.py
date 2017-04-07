@@ -8,8 +8,8 @@ from pyven.processing.tests.integration import IntegrationTest
 class IntegrationTestsParser(TestsParser):
 	TYPES = ['file']
 	
-	def __init__(self, query):
-		super(IntegrationTestsParser, self).__init__(query)
+	def __init__(self, query, path):
+		super(IntegrationTestsParser, self).__init__(query, path)
 		
 	def _parse(self, node):
 		members = super(IntegrationTestsParser, self)._parse(node)
@@ -27,4 +27,4 @@ class IntegrationTestsParser(TestsParser):
 			e = ParserException('')
 			e.args = tuple(errors)
 			raise e
-		return IntegrationTest(members['type'], members['report'], members['path'], members['filename'], members['arguments'], members['format'], package)
+		return IntegrationTest(self.path, members['type'], members['report'], members['path'], members['filename'], members['arguments'], members['format'], package)

@@ -5,8 +5,8 @@ from pyven.parser.elements_parser import ElementsParser
 
 class ConstantsParser(ElementsParser):
 
-	def __init__(self, query):
-		super(ConstantsParser, self).__init__(query)
+	def __init__(self, query, path):
+		super(ConstantsParser, self).__init__(query, path)
 		
 	def parse(self, tree):
 		constants = {}

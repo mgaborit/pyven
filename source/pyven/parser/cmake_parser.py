@@ -4,8 +4,8 @@ from pyven.processing.tools.cmake import CMakeTool
 
 class CMakeParser(ToolsParser):
 	
-	def __init__(self, query):
-		super(CMakeParser, self).__init__(query)
+	def __init__(self, query, path):
+		super(CMakeParser, self).__init__(query, path)
 	
 	def _parse(self, node):
 		objects = []
@@ -31,7 +31,7 @@ class CMakeParser(ToolsParser):
 				e = ParserException('')
 				e.args = tuple(errors)
 				raise e
-			objects.append(CMakeTool(members['type'], members['report'], members['name'], members['scope'], generator, output_path, definitions))
+			objects.append(CMakeTool(self.path, members['type'], members['report'], members['name'], members['scope'], generator, output_path, definitions))
 		return objects
 		
 		

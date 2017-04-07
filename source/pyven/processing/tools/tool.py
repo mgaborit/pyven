@@ -3,8 +3,8 @@ from pyven.reporting.reportable import Reportable
 
 class Tool(Processible, Reportable):
     
-    def __init__(self, type, report, name, scope):
-        Processible.__init__(self)
+    def __init__(self, cwd, type, report, name, scope):
+        Processible.__init__(self, cwd)
         Reportable.__init__(self, report)
         self.type = type
         self.name = name

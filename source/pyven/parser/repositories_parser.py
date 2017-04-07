@@ -1,13 +1,11 @@
-from lxml import etree
-
 from pyven.parser.elements_parser import ElementsParser
 from pyven.exceptions.parser_exception import ParserException
 
 class RepositoriesParser(ElementsParser):
 	TYPES = ['file']
 	
-	def __init__(self, query, type_filter):
-		super(RepositoriesParser, self).__init__(query)
+	def __init__(self, query, path, type_filter):
+		super(RepositoriesParser, self).__init__(query, path)
 		self.type_filter = type_filter
 		self.available_repositories = {}
 		

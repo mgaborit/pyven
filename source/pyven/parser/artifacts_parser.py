@@ -4,8 +4,8 @@ from pyven.items.artifact import Artifact
 
 class ArtifactsParser(ItemsParser):
     
-    def __init__(self, query):
-        super(ArtifactsParser, self).__init__(query)
+    def __init__(self, query, path):
+        super(ArtifactsParser, self).__init__(query, path)
         
     def _parse(self, node):
         members = super(ArtifactsParser, self)._parse(node)

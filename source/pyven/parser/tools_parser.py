@@ -6,8 +6,8 @@ class ToolsParser(ElementsParser):
 	TYPES = ['msbuild', 'cmake', 'makefile', 'command']
 	SCOPES = ['preprocess', 'build', 'postprocess']
 	
-	def __init__(self, query):
-		super(ToolsParser, self).__init__(query)
+	def __init__(self, query, path):
+		super(ToolsParser, self).__init__(query, path)
 	
 	def _parse(self, node):
 		errors = []
