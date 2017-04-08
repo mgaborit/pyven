@@ -30,7 +30,7 @@ class MakefileTool(Tool):
         properties = []
         properties.append(Property(name='Workspace', value=self.workspace))
         properties.append(Property(name='Rules', value=str(self.rules)))
-        properties.append(Property(name='Duration', value=self.duration + ' seconds'))
+        properties.append(Property(name='Duration', value=str(self.duration) + ' seconds'))
         return properties
     
     def _format_call(self, clean=False):

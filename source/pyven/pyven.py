@@ -60,6 +60,7 @@ class Pyven:
 		self.verbose = verbose
 		self.nb_lines = nb_lines
 		self.nb_threads = nb_threads
+		Logger.get().info('Number of threads : ' + str(self.nb_threads))
 		self.status = pyven.constants.STATUS[2]
 		if self.verbose:
 			Logger.get().info('Verbose mode enabled')
