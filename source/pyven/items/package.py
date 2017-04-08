@@ -1,4 +1,4 @@
-import zipfile, os
+import zipfile, os, glob
 
 from pyven.exceptions.exception import PyvenException
 from pyven.items.item import Item
@@ -8,11 +8,13 @@ from pyven.logging.logger import Logger
 class Package(Item):
     EXTENSION = '.zip'
 
-    def __init__(self, company, name, config, version, repo, to_retrieve, publish, items, delivery, extensions):
+    def __init__(self, company, name, config, version, repo, to_retrieve, publish, items, delivery, extensions, cwd, patterns):
         super(Package, self).__init__(company, name, config, version, repo, to_retrieve, publish)
         self.items = items
         self.delivery = delivery
         self.extensions = extensions
+        self.cwd = cwd
+        self.patterns = patterns
 
     def type(self):
         return 'package'
@@ -35,6 +37,10 @@ class Package(Item):
         if ok:
             zf = zipfile.ZipFile(os.path.join(self.location(repo.url), self.basename()), mode='w')
             try:
+                for pattern in self.patterns:
+                    for file in glob.glob(os.path.join(self.cwd, pattern)):
+                        zf.write(file, os.path.basename(file))
+                        Logger.get().info('Package ' + self.format_name() + ' --> Added file from pattern : ' + os.path.basename(file))
                 for item in self.items:
                     zf.write(os.path.join(item.location(repo.url), item.basename()), item.basename())
                     Logger.get().info('Package ' + self.format_name() + ' --> Added artifact ' + item.format_name())
