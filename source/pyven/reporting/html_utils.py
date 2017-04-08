@@ -1,12 +1,9 @@
 import os, webbrowser, shutil
 from string import Template
 
-from pyven.exceptions.exception import PyvenException
-
 from pyven.reporting.style import Style
 
 import pyven.constants
-from pyven.logging.logger import Logger
 from pyven.utils.utils import str_to_file, file_to_str
 
 class HTMLUtils(object):
@@ -74,7 +71,7 @@ class HTMLUtils(object):
 		title = 'Build report'
 		if 'BUILD_NUMBER' in os.environ:
 			title = 'Jenkins - Build #' + os.environ.get('BUILD_NUMBER')
-		str = template.substitute(STYLE=Style.get().write(), TITLE=title, CONTENT=HTMLUtils.write_body(workspace))
+		str = template.substitute(STYLE=Style.get().write(), TITLE=title, CONTENT=HTMLUtils.write_body(workspace), PVN_VERSION=pyven.constants.VERSION)
 		str_to_file(str, os.path.join(report_dir, HTMLUtils.INDEX))
 	
 	@staticmethod
@@ -121,7 +118,7 @@ class HTMLUtils(object):
 			html_str += HTMLUtils.ltag('meta', {'http-equiv' : 'Content-Type', 'content' : 'text/html; charset=utf-8'})
 			html_str += HTMLUtils.ltag('title')
 			try:
-				html_str += 'Pyven build report'
+				html_str += 'Pyven $PVN_VERSION report'
 			finally:
 				html_str += HTMLUtils.rtag('title')
 			html_str += HTMLUtils.ltag('style', {'type' : 'text/css'})

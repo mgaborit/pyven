@@ -2,11 +2,13 @@ import sys, time, argparse
 
 from pyven.exceptions.exception import PyvenException
 
+import pyven.constants
 from pyven.pyven import Pyven
 from pyven.logging.logger import Logger
 
 def main(args):
     tic = time.time()
+    Logger.get().info('Pyven ' + pyven.constants.VERSION)
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', action='version', version='1.0.0')
@@ -29,17 +31,17 @@ def main(args):
         parser.error('Missing path argument for step ' + args.step)
 
     
-    pyven = Pyven(args.step, args.verbose, args.warning_as_error, args.pym, args.release, arguments={'path' : args.path}, nb_lines=args.nb_lines, nb_threads=args.nb_threads)
+    pvn = Pyven(args.step, args.verbose, args.warning_as_error, args.pym, args.release, arguments={'path' : args.path}, nb_lines=args.nb_lines, nb_threads=args.nb_threads)
     try:
         ok = True
-        if pyven.step == 'aggregate' and not args.display:
-            pyven.report(args.report_style)
+        if pvn.step == 'aggregate' and not args.display:
+            pvn.report(args.report_style)
         
-        if pyven.step == 'parse':
-            ok = pyven.parse()
+        if pvn.step == 'parse':
+            ok = pvn.parse()
         
         else:
-            ok = pyven.process()
+            ok = pvn.process()
         
         if not ok:
             raise PyvenException('Pyven build failed')
@@ -49,10 +51,10 @@ def main(args):
             Logger.get().error(msg)
         sys.exit(1)
     finally:
-        if pyven.step not in ['aggregate']:
-            pyven.report(args.report_style)
+        if pvn.step not in ['aggregate']:
+            pvn.report(args.report_style)
             if args.display:
-                pyven.display()
+                pvn.display()
     
         toc = time.time()
         Logger.get().info('Total process time : ' + str(round(toc - tic, 3)) + ' seconds')
