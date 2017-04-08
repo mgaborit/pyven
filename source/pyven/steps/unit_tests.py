@@ -23,15 +23,11 @@ class UnitTests(Step):
             self.parallelizer.run()
         ok = True
         for project in Step.PROJECTS:
-            for test in project.unit_tests:
+            project.status = pyven.constants.STATUS[0]
+            for test in project.integration_tests:
                 if test.status in pyven.constants.STATUS[1:]:
+                    project.status = pyven.constants.STATUS[1]
                     ok = False
-        if not ok:
-            self.status = Step.STATUS[1]
-            Logger.get().error(self.name + ' errors found')
-        else:
-            self.status = Step.STATUS[0]
-            Logger.get().info(self.name + ' completed')
         return ok
     
     @Step.error_checks

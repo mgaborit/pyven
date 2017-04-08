@@ -1,5 +1,6 @@
 import os
 
+import pyven.constants
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 from pyven.parser.pym_parser import PymParser
@@ -27,7 +28,7 @@ class Configure(Step):
         return StepListing(title=self.title(), status=self.report_status(), listings=listings)
         
     def report(self):
-        return self.status == Step.STATUS[1]
+        return self.status == pyven.constants.STATUS[1]
        
     @Step.step
     def process(self):

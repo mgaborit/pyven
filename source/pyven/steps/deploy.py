@@ -1,4 +1,4 @@
-from pyven.exceptions.exception import PyvenException
+import pyven.constants
 from pyven.exceptions.repository_exception import RepositoryException
 
 from pyven.steps.step import Step
@@ -43,6 +43,12 @@ class Deploy(Step):
                     for msg in e.args:
                         Logger.get().error(msg)
                     raise e
+        if not ok:
+            project.status = pyven.constants.STATUS[1]
+            Logger.get().error(self.name + ' errors found')
+        else:
+            project.status = pyven.constants.STATUS[0]
+            Logger.get().info(self.name + ' completed')
         return ok
         
     def content(self):

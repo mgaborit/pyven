@@ -1,6 +1,4 @@
-import logging
-
-logger = logging.getLogger('global')
+import pyven.constants
 
 class Project:
     
@@ -15,3 +13,4 @@ class Project:
         self.postprocessors = []
         self.unit_tests = []
         self.integration_tests = []
+        self.status = pyven.constants.STATUS[2]

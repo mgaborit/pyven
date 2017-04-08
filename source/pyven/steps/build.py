@@ -1,5 +1,6 @@
 import time
 
+import pyven.constants
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
@@ -29,10 +30,10 @@ class Build(Step):
                 toc = time.time()
                 Logger.get().info('Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
         if not ok:
-            self.status = Step.STATUS[1]
+            project.status = pyven.constants.STATUS[1]
             Logger.get().error(self.name + ' errors found')
         else:
-            self.status = Step.STATUS[0]
+            project.status = pyven.constants.STATUS[0]
             Logger.get().info(self.name + ' completed')
         return ok
     
