@@ -2,7 +2,6 @@ import os
 
 from pyven.exceptions.exception import PyvenException
 
-
 MAJOR = 0
 MINOR = 1
 PATCH = 0
