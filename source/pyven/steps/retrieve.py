@@ -1,5 +1,6 @@
 import os, shutil
 
+import pyven.constants
 from pyven.steps.step import Step
 from pyven.steps.utils import retrieve
 from pyven.checkers.checker import Checker
@@ -28,6 +29,12 @@ class Retrieve(Step):
                             os.makedirs(dir)
                         Logger.get().info('Copying artifact ' + item.format_name() + ' to directory ' + dir)
                         shutil.copy(os.path.join(item.location(Step.WORKSPACE.url), item.basename()), os.path.join(dir, item.basename()))
+        if not ok:
+            project.status = pyven.constants.STATUS[1]
+            Logger.get().error(self.name + ' errors found')
+        else:
+            project.status = pyven.constants.STATUS[0]
+            Logger.get().info(self.name + ' completed')
         return ok
         
     def content(self):

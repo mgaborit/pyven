@@ -1,3 +1,4 @@
+import pyven.constants
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
@@ -32,6 +33,12 @@ class Deliver(Step):
                 else:
                     package.deliver(self.location, Step.WORKSPACE)
                 Logger.get().info('Delivered package : ' + package.format_name())
+        if not ok:
+            project.status = pyven.constants.STATUS[1]
+            Logger.get().error(self.name + ' errors found')
+        else:
+            project.status = pyven.constants.STATUS[0]
+            Logger.get().info(self.name + ' completed')
         return ok
         
     def content(self):

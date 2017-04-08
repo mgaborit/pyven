@@ -1,5 +1,6 @@
 import time
 
+import pyven.constants
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
@@ -28,16 +29,16 @@ class Preprocess(Step):
                 toc = time.time()
                 Logger.get().info('Time for ' + tool.type + ':' + tool.name + ' : ' + str(round(toc - tic, 3)) + ' seconds')
         if not ok:
-            self.status = Step.STATUS[1]
+            project.status = pyven.constants.STATUS[1]
             Logger.get().error(self.name + ' errors found')
         else:
-            self.status = Step.STATUS[0]
+            project.status = pyven.constants.STATUS[0]
             Logger.get().info(self.name + ' completed')
         return ok
     
     def content(self):
         listings = []
-        if self.status in Step.STATUS[1]:
+        if self.status in pyven.constants.STATUS[1]:
             for project in Step.PROJECTS:
                 for preprocessor in project.preprocessors:
                     listings.append(preprocessor.content())
@@ -46,5 +47,5 @@ class Preprocess(Step):
         return StepListing(title=self.title(), status=self.report_status(), listings=listings, enable_summary=True)
         
     def report(self):
-        return self.status == Step.STATUS[1]
+        return self.status == pyven.constants.STATUS[1]
         

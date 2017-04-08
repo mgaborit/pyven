@@ -17,13 +17,12 @@ class Step(object):
     LOCAL_REPO = None
     WORKSPACE = None
     PROJECTS = []
-    STATUS = pyven.constants.STATUS
 
     def __init__(self, verbose=False):
         self.verbose = verbose
         self.name = None
         self.checker = None
-        self.status = Step.STATUS[2]
+        self.status = pyven.constants.STATUS[2]
 
     @staticmethod
     def log_delimiter(path=None):
@@ -35,11 +34,11 @@ class Step(object):
             Logger.get().info('STEP ' + self.name.replace('_', ' ').upper() + ' : STARTING')
             ok = function(self)
             if ok:
-                self.status = Step.STATUS[0]
+                self.status = pyven.constants.STATUS[0]
                 Logger.get().info('STEP ' + self.name.replace('_', ' ').upper() + ' : SUCCESSFUL')
                 Step.log_delimiter()
             else:
-                self.status = Step.STATUS[1]
+                self.status = pyven.constants.STATUS[1]
                 Logger.get().info('STEP ' + self.name.replace('_', ' ').upper() + ' : FAILED')
                 Step.log_delimiter()
             return ok
@@ -69,22 +68,26 @@ class Step(object):
     
     @step
     def _process_parallel(self):
-        self.checker.status = Step.STATUS[2]
+        self.checker.status = pyven.constants.STATUS[2]
         threads = []
         for project in Step.PROJECTS:
             threads.append(Thread(target=self._process, args=(project,)))
         parallelizer = Parallelizer(threads, self.nb_threads)
         parallelizer.run()
-        return self.status not in Step.STATUS[1:]
+        self.status = pyven.constants.STATUS[0]
+        for project in Step.PROJECTS:
+            if project.status in pyven.constants.STATUS[1:]:
+                self.status = pyven.constants.STATUS[1]
+        return self.status == pyven.constants.STATUS[0]
     
     @step
     def _process_sequential(self):
-        ok = True
-        self.checker.status = Step.STATUS[2]
+        self.checker.status = pyven.constants.STATUS[2]
+        self.status = pyven.constants.STATUS[0]
         for project in Step.PROJECTS:
             if not self._process(project):
-                ok = False
-        return ok
+                self.status = pyven.constants.STATUS[1]
+        return self.status == pyven.constants.STATUS[0]
     
     def process(self):
         raise NotImplementedError('Step process method not implemented')
@@ -107,7 +110,7 @@ class Step(object):
         raise NotImplementedError
         
     def report(self):
-        return self.status != Step.STATUS[2]
+        return self.status != pyven.constants.STATUS[2]
         
     def title(self):
         return Title(self.name)

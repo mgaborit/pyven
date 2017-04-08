@@ -1,3 +1,4 @@
+import pyven.constants
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 
@@ -25,22 +26,18 @@ class ArtifactsChecks(Step):
             else:
                 Logger.get().info('Artifact ' + artifact.format_name() + ' --> OK')
         if not ok:
+            project.status = pyven.constants.STATUS[1]
             Logger.get().error('Artifacts missing')
         else:
             for artifact in [a for a in project.artifacts.values() if not a.to_retrieve]:
                 Step.WORKSPACE.publish(artifact, artifact.file)
-            Logger.get().info(self.name + ' completed')
-        if not ok:
-            self.status = Step.STATUS[1]
-            Logger.get().error(self.name + ' errors found')
-        else:
-            self.status = Step.STATUS[0]
+            project.status = pyven.constants.STATUS[0]
             Logger.get().info(self.name + ' completed')
         return ok
     
     def content(self):
         listings = []
-        if self.status in Step.STATUS[1]:
+        if self.status in pyven.constants.STATUS[1]:
             listings.append(self.checker.content())
         return StepListing(title=self.title(), status=self.report_status(), listings=listings)
         
