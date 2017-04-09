@@ -41,6 +41,9 @@ def zip_pvn():
     zf.write('pyven/processing/tools/cmake.py')
     zf.write('pyven/processing/tools/command.py')
     
+    zf.write('pyven/plugin_api/__init__.py')
+    zf.write('pyven/plugin_api/process.py')
+    
     zf.write('pyven/processing/tests/__init__.py')
     zf.write('pyven/processing/tests/test.py')
     zf.write('pyven/processing/tests/unit.py')
