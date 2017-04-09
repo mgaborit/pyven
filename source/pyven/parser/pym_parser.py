@@ -16,7 +16,6 @@ from pyven.parser.packages_parser import PackagesParser
 from pyven.parser.msbuild_parser import MSBuildParser
 from pyven.parser.makefile_parser import MakefileParser
 from pyven.parser.cmake_parser import CMakeParser
-from pyven.parser.command_parser import CommandParser
 from pyven.parser.unit_tests_parser import UnitTestsParser
 from pyven.parser.valgrind_tests_parser import ValgrindTestsParser
 from pyven.parser.integration_tests_parser import IntegrationTestsParser
@@ -36,9 +35,6 @@ class PymParser(object):
         self.artifacts_parser = ArtifactsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/artifacts/artifact', os.path.dirname(self.pym))
         self.packages_parser = PackagesParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/packages/package', os.path.dirname(self.pym))
         self.cmake_parser = CMakeParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym))
-#        self.preprocess_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym), 'preprocess')
-#        self.build_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym), 'build')
-#        self.postprocess_command_parser = CommandParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym), 'postprocess')
         self.msbuild_parser = MSBuildParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym))
         self.makefile_parser = MakefileParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym))
         self.unit_tests_parser = UnitTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="unit"]', os.path.dirname(self.pym))
@@ -138,9 +134,6 @@ class PymParser(object):
         parser = command_plugin.parser.get(os.path.dirname(self.pym))
         for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="preprocess"]'):
             preprocessors.extend(parser.parse(node))
-            
-#        for command_tools in self.preprocess_command_parser.parse(self.tree):
-#            preprocessors.extend(command_tools)
         return preprocessors
         
     @check_errors
@@ -153,9 +146,6 @@ class PymParser(object):
         parser = command_plugin.parser.get(os.path.dirname(self.pym))
         for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="build"]'):
             builders.extend(parser.parse(node))
-            
-#        for command_tools in self.build_command_parser.parse(self.tree):
-#            builders.extend(command_tools)
         return builders
         
     @check_errors
@@ -164,9 +154,6 @@ class PymParser(object):
         parser = command_plugin.parser.get(os.path.dirname(self.pym))
         for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="postprocess"]'):
             postprocessors.extend(parser.parse(node))
-            
-#        for command_tools in self.postprocess_command_parser.parse(self.tree):
-#            postprocessors.extend(command_tools)
         return postprocessors
         
     @check_errors
