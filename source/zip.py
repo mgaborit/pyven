@@ -109,6 +109,7 @@ def zip_pvn():
     zf.write('pyven/utils/__init__.py')
     zf.write('pyven/utils/utils.py')
     zf.write('pyven/utils/parallelizer.py')
+    zf.write('pyven/utils/pym_writer.py')
     
     zf.write('pyven/results/__init__.py')
     zf.write('pyven/results/results_parser.py')

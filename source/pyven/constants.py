@@ -7,10 +7,12 @@ MINOR = 1
 PATCH = 1
 VERSION = '.'.join([str(MAJOR), str(MINOR), str(PATCH)])
 
+PLATFORMS = ['linux', 'windows']
+
 if os.name == 'nt':
-	PLATFORM = 'windows'
+	PLATFORM = PLATFORMS[1]
 elif os.name == 'posix':
-	PLATFORM = 'linux'
+	PLATFORM = PLATFORMS[0]
 else:
 	raise PyvenException('Unsupported platform : ' + os.name, 'Supported platforms : windows, linux')
 	
