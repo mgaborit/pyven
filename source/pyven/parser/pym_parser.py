@@ -14,9 +14,7 @@ from pyven.parser.constants_parser import ConstantsParser
 from pyven.parser.directory_repo_parser import DirectoryRepoParser
 from pyven.parser.artifacts_parser import ArtifactsParser
 from pyven.parser.packages_parser import PackagesParser
-from pyven.parser.msbuild_parser import MSBuildParser
 from pyven.parser.makefile_parser import MakefileParser
-from pyven.parser.cmake_parser import CMakeParser
 from pyven.parser.unit_tests_parser import UnitTestsParser
 from pyven.parser.valgrind_tests_parser import ValgrindTestsParser
 from pyven.parser.integration_tests_parser import IntegrationTestsParser
@@ -33,8 +31,6 @@ class PymParser(object):
         self.directory_repo_parser = DirectoryRepoParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/repositories/repository', os.path.dirname(self.pym))
         self.artifacts_parser = ArtifactsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/artifacts/artifact', os.path.dirname(self.pym))
         self.packages_parser = PackagesParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/packages/package', os.path.dirname(self.pym))
-        self.cmake_parser = CMakeParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym))
-        self.msbuild_parser = MSBuildParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym))
         self.makefile_parser = MakefileParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools', os.path.dirname(self.pym))
         self.unit_tests_parser = UnitTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="unit"]', os.path.dirname(self.pym))
         self.valgrind_tests_parser = ValgrindTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="valgrind"]', os.path.dirname(self.pym))
@@ -90,7 +86,7 @@ class PymParser(object):
     @check_errors
     def parse_plugins(self):
         if self.tree is not None:
-            for plugin in self.tree.xpath('/pyven/plugins/plugin'):
+            for plugin in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/plugins/plugin'):
                 name = plugin.get('name')
                 version = plugin.get('version')
                 if name is None:
@@ -141,9 +137,7 @@ class PymParser(object):
     @check_errors
     def parse_preprocessors(self):
         preprocessors = []
-        for cmake_tools in self.cmake_parser.parse(self.tree):
-            preprocessors.extend(cmake_tools)
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="preprocess"]'):
+        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="preprocess"]'):
             type = node.get('type')
             if type is None:
                 raise ParserException('Missing pre-processor type')
@@ -154,11 +148,9 @@ class PymParser(object):
     @check_errors
     def parse_builders(self):
         builders = []
-        for msbuild_tools in self.msbuild_parser.parse(self.tree):
-            builders.extend(msbuild_tools)
         for makefile_tools in self.makefile_parser.parse(self.tree):
             builders.extend(makefile_tools)
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="build"]'):
+        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="build"]'):
             type = node.get('type')
             if type is None:
                 raise ParserException('Missing builder type')
@@ -169,7 +161,7 @@ class PymParser(object):
     @check_errors
     def parse_postprocessors(self):
         postprocessors = []
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="postprocess"]'):
+        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="postprocess"]'):
             type = node.get('type')
             if type is None:
                 raise ParserException('Missing post-processor type')
