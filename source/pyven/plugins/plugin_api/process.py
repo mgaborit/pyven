@@ -12,13 +12,15 @@ from pyven.reporting.content.unknown import Unknown
 
 class Process(object):
 
-    def __init__(self, cwd='.', name=None):
+    def __init__(self, cwd='.', name=None, artifacts={}, packages={}):
         self.cwd = cwd
         self.name = name
         self.type = None
         self.status = pyven.constants.STATUS[2]
         self.errors = []
         self.warnings = []
+        self.artifacts = artifacts
+        self.packages = packages
     
     def process(self, verbose=False, warning_as_error=False):
         raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "process"')
