@@ -36,7 +36,7 @@ class Process(object):
         properties = []
         for p in self.report_properties():
             properties.append(Property(name=p[0], value=p[1]))
-        return ReportableListing(title=Title(self.title()),\
+        return ReportableListing(title=Title(self.report_title()),\
                                 status=self.report_status(),\
                                 properties=Properties(properties),\
                                 lines=content_lines,\

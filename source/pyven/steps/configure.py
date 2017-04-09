@@ -21,10 +21,10 @@ class Configure(Step):
     def project_title(self):
         return self.parsers[0].parse_project_title()
         
-    def content(self):
+    def report_content(self):
         listings = []
         if self.checker.enabled():
-            listings.append(self.checker.content())
+            listings.append(self.checker.report_content())
         return StepListing(title=self.title(), status=self.report_status(), listings=listings)
         
     def report(self):

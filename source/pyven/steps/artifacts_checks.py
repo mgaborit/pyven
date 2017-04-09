@@ -35,10 +35,10 @@ class ArtifactsChecks(Step):
             Logger.get().info(self.name + ' completed')
         return ok
     
-    def content(self):
+    def report_content(self):
         listings = []
         if self.status in pyven.constants.STATUS[1]:
-            listings.append(self.checker.content())
+            listings.append(self.checker.report_content())
         return StepListing(title=self.title(), status=self.report_status(), listings=listings)
         
     def report(self):

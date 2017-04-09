@@ -139,7 +139,7 @@ class Pyven:
         listings = []
         for step in self.steps:
             if step.report():
-                listings.append(step.content())
+                listings.append(step.report_content())
         status = None
         if self.status == pyven.constants.STATUS[0]:
             status = Success()

@@ -1,4 +1,5 @@
 from lxml import etree
+import os
 
 import pyven.constants
 from pyven.utils.utils import str_to_file
@@ -49,15 +50,16 @@ class PymWriter(object):
 
     @staticmethod
     def write():
-        pyven_tag = PymWriter.tags(PymWriter.tags(PymWriter.comment('Write your project title here'), 'project', oneline=True)\
-                                    + PymWriter.tags(PymWriter.comment('Declare your constants here'), 'constants')\
-                                    + PymWriter.tags(PymWriter.tags(PymWriter.comment('Declare your repositories here'), 'repositories')\
-                                                    + PymWriter.tags(PymWriter.comment('Declare your artifacts here'), 'artifacts')\
-                                                    + PymWriter.tags(PymWriter.comment('Declare your packages here'), 'packages')\
-                                                    + PymWriter.tags(PymWriter.tags(PymWriter.comment('Declare your tools here'), 'tools'), 'build')\
-                                                    + PymWriter.tags(PymWriter.comment('Declare your tests here'), 'tests')\
-                                    , 'platform', {'name' : pyven.constants.PLATFORM})\
-                    , 'pyven', {'version' : pyven.constants.VERSION})
-        str_to_file(pyven_tag, PymWriter.PYM)
+        if not os.path.isfile(PymWriter.PYM):
+            pyven_tag = PymWriter.tags(PymWriter.tags(PymWriter.comment('Write your project title here'), 'project', oneline=True)\
+                                        + PymWriter.tags(PymWriter.comment('Declare your constants here'), 'constants')\
+                                        + PymWriter.tags(PymWriter.tags(PymWriter.comment('Declare your repositories here'), 'repositories')\
+                                                        + PymWriter.tags(PymWriter.comment('Declare your artifacts here'), 'artifacts')\
+                                                        + PymWriter.tags(PymWriter.comment('Declare your packages here'), 'packages')\
+                                                        + PymWriter.tags(PymWriter.tags(PymWriter.comment('Declare your tools here'), 'tools'), 'build')\
+                                                        + PymWriter.tags(PymWriter.comment('Declare your tests here'), 'tests')\
+                                        , 'platform', {'name' : pyven.constants.PLATFORM})\
+                        , 'pyven', {'version' : pyven.constants.VERSION})
+            str_to_file(pyven_tag, PymWriter.PYM)
         
     

@@ -18,7 +18,7 @@ class Reportable(object):
         self.warnings = []
         self.parser = None
     
-    def content(self):
+    def report_content(self):
         lines = []
         for error in self.errors:
             lines.append(Error(error))
