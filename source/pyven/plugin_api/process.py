@@ -12,9 +12,10 @@ from pyven.reporting.content.unknown import Unknown
 
 class Process(object):
 
-    def __init__(self, cwd='.', report=None):
+    def __init__(self, cwd='.', name=None):
         self.cwd = cwd
-        self.report = report
+        self.name = name
+        self.type = None
         self.status = pyven.constants.STATUS[2]
         self.errors = []
         self.warnings = []
@@ -22,7 +23,7 @@ class Process(object):
     def process(self, verbose=False, warning_as_error=False):
         raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "process"')
     
-    def clean(self, verbose=False, warning_as_error=False):
+    def clean(self, verbose=False):
         raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "clean"')
     
     def report_content(self):
