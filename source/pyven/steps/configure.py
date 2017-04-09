@@ -36,7 +36,7 @@ class Configure(Step):
      
     @Step.error_checks
     def _process(self, project):
-        parser = PymParser(os.path.join(project.path, self.pym))
+        parser = PymParser(os.path.join(project.path, self.pym), project.plugins)
         self.parsers.append(parser)
         parser.parse_pym()
         parser.parse_plugins()
@@ -83,7 +83,7 @@ class Configure(Step):
                 raise PyvenException('Subproject directory does not exist : ' + directory)
             else:
                 full_path = os.path.join(project.path, directory)
-                subproject = Project(full_path)
+                subproject = Project(full_path, parser.plugins_manager.plugins.copy())
                 subproject.constants = project.constants.copy()
                 if not self._process(subproject):
                   raise PyvenException('Subproject ' + full_path + ' --> configuration failed')

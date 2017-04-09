@@ -1,4 +1,4 @@
-import os, sys
+import os
 from pyven.logging.logger import Logger
 
 from lxml import etree
@@ -23,9 +23,9 @@ from pyven.parser.integration_tests_parser import IntegrationTestsParser
 
 class PymParser(object):
     
-    def __init__(self, pym='pym.xml'):
+    def __init__(self, pym='pym.xml', plugins={}):
         self.pym = pym
-        self.plugins_manager = PluginsManager()
+        self.plugins_manager = PluginsManager(plugins)
         self.repo_config = 'repositories.xml'
         self.tree = None
         self.checker = Checker('Parser')
@@ -98,6 +98,7 @@ class PymParser(object):
                 if version is None:
                     raise ParserException('Missing plugin version : ' + name)
                 self.plugins_manager.plugins[name] = version
+                Logger.get().info('Plugin ' + name + '_' + version + ' added')
         self.plugins_manager.load()
                 
     @check_errors
@@ -142,7 +143,7 @@ class PymParser(object):
         preprocessors = []
         for cmake_tools in self.cmake_parser.parse(self.tree):
             preprocessors.extend(cmake_tools)
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="preprocess"]'):
+        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="preprocess"]'):
             type = node.get('type')
             if type is None:
                 raise ParserException('Missing pre-processor type')
@@ -157,7 +158,7 @@ class PymParser(object):
             builders.extend(msbuild_tools)
         for makefile_tools in self.makefile_parser.parse(self.tree):
             builders.extend(makefile_tools)
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="build"]'):
+        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="build"]'):
             type = node.get('type')
             if type is None:
                 raise ParserException('Missing builder type')
@@ -168,7 +169,7 @@ class PymParser(object):
     @check_errors
     def parse_postprocessors(self):
         postprocessors = []
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="postprocess"]'):
+        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="postprocess"]'):
             type = node.get('type')
             if type is None:
                 raise ParserException('Missing post-processor type')

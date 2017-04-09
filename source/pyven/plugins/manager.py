@@ -5,8 +5,8 @@ from pyven.exceptions.exception import PyvenException
 class PluginsManager(object):
     DIR = os.path.join(os.environ.get('PVN_HOME'), 'plugins')
 
-    def __init__(self):
-        self.plugins = {}
+    def __init__(self, plugins):
+        self.plugins = plugins
         self.modules = {}
       
     @staticmethod
