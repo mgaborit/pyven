@@ -43,6 +43,7 @@ def zip_pvn():
     
     zf.write('pyven/plugin_api/__init__.py')
     zf.write('pyven/plugin_api/process.py')
+    zf.write('pyven/plugin_api/parser.py')
     
     zf.write('pyven/processing/tests/__init__.py')
     zf.write('pyven/processing/tests/test.py')
