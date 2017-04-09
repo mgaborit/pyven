@@ -39,6 +39,7 @@ class Configure(Step):
         parser = PymParser(os.path.join(project.path, self.pym))
         self.parsers.append(parser)
         parser.parse_pym()
+        parser.parse_plugins()
         for k, v in parser.parse_constants().items():
             project.constants[k] = v
         ok = self._configure_projects(project, parser)\

@@ -8,6 +8,7 @@ import pyven.constants
 from pyven.exceptions.parser_exception import ParserException
 
 from pyven.checkers.checker import Checker
+from pyven.plugins.manager import PluginsManager
 
 from pyven.parser.constants_parser import ConstantsParser
 from pyven.parser.directory_repo_parser import DirectoryRepoParser
@@ -20,13 +21,11 @@ from pyven.parser.unit_tests_parser import UnitTestsParser
 from pyven.parser.valgrind_tests_parser import ValgrindTestsParser
 from pyven.parser.integration_tests_parser import IntegrationTestsParser
 
-sys.path.append(os.path.join(os.environ.get('PVN_HOME'), 'plugins', 'command-plugin_1.0.0.zip'))
-import command_plugin.parser
-
 class PymParser(object):
     
     def __init__(self, pym='pym.xml'):
         self.pym = pym
+        self.plugins_manager = PluginsManager()
         self.repo_config = 'repositories.xml'
         self.tree = None
         self.checker = Checker('Parser')
@@ -89,6 +88,19 @@ class PymParser(object):
         return True
         
     @check_errors
+    def parse_plugins(self):
+        if self.tree is not None:
+            for plugin in self.tree.xpath('/pyven/plugins/plugin'):
+                name = plugin.get('name')
+                version = plugin.get('version')
+                if name is None:
+                    raise ParserException('Missing plugin name')
+                if version is None:
+                    raise ParserException('Missing plugin version : ' + name)
+                self.plugins_manager.plugins[name] = version
+        self.plugins_manager.load()
+                
+    @check_errors
     def parse_project_title(self):
         title = ''
         if self.tree is not None:
@@ -130,9 +142,11 @@ class PymParser(object):
         preprocessors = []
         for cmake_tools in self.cmake_parser.parse(self.tree):
             preprocessors.extend(cmake_tools)
-        
-        parser = command_plugin.parser.get(os.path.dirname(self.pym))
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="preprocess"]'):
+        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="preprocess"]'):
+            type = node.get('type')
+            if type is None:
+                raise ParserException('Missing pre-processor type')
+            parser = self.plugins_manager.get_parser(type, os.path.dirname(self.pym))
             preprocessors.extend(parser.parse(node))
         return preprocessors
         
@@ -143,16 +157,22 @@ class PymParser(object):
             builders.extend(msbuild_tools)
         for makefile_tools in self.makefile_parser.parse(self.tree):
             builders.extend(makefile_tools)
-        parser = command_plugin.parser.get(os.path.dirname(self.pym))
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="build"]'):
+        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="build"]'):
+            type = node.get('type')
+            if type is None:
+                raise ParserException('Missing builder type')
+            parser = self.plugins_manager.get_parser(type, os.path.dirname(self.pym))
             builders.extend(parser.parse(node))
         return builders
         
     @check_errors
     def parse_postprocessors(self):
         postprocessors = []
-        parser = command_plugin.parser.get(os.path.dirname(self.pym))
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@type="command" and @scope="postprocess"]'):
+        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="postprocess"]'):
+            type = node.get('type')
+            if type is None:
+                raise ParserException('Missing post-processor type')
+            parser = self.plugins_manager.get_parser(type, os.path.dirname(self.pym))
             postprocessors.extend(parser.parse(node))
         return postprocessors
         
