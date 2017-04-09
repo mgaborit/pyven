@@ -6,7 +6,7 @@ class Processible(object):
         self.duration = 0
         self.cwd = cwd
     
-    def process(self, mode, verbose=False, warning_as_error=False):
+    def process(self, verbose=False, warning_as_error=False):
         raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "process"')
     
     def _call_command(self, command):
