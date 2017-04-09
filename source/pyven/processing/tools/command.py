@@ -1,4 +1,4 @@
-import os
+import os, subprocess, time
 import pyven.constants
 
 from pyven.processing.tools.tool import Tool
@@ -31,13 +31,15 @@ class CommandTool(Tool):
         properties.append(Property(name='Duration', value=str(self.duration) + ' seconds'))
         return properties
     
+    def _call_command(self, command):
+        tic = time.time()
+        sp = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, cwd=self.cwd)
+        out, err = sp.communicate(input='\n')
+        toc = time.time()
+        return round(toc - tic, 3), out, err, sp.returncode
+        
     def _format_call(self):
-        call = []
-        if pyven.constants.PLATFORM == 'linux':
-            call.append('sh')
-        call.extend(self.command.split(' '))
-        if pyven.constants.PLATFORM == 'linux':
-            call = [' '.join(call)]
+        call = self.command.split(' ')
         Logger.get().info(self.command)
         return call
     

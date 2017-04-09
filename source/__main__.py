@@ -40,6 +40,9 @@ def main(args):
         if pvn.step == 'parse':
             ok = pvn.parse()
         
+        if pvn.step == 'init':
+            ok = pvn.init()
+        
         else:
             ok = pvn.process()
         
