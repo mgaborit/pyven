@@ -10,44 +10,41 @@ from pyven.reporting.content.failure import Failure
 from pyven.reporting.content.unknown import Unknown
 
 class Reportable(object):
-	
-	def __init__(self, report=None):
-		self.report = report
-		self.status = pyven.constants.STATUS[2]
-		self.errors = []
-		self.warnings = []
-		self.parser = None
-	
-	def status(self):
-		raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "status"')
+    
+    def __init__(self, report=None):
+        self.report = report
+        self.status = pyven.constants.STATUS[2]
+        self.errors = []
+        self.warnings = []
+        self.parser = None
+    
+    def report_content(self):
+        lines = []
+        for error in self.errors:
+            lines.append(Error(error))
+        for warning in self.warnings:
+            lines.append(Warning(warning))
+        content_lines = Lines(lines)
+        return ReportableListing(title=Title(self.title()),\
+                                status=self.report_status(),\
+                                properties=Properties(self.properties()),\
+                                lines=content_lines,\
+                                summary=self.summary())
 
-	def content(self):
-		lines = []
-		for error in self.errors:
-			lines.append(Error(error))
-		for warning in self.warnings:
-			lines.append(Warning(warning))
-		content_lines = Lines(lines)
-		return ReportableListing(title=Title(self.title()),\
-								status=self.report_status(),\
-								properties=Properties(self.properties()),\
-								lines=content_lines,\
-								summary=self.summary())
-
-	def summary(self):
-		return self.title()
-	
-	def title(self):
-		raise NotImplementedError
-		
-	def properties(self):
-		raise NotImplementedError
-		
-	def report_status(self):
-		if self.status == pyven.constants.STATUS[0]:
-			return Success()
-		elif self.status == pyven.constants.STATUS[1]:
-			return Failure()
-		else:
-			return Unknown()
-	
+    def summary(self):
+        return self.title()
+    
+    def title(self):
+        raise NotImplementedError
+        
+    def properties(self):
+        raise NotImplementedError
+        
+    def report_status(self):
+        if self.status == pyven.constants.STATUS[0]:
+            return Success()
+        elif self.status == pyven.constants.STATUS[1]:
+            return Failure()
+        else:
+            return Unknown()
+    

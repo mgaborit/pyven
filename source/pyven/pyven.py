@@ -8,7 +8,6 @@ from pyven.utils.pym_writer import PymWriter
 
 from pyven.repositories.directory import DirectoryRepo
 from pyven.repositories.workspace import Workspace
-from pyven.processing.tests.test import Test
 
 from pyven.reporting.content.platform import Platform
 from pyven.reporting.content.success import Success
@@ -32,8 +31,6 @@ from pyven.steps.retrieve import Retrieve
 from pyven.steps.deliver import Deliver
 from pyven.steps.clean import Clean
 
-from pyven.results.xml_parser import XMLParser
-
 class Pyven:    
     WORKSPACE = Workspace('workspace', 'workspace', os.path.join(os.getcwd(), 'pvn_workspace'))
     if not os.path.isdir(WORKSPACE.url):
@@ -51,7 +48,7 @@ class Pyven:
     Step.LOCAL_REPO = LOCAL_REPO
 
     STEPS = ['deliver', 'clean', 'retrieve', 'configure', 'preprocess', 'build', 'test', 'package', 'verify', 'install', 'deploy']
-    UTILS = ['init', 'parse', 'aggregate']
+    UTILS = ['init', 'aggregate']
     
     def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path='', arguments={}, nb_lines=10, nb_threads=1):
         self.pym = pym
@@ -139,7 +136,7 @@ class Pyven:
         listings = []
         for step in self.steps:
             if step.report():
-                listings.append(step.content())
+                listings.append(step.report_content())
         status = None
         if self.status == pyven.constants.STATUS[0]:
             status = Success()
@@ -158,23 +155,6 @@ class Pyven:
     def display(self):
         HTMLUtils.display(Step.WORKSPACE.url)
     
-    def _parse(self, format='cppunit'):
-        ok = True
-        for report in [r for r in os.listdir(self.arguments['path']) if r.endswith('.xml')]:
-            parser = XMLParser(format)
-            parser.parse(os.path.join(self.arguments['path'], report))
-            test = Test('', self.arguments['path'], report, [], format)
-            test.errors = parser.errors
-            if len(test.errors) > 0:
-                test.status = Step.STATUS[1]
-            else:
-                test.status = Step.STATUS[0]
-            self.unit_tests.tests.append(test)
-        return ok
-        
-    def parse(self):
-        return self._parse()
-        
     def init(self):
         PymWriter.write()
         return True

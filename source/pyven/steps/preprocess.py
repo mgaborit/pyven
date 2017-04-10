@@ -36,14 +36,14 @@ class Preprocess(Step):
             Logger.get().info(self.name + ' completed')
         return ok
     
-    def content(self):
+    def report_content(self):
         listings = []
         if self.status in pyven.constants.STATUS[1]:
             for project in Step.PROJECTS:
                 for preprocessor in project.preprocessors:
-                    listings.append(preprocessor.content())
+                    listings.append(preprocessor.report_content())
             if self.checker.enabled():
-                listings.append(self.checker.content())
+                listings.append(self.checker.report_content())
         return StepListing(title=self.title(), status=self.report_status(), listings=listings, enable_summary=True)
         
     def report(self):

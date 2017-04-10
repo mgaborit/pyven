@@ -37,13 +37,13 @@ class Build(Step):
             Logger.get().info(self.name + ' completed')
         return ok
     
-    def content(self):
+    def report_content(self):
         listings = []
         for project in Step.PROJECTS:
             for builder in project.builders:
-                listings.append(builder.content())
+                listings.append(builder.report_content())
         if self.checker.enabled():
-            listings.append(self.checker.content())
+            listings.append(self.checker.report_content())
         return StepListing(title=self.title(), status=self.report_status(), listings=listings, enable_summary=True)
         
     def report(self):

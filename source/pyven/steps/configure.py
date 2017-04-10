@@ -21,10 +21,10 @@ class Configure(Step):
     def project_title(self):
         return self.parsers[0].parse_project_title()
         
-    def content(self):
+    def report_content(self):
         listings = []
         if self.checker.enabled():
-            listings.append(self.checker.content())
+            listings.append(self.checker.report_content())
         return StepListing(title=self.title(), status=self.report_status(), listings=listings)
         
     def report(self):
@@ -36,31 +36,21 @@ class Configure(Step):
      
     @Step.error_checks
     def _process(self, project):
-        parser = PymParser(os.path.join(project.path, self.pym))
+        parser = PymParser(os.path.join(project.path, self.pym), project.plugins)
         self.parsers.append(parser)
         parser.parse_pym()
+        parser.parse_plugins()
         for k, v in parser.parse_constants().items():
             project.constants[k] = v
         ok = self._configure_projects(project, parser)\
             and self._configure_repositories(project, parser)\
             and self._configure_artifacts(project, parser)\
             and self._configure_packages(project, parser)\
-            and self._configure_preprocessors(project, parser)\
-            and self._configure_builders(project, parser)\
-            and self._configure_postprocessors(project, parser)\
-            and self._configure_unit_tests(project, parser)\
-            and self._configure_valgrind_tests(project, parser)\
-            and self._configure_integration_tests(project, parser)
+            and self._configure_processes(project, parser)
         if ok:
             Step.PROJECTS.append(project)
         return ok
     
-    @staticmethod
-    def _replace_constants(str, constants):
-        for name, value in constants.items():
-            str = str.replace('$('+name+')', value)
-        return str
-
     def _configure_error_checks(function):
         def __intern(self, project, parser):
             ok = True
@@ -82,7 +72,7 @@ class Configure(Step):
                 raise PyvenException('Subproject directory does not exist : ' + directory)
             else:
                 full_path = os.path.join(project.path, directory)
-                subproject = Project(full_path)
+                subproject = Project(full_path, parser.plugins_manager.plugins.copy())
                 subproject.constants = project.constants.copy()
                 if not self._process(subproject):
                   raise PyvenException('Subproject ' + full_path + ' --> configuration failed')
@@ -113,12 +103,12 @@ class Configure(Step):
     def _configure_artifacts(self, project, parser):
         artifacts = parser.parse_artifacts()
         for artifact in artifacts:
-            artifact.company = Configure._replace_constants(artifact.company, project.constants)
-            artifact.name = Configure._replace_constants(artifact.name, project.constants)
-            artifact.config = Configure._replace_constants(artifact.config, project.constants)
-            artifact.version = Configure._replace_constants(artifact.version, project.constants)
+            artifact.company = project.replace_constants(artifact.company)
+            artifact.name = project.replace_constants(artifact.name)
+            artifact.config = project.replace_constants(artifact.config)
+            artifact.version = project.replace_constants(artifact.version)
             if not artifact.to_retrieve:
-                artifact.file = Configure._replace_constants(artifact.file, project.constants)
+                artifact.file = project.replace_constants(artifact.file)
             if artifact.format_name() in project.artifacts.keys():
                 raise PyvenException('Artifact already added --> ' + artifact.format_name())
             elif artifact.to_retrieve and artifact.repo not in project.repositories.keys() and artifact.repo not in [Step.LOCAL_REPO.name, 'workspace']:
@@ -133,11 +123,11 @@ class Configure(Step):
     def _configure_packages(self, project, parser):
         packages = parser.parse_packages()
         for package in packages:
-            package.company = Configure._replace_constants(package.company, project.constants)
-            package.name = Configure._replace_constants(package.name, project.constants)
-            package.config = Configure._replace_constants(package.config, project.constants)
-            package.version = Configure._replace_constants(package.version, project.constants)
-            package.delivery = Configure._replace_constants(package.delivery, project.constants)
+            package.company = project.replace_constants(package.company)
+            package.name = project.replace_constants(package.name)
+            package.config = project.replace_constants(package.config)
+            package.version = project.replace_constants(package.version)
+            package.delivery = project.replace_constants(package.delivery)
             items = []
             items.extend(package.items)
             package.items = []
@@ -147,7 +137,7 @@ class Configure(Step):
                 raise PyvenException('Package repository not declared --> ' + package.format_name() + ' : repo ' + package.repo)
             else:
                 for item in items:
-                    item = Configure._replace_constants(item, project.constants)
+                    item = project.replace_constants(item)
                     if item not in project.artifacts.keys():
                         raise PyvenException('Package ' + package.format_name() + ' : Artifact not declared --> ' + item)
                     else:
@@ -159,7 +149,7 @@ class Configure(Step):
                     Logger.get().info('Package ' + package.format_name() + ' --> publishment disabled')
         for package in packages:
             for extension in package.extensions:
-                extension = Configure._replace_constants(extension, project.constants)
+                extension = project.replace_constants(extension)
                 if extension not in project.packages.keys():
                     raise PyvenException('Package ' + package.format_name() + ' : Package extension not declared --> ' + extension)
                 elif project.packages[extension].to_retrieve:
@@ -168,72 +158,25 @@ class Configure(Step):
                     package.items.extend(project.packages[extension].items)
                     Logger.get().info('Package ' + package.format_name() + ' : Package extension added --> ' + extension)
                 
-        
     @_configure_error_checks
-    def _configure_preprocessors(self, project, parser):
-        preprocessors = parser.parse_preprocessors()
-        checked = []
-        for preprocessor in preprocessors:
-            preprocessor.name = Configure._replace_constants(preprocessor.name, project.constants)
-            checked.append(preprocessor)
-            Logger.get().info('Pre-processor added --> ' + preprocessor.type + ':' + preprocessor.name)
-        project.preprocessors = checked
+    def _configure_processes(self, project, parser):
+        preprocessors = parser.parse_processes('preprocess', 'build/tools/tool', project)
+        builders = parser.parse_processes('build', 'build/tools/tool', project)
+        postprocessors = parser.parse_processes('postprocess', 'build/tools/tool', project)
+        unit_tests = parser.parse_processes('test', 'tests/test', project)
+        integration_tests = parser.parse_processes('verify', 'tests/test', project)
         
-    @_configure_error_checks
-    def _configure_builders(self, project, parser):
-        builders = parser.parse_builders()
-        checked = []
-        for builder in builders:
-            builder.name = Configure._replace_constants(builder.name, project.constants)
-            checked.append(builder)
-            Logger.get().info('Builder added --> ' + builder.type + ':' + builder.name)
-        project.builders = checked
+        project.preprocessors = self._check_processes('preprocessor', preprocessors, project)
+        project.builders = self._check_processes('builder', builders, project)
+        project.postprocessors = self._check_processes('postprocessor', postprocessors, project)
+        project.unit_tests = self._check_processes('unit test', unit_tests, project)
+        project.integration_tests = self._check_processes('integration test', integration_tests, project)
         
-    @_configure_error_checks
-    def _configure_postprocessors(self, project, parser):
-        postprocessors = parser.parse_postprocessors()
-        checked = []
-        for postprocessor in postprocessors:
-            postprocessor.name = Configure._replace_constants(postprocessor.name, project.constants)
-            checked.append(postprocessor)
-            Logger.get().info('Post-processor added --> ' + postprocessor.type + ':' + postprocessor.name)
-        project.postprocessors = checked
-        
-    @_configure_error_checks
-    def _configure_unit_tests(self, project, parser):
-        unit_tests = parser.parse_unit_tests()
-        checked = []
-        for unit_test in unit_tests:
-            checked.append(unit_test)
-            Logger.get().info('Unit test added --> ' + os.path.join(unit_test.path, unit_test.filename))
-        project.unit_tests = checked
-        
-    @_configure_error_checks
-    def _configure_valgrind_tests(self, project, parser):
-        valgrind_tests = parser.parse_valgrind_tests()
-        checked = []
-        for valgrind_test in valgrind_tests:
-            checked.append(valgrind_test)
-            Logger.get().info('Valgrind test added --> ' + os.path.join(valgrind_test.path, valgrind_test.filename))
-        self.valgrind_tests = checked
-        
-    @_configure_error_checks
-    def _configure_integration_tests(self, project, parser):
-        integration_tests = parser.parse_integration_tests()
-        checked = []
-        for integration_test in integration_tests:
-            integration_test.package = Configure._replace_constants(integration_test.package, project.constants)
-            if integration_test.package not in project.packages.keys():
-                raise PyvenException('Integration test ' + os.path.join(integration_test.path, integration_test.filename)\
-                            + ' : Package not declared --> ' + integration_test.package)
-            else:
-                integration_test.package = project.packages[integration_test.package]
-                Logger.get().info('Integration test ' + os.path.join(integration_test.path, integration_test.filename)\
-                            + ' : Package added --> ' + integration_test.package.format_name())
-            checked.append(integration_test)
-            Logger.get().info('Integration test added --> ' + os.path.join(integration_test.path, integration_test.filename))
-        project.integration_tests = checked
-        
+    def _check_processes(self, type, processes, project):
+        for process in processes:
+            process.name = project.replace_constants(process.name)
+            Logger.get().info(type + ' added --> ' + process.type + ':' + process.name)
+        return processes
         
         
         
