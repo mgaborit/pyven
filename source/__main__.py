@@ -37,9 +37,6 @@ def main(args):
         if pvn.step == 'aggregate' and not args.display:
             pvn.report(args.report_style)
         
-        if pvn.step == 'parse':
-            ok = pvn.parse()
-        
         if pvn.step == 'init':
             ok = pvn.init()
         
