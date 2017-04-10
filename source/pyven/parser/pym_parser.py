@@ -69,6 +69,15 @@ class PymParser(object):
                 raise e
         return _intern
     
+    def check_errors_processes(function):
+        def _intern(self, scope, xpath, project=None):
+            try:
+                return function(self, scope, xpath, project)
+            except ParserException as e:
+                self.checker.errors.append(e.args)
+                raise e
+        return _intern
+    
     @check_errors
     def parse_pym(self, project=None):
         Logger.get().info('Starting ' + self.pym + ' parsing')
@@ -130,57 +139,16 @@ class PymParser(object):
     def parse_packages(self, project=None):
         return self.packages_parser.parse(self.tree)
         
-    @check_errors
-    def parse_preprocessors(self, project=None):
-        preprocessors = []
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="preprocess"]'):
+    @check_errors_processes
+    def parse_processes(self, scope, xpath, project=None):
+        processes = []
+        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/' + xpath + '[@scope="' + scope + '"]'):
             type = node.get('type')
             if type is None:
-                raise ParserException('Missing pre-processor type')
+                raise ParserException('Missing process type')
+            name = node.get('name')
+            if name is None:
+                raise ParserException('Missing process name')
             parser = self.plugins_manager.get_parser(type, os.path.dirname(self.pym))
-            preprocessors.extend(parser.parse(node))
-        return preprocessors
-        
-    @check_errors
-    def parse_builders(self, project=None):
-        builders = []
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="build"]'):
-            type = node.get('type')
-            if type is None:
-                raise ParserException('Missing builder type')
-            parser = self.plugins_manager.get_parser(type, os.path.dirname(self.pym))
-            builders.extend(parser.parse(node))
-        return builders
-        
-    @check_errors
-    def parse_postprocessors(self, project=None):
-        postprocessors = []
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="postprocess"]'):
-            type = node.get('type')
-            if type is None:
-                raise ParserException('Missing post-processor type')
-            parser = self.plugins_manager.get_parser(type, os.path.dirname(self.pym))
-            postprocessors.extend(parser.parse(node))
-        return postprocessors
-        
-    @check_errors
-    def parse_unit_tests(self, project=None):
-        tests = []
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@scope="test"]'):
-            type = node.get('type')
-            if type is None:
-                raise ParserException('Missing test type')
-            parser = self.plugins_manager.get_parser(type, os.path.dirname(self.pym))
-            tests.extend(parser.parse(node))
-        return tests
-        
-    @check_errors
-    def parse_integration_tests(self, project=None):
-        tests = []
-        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@scope="verify"]'):
-            type = node.get('type')
-            if type is None:
-                raise ParserException('Missing test type')
-            parser = self.plugins_manager.get_parser(type, os.path.dirname(self.pym))
-            tests.extend(parser.parse(node, project))
-        return tests
+            processes.extend(parser.parse(node, project))
+        return processes

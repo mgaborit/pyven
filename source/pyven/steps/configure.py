@@ -46,11 +46,7 @@ class Configure(Step):
             and self._configure_repositories(project, parser)\
             and self._configure_artifacts(project, parser)\
             and self._configure_packages(project, parser)\
-            and self._configure_preprocessors(project, parser)\
-            and self._configure_builders(project, parser)\
-            and self._configure_postprocessors(project, parser)\
-            and self._configure_unit_tests(project, parser)\
-            and self._configure_integration_tests(project, parser)
+            and self._configure_processes(project, parser)
         if ok:
             Step.PROJECTS.append(project)
         return ok
@@ -162,55 +158,25 @@ class Configure(Step):
                     package.items.extend(project.packages[extension].items)
                     Logger.get().info('Package ' + package.format_name() + ' : Package extension added --> ' + extension)
                 
-        
     @_configure_error_checks
-    def _configure_preprocessors(self, project, parser):
-        preprocessors = parser.parse_preprocessors()
-        checked = []
-        for preprocessor in preprocessors:
-            preprocessor.name = project.replace_constants(preprocessor.name)
-            checked.append(preprocessor)
-            Logger.get().info('Pre-processor added --> ' + preprocessor.type + ':' + preprocessor.name)
-        project.preprocessors = checked
+    def _configure_processes(self, project, parser):
+        preprocessors = parser.parse_processes('preprocess', 'build/tools/tool', project)
+        builders = parser.parse_processes('build', 'build/tools/tool', project)
+        postprocessors = parser.parse_processes('postprocess', 'build/tools/tool', project)
+        unit_tests = parser.parse_processes('test', 'tests/test', project)
+        integration_tests = parser.parse_processes('verify', 'tests/test', project)
         
-    @_configure_error_checks
-    def _configure_builders(self, project, parser):
-        builders = parser.parse_builders()
-        checked = []
-        for builder in builders:
-            builder.name = project.replace_constants(builder.name)
-            checked.append(builder)
-            Logger.get().info('Builder added --> ' + builder.type + ':' + builder.name)
-        project.builders = checked
+        project.preprocessors = self._check_processes('preprocessor', preprocessors, project)
+        project.builders = self._check_processes('builder', builders, project)
+        project.postprocessors = self._check_processes('postprocessor', postprocessors, project)
+        project.unit_tests = self._check_processes('unit test', unit_tests, project)
+        project.integration_tests = self._check_processes('integration test', integration_tests, project)
         
-    @_configure_error_checks
-    def _configure_postprocessors(self, project, parser):
-        postprocessors = parser.parse_postprocessors()
-        checked = []
-        for postprocessor in postprocessors:
-            postprocessor.name = project.replace_constants(postprocessor.name)
-            checked.append(postprocessor)
-            Logger.get().info('Post-processor added --> ' + postprocessor.type + ':' + postprocessor.name)
-        project.postprocessors = checked
-        
-    @_configure_error_checks
-    def _configure_unit_tests(self, project, parser):
-        unit_tests = parser.parse_unit_tests()
-        checked = []
-        for unit_test in unit_tests:
-            checked.append(unit_test)
-            Logger.get().info('Unit test added --> ' + os.path.join(unit_test.path, unit_test.filename))
-        project.unit_tests = checked
-        
-    @_configure_error_checks
-    def _configure_integration_tests(self, project, parser):
-        integration_tests = parser.parse_integration_tests(project)
-        checked = []
-        for integration_test in integration_tests:
-            checked.append(integration_test)
-            Logger.get().info('Integration test added --> ' + os.path.join(integration_test.path, integration_test.filename))
-        project.integration_tests = checked
-        
+    def _check_processes(self, type, processes, project):
+        for process in processes:
+            process.name = project.replace_constants(process.name)
+            Logger.get().info(type + ' added --> ' + process.type + ':' + process.name)
+        return processes
         
         
         
