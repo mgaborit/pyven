@@ -20,8 +20,13 @@ class IntegrationTests(Step):
     @Step.step
     def process(self):
         self.parallelizer.threads = []
-        if self._process_sequential():
-            self.parallelizer.run()
+        for project in Step.PROJECTS:
+            if len(project.integration_tests) == 0:
+                Logger.get().warning('No integration tests configured')
+            else:
+                for test in project.integration_tests:
+                    self.parallelizer.threads.append(Thread(target=test.process, args=(self.verbose,)))
+        self.parallelizer.run()
         ok = True
         for project in Step.PROJECTS:
             project.status = pyven.constants.STATUS[0]
@@ -30,15 +35,6 @@ class IntegrationTests(Step):
                     project.status = pyven.constants.STATUS[1]
                     ok = False
         return ok
-    
-    @Step.error_checks
-    def _process(self, project):
-        if len(project.integration_tests) == 0:
-            Logger.get().warning('No integration tests configured')
-        else:
-            for test in project.integration_tests:
-                self.parallelizer.threads.append(Thread(target=test.process, args=(self.verbose, Step.WORKSPACE)))
-        return True
     
     def report_content(self):
         listings = []

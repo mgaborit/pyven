@@ -20,8 +20,13 @@ class UnitTests(Step):
     @Step.step
     def process(self):
         self.parallelizer.threads = []
-        if self._process_sequential():
-            self.parallelizer.run()
+        for project in Step.PROJECTS:
+            if len(project.unit_tests) == 0:
+                Logger.get().warning('No unit tests configured')
+            else:
+                for test in project.unit_tests:
+                    self.parallelizer.threads.append(Thread(target=test.process, args=(self.verbose,)))
+        self.parallelizer.run()
         ok = True
         for project in Step.PROJECTS:
             project.status = pyven.constants.STATUS[0]
@@ -29,16 +34,6 @@ class UnitTests(Step):
                 if test.status in pyven.constants.STATUS[1:]:
                     project.status = pyven.constants.STATUS[1]
                     ok = False
-        return ok
-    
-    @Step.error_checks
-    def _process(self, project):
-        ok = True
-        if len(project.unit_tests) == 0:
-            Logger.get().warning('No unit tests configured')
-        else:
-            for test in project.unit_tests:
-                self.parallelizer.threads.append(Thread(target=test.process, args=(self.verbose,)))
         return ok
     
     def report_content(self):
