@@ -17,6 +17,7 @@ class UnitTests(Step):
         self.nb_threads = nb_threads
         self.parallelizer = Parallelizer(max_concurrent=self.nb_threads)
 
+    @Step.step
     def process(self):
         self.parallelizer.threads = []
         if self._process_sequential():
@@ -24,7 +25,7 @@ class UnitTests(Step):
         ok = True
         for project in Step.PROJECTS:
             project.status = pyven.constants.STATUS[0]
-            for test in project.integration_tests:
+            for test in project.unit_tests:
                 if test.status in pyven.constants.STATUS[1:]:
                     project.status = pyven.constants.STATUS[1]
                     ok = False

@@ -16,5 +16,5 @@ class Parser(object):
             raise e
         return name,
   
-    def parse(self, node):
+    def parse(self, node, project):
         raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "parse"')

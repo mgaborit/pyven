@@ -14,8 +14,6 @@ from pyven.parser.constants_parser import ConstantsParser
 from pyven.parser.directory_repo_parser import DirectoryRepoParser
 from pyven.parser.artifacts_parser import ArtifactsParser
 from pyven.parser.packages_parser import PackagesParser
-from pyven.parser.valgrind_tests_parser import ValgrindTestsParser
-from pyven.parser.integration_tests_parser import IntegrationTestsParser
 
 class PymParser(object):
     
@@ -23,14 +21,13 @@ class PymParser(object):
         self.pym = pym
         self.plugins_manager = PluginsManager(plugins)
         self.repo_config = 'repositories.xml'
+        self.plugins_config = 'plugins.xml'
         self.tree = None
         self.checker = Checker('Parser')
         self.constants_parser = ConstantsParser('/pyven/constants/constant', os.path.dirname(self.pym))
         self.directory_repo_parser = DirectoryRepoParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/repositories/repository', os.path.dirname(self.pym))
         self.artifacts_parser = ArtifactsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/artifacts/artifact', os.path.dirname(self.pym))
         self.packages_parser = PackagesParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/packages/package', os.path.dirname(self.pym))
-        self.valgrind_tests_parser = ValgrindTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="valgrind"]', os.path.dirname(self.pym))
-        self.integration_tests_parser = IntegrationTestsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@type="integration"]', os.path.dirname(self.pym))
     
     @staticmethod
     def check_version(tree, file):
@@ -64,25 +61,28 @@ class PymParser(object):
         return tree
     
     def check_errors(function):
-        def _intern(self):
+        def _intern(self, project=None):
             try:
-                return function(self)
+                return function(self, project)
             except ParserException as e:
                 self.checker.errors.append(e.args)
                 raise e
         return _intern
     
     @check_errors
-    def parse_pym(self):
+    def parse_pym(self, project=None):
         Logger.get().info('Starting ' + self.pym + ' parsing')
         self.tree = PymParser.parse_xml(self.pym)
         PymParser.check_version(self.tree, self.pym)
         return True
         
     @check_errors
-    def parse_plugins(self):
-        if self.tree is not None:
-            for plugin in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/plugins/plugin'):
+    def parse_plugins(self, project=None):
+        repo_config = os.path.join(os.environ.get('PVN_HOME'), self.plugins_config)
+        tree = PymParser.parse_xml(repo_config)
+        PymParser.check_version(tree, repo_config)
+        if tree is not None:
+            for plugin in tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/plugins/plugin'):
                 name = plugin.get('name')
                 version = plugin.get('version')
                 if name is None:
@@ -94,7 +94,7 @@ class PymParser(object):
         self.plugins_manager.load()
                 
     @check_errors
-    def parse_project_title(self):
+    def parse_project_title(self, project=None):
         title = ''
         if self.tree is not None:
             nodes = self.tree.xpath('/pyven/project')
@@ -103,11 +103,11 @@ class PymParser(object):
         return title
         
     @check_errors
-    def parse_constants(self):
+    def parse_constants(self, project=None):
         return self.constants_parser.parse(self.tree)
         
     @check_errors
-    def parse_projects(self):
+    def parse_projects(self, project=None):
         query = '/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/subprojects/subproject'
         subprojects = []
         for node in self.tree.xpath(query):
@@ -115,7 +115,7 @@ class PymParser(object):
         return subprojects
         
     @check_errors
-    def parse_repositories(self):
+    def parse_repositories(self, project=None):
         repo_config = os.path.join(os.environ.get('PVN_HOME'), self.repo_config)
         tree = PymParser.parse_xml(repo_config)
         PymParser.check_version(tree, repo_config)
@@ -123,15 +123,15 @@ class PymParser(object):
         return self.directory_repo_parser.parse(self.tree)
         
     @check_errors
-    def parse_artifacts(self):
+    def parse_artifacts(self, project=None):
         return self.artifacts_parser.parse(self.tree)
         
     @check_errors
-    def parse_packages(self):
+    def parse_packages(self, project=None):
         return self.packages_parser.parse(self.tree)
         
     @check_errors
-    def parse_preprocessors(self):
+    def parse_preprocessors(self, project=None):
         preprocessors = []
         for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="preprocess"]'):
             type = node.get('type')
@@ -142,7 +142,7 @@ class PymParser(object):
         return preprocessors
         
     @check_errors
-    def parse_builders(self):
+    def parse_builders(self, project=None):
         builders = []
         for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="build"]'):
             type = node.get('type')
@@ -153,7 +153,7 @@ class PymParser(object):
         return builders
         
     @check_errors
-    def parse_postprocessors(self):
+    def parse_postprocessors(self, project=None):
         postprocessors = []
         for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/build/tools/tool[@scope="postprocess"]'):
             type = node.get('type')
@@ -164,7 +164,7 @@ class PymParser(object):
         return postprocessors
         
     @check_errors
-    def parse_unit_tests(self):
+    def parse_unit_tests(self, project=None):
         tests = []
         for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@scope="test"]'):
             type = node.get('type')
@@ -175,9 +175,12 @@ class PymParser(object):
         return tests
         
     @check_errors
-    def parse_valgrind_tests(self):
-        return self.valgrind_tests_parser.parse(self.tree)
-        
-    @check_errors
-    def parse_integration_tests(self):
-        return self.integration_tests_parser.parse(self.tree)
+    def parse_integration_tests(self, project=None):
+        tests = []
+        for node in self.tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/tests/test[@scope="verify"]'):
+            type = node.get('type')
+            if type is None:
+                raise ParserException('Missing test type')
+            parser = self.plugins_manager.get_parser(type, os.path.dirname(self.pym))
+            tests.extend(parser.parse(node, project))
+        return tests

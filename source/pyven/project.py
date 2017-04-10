@@ -15,3 +15,8 @@ class Project:
         self.integration_tests = []
         self.status = pyven.constants.STATUS[2]
         self.plugins = plugins
+        
+    def replace_constants(self, str):
+        for name, value in self.constants.items():
+            str = str.replace('$('+name+')', value)
+        return str
