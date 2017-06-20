@@ -50,7 +50,7 @@ class Pyven:
     STEPS = ['deliver', 'clean', 'retrieve', 'configure', 'preprocess', 'build', 'test', 'package', 'verify', 'install', 'deploy']
     UTILS = ['init', 'aggregate']
     
-    def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, path='', arguments={}, nb_lines=10, nb_threads=1):
+    def __init__(self, step, verbose=False, warning_as_error=False, pym='pym.xml', release=False, overwrite=False, path='', arguments={}, nb_lines=10, nb_threads=1):
         self.pym = pym
         self.path = path
         self.arguments = arguments
@@ -65,6 +65,9 @@ class Pyven:
         self.release = release
         if self.release:
             Logger.get().info('Release mode enabled')
+        self.overwrite = overwrite
+        if self.overwrite:
+            Logger.get().info('Release artifacts and packages will be overwritten')
         self.warning_as_error = warning_as_error
         if self.warning_as_error:
             Logger.get().info('Warnings will be considered as errors')
@@ -94,7 +97,7 @@ class Pyven:
             
             if step_id > Pyven.STEPS.index('verify'):
                 if step_id > Pyven.STEPS.index('install'):
-                    self.steps.append(Deploy(self.verbose, self.release))
+                    self.steps.append(Deploy(self.verbose, self.release, self.overwrite))
             
                 else:
                     self.steps.append(Install(self.verbose))

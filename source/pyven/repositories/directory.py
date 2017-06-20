@@ -34,8 +34,8 @@ class DirectoryRepo(Repository):
 		dst_file = os.path.join(dst_dir, item.basename())
 		shutil.copy2(src_file, dst_file)
 		
-	def publish(self, item, source):
-		if self.release and self.is_available(item):
+	def publish(self, item, source, overwrite=False):
+		if self.release and self.is_available(item) and not overwrite:
 			raise RepositoryException('Release repository ' + self.name + ' --> ' + item.type() + ' already present : ' + item.format_name())
 		src_file = os.path.join(item.location(source.url), item.basename())
 		if not os.path.isfile(src_file):

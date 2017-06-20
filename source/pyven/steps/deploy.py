@@ -8,11 +8,12 @@ from pyven.logging.logger import Logger
 from pyven.reporting.content.step import StepListing
 
 class Deploy(Step):
-    def __init__(self, verbose, release):
+    def __init__(self, verbose, release, overwrite):
         super(Deploy, self).__init__(verbose)
         self.name = 'deploy'
         self.checker = Checker('Deployment')
         self.release = release
+        self.overwrite = overwrite
 
     def process(self):
         return self._process_sequential()
@@ -33,10 +34,10 @@ class Deploy(Step):
             for repo in repositories:
                 try:
                     for artifact in [a for a in project.artifacts.values() if a.publish]:
-                        repo.publish(artifact, Step.WORKSPACE)
+                        repo.publish(artifact, Step.WORKSPACE, self.overwrite)
                         Logger.get().info('Repository ' + repo.name + ' --> Published artifact ' + artifact.format_name())
                     for package in [p for p in project.packages.values() if p.publish]:
-                        repo.publish(package, Step.WORKSPACE)
+                        repo.publish(package, Step.WORKSPACE, self.overwrite)
                         Logger.get().info('Repository ' + repo.name + ' --> Published package ' + package.format_name())
                 except RepositoryException as e:
                     self.checker.errors.append(e.args)
