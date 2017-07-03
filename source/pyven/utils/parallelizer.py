@@ -1,3 +1,5 @@
+import time
+
 class Parallelizer(object):
     
     def __init__(self, threads=[], max_concurrent=1):
@@ -16,6 +18,7 @@ class Parallelizer(object):
                     self.threads[i].start()
                     i += 1
                 running = [t for t in running if t.is_alive()]
+                time.sleep(1)
             for t in running:
                 t.join()
                     

@@ -1,8 +1,6 @@
 import os
 from pyven.exceptions.exception import PyvenException
 
-from pyven.logging.logger import Logger
-
 class Item(object):
 	if os.name == 'nt':
 		PLATFORM = 'windows'
