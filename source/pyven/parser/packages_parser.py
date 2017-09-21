@@ -23,18 +23,19 @@ class PackagesParser(ItemsParser):
         members['items'] = []
         for item in items:
             members['items'].append(item.text)
-        delivery = ''
-        if node.find('delivery') is not None:
-            delivery = node.find('delivery').text
-        if '$company' in delivery:
-            delivery = delivery.replace('$$company', members['company'])
-        if '$name' in delivery:
-            delivery = delivery.replace('$$name', members['name'])
-        if '$config' in delivery:
-            delivery = delivery.replace('$$config', members['config'])
-        if '$version' in delivery:
-            delivery = delivery.replace('$$version', members['version'])
-        members['delivery'] = delivery
+        deliveries = []
+        for delivery_node in node.xpath('delivery'):
+            delivery = delivery_node.text
+            if '$company' in delivery:
+                delivery = delivery.replace('$$company', members['company'])
+            if '$name' in delivery:
+                delivery = delivery.replace('$$name', members['name'])
+            if '$config' in delivery:
+                delivery = delivery.replace('$$config', members['config'])
+            if '$version' in delivery:
+                delivery = delivery.replace('$$version', members['version'])
+            deliveries.append(delivery)
+        members['delivery'] = deliveries
         return Package(members['company'],\
                         members['name'],\
                         members['config'],\

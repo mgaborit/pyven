@@ -127,7 +127,9 @@ class Configure(Step):
             package.name = project.replace_constants(package.name)
             package.config = project.replace_constants(package.config)
             package.version = project.replace_constants(package.version)
-            package.delivery = project.replace_constants(package.delivery)
+            if len(package.deliveries) > 0:
+                for i in range(len(package.deliveries)):
+                    package.deliveries[i] = project.replace_constants(package.deliveries[i])
             items = []
             items.extend(package.items)
             package.items = []

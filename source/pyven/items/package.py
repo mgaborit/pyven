@@ -8,10 +8,10 @@ from pyven.logging.logger import Logger
 class Package(Item):
     EXTENSION = '.zip'
 
-    def __init__(self, company, name, config, version, repo, to_retrieve, publish, items, delivery, extensions, cwd, patterns):
+    def __init__(self, company, name, config, version, repo, to_retrieve, publish, items, deliveries, extensions, cwd, patterns):
         super(Package, self).__init__(company, name, config, version, repo, to_retrieve, publish)
         self.items = items
-        self.delivery = delivery
+        self.deliveries = deliveries
         self.extensions = extensions
         self.cwd = cwd
         self.patterns = patterns
@@ -66,7 +66,8 @@ class Package(Item):
                 z.extractall(os.path.join(dir, self.format_name('_')))
     
     def deliver(self, dir, repo):
-        if self.delivery == '':
+        if len(self.deliveries) < 1:
             self.unpack(dir, repo, flatten=False)
         else:
-            self.unpack(os.path.join(dir, self.delivery), repo, flatten=True)
+            for delivery in self.deliveries: 
+                self.unpack(os.path.join(dir, delivery), repo, flatten=True)
