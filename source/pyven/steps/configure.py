@@ -4,6 +4,7 @@ import pyven.constants
 from pyven.steps.step import Step
 from pyven.checkers.checker import Checker
 from pyven.parser.pym_parser import PymParser
+from pyven.parser.constants_parser import ConstantsParser
 from pyven.exceptions.exception import PyvenException
 from pyven.project import Project
 
@@ -32,7 +33,12 @@ class Configure(Step):
        
     @Step.step
     def process(self):
-        return self._process(Project(os.getcwd()))
+        project = Project(os.getcwd())
+        cst_file = os.path.join(os.getcwd(), 'const.xml')
+        if os.path.isfile(cst_file):
+            cst_tree = PymParser.parse_xml(cst_file)
+            project.constants = ConstantsParser('/constants/constant', os.getcwd()).parse(cst_tree)
+        return self._process(project)
      
     @Step.error_checks
     def _process(self, project):

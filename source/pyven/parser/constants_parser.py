@@ -1,5 +1,3 @@
-from lxml import etree
-
 from pyven.exceptions.parser_exception import ParserException
 from pyven.parser.elements_parser import ElementsParser
 

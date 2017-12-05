@@ -4,7 +4,7 @@ from pyven.exceptions.exception import PyvenException
 
 MAJOR = 0
 MINOR = 2
-PATCH = 4
+PATCH = 5
 VERSION = '.'.join([str(MAJOR), str(MINOR), str(PATCH)])
 
 PLATFORMS = ['linux', 'windows']
