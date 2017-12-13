@@ -8,13 +8,14 @@ from pyven.logging.logger import Logger
 class Package(Item):
     EXTENSION = '.zip'
 
-    def __init__(self, company, name, config, version, repo, to_retrieve, publish, items, deliveries, extensions, cwd, patterns):
+    def __init__(self, company, name, config, version, repo, to_retrieve, publish, items, deliveries, extensions, cwd, patterns, directories):
         super(Package, self).__init__(company, name, config, version, repo, to_retrieve, publish)
         self.items = items
         self.deliveries = deliveries
         self.extensions = extensions
         self.cwd = cwd
         self.patterns = patterns
+        self.directories = directories
 
     def type(self):
         return 'package'
@@ -34,9 +35,20 @@ class Package(Item):
             if not os.path.isfile(os.path.join(item.location(repo.url), item.basename())):
                 errors.append('Package item not found --> ' + os.path.join(item.location(repo.url), item.basename()))
                 ok = False
+        for d in self.directories:
+            if not os.path.isdir(d):
+                errors.append('Directory not found --> ' + d)
+                ok = False
         if ok:
             zf = zipfile.ZipFile(os.path.join(self.location(repo.url), self.basename()), mode='w')
             try:
+                for d in self.directories:
+                    Logger.get().info('Package ' + self.format_name() + ' --> Adding directory ' + d)
+                    for root, dirs, files in os.walk(d):
+                        for f in [os.path.join(root, f) for f in files]:
+                            zf.write(f)
+                            Logger.get().info('Package ' + self.format_name() + ' --> Added file : ' + f)
+                    Logger.get().info('Package ' + self.format_name() + ' --> Added directory ' + d)
                 for pattern in self.patterns:
                     for file in glob.glob(os.path.join(self.cwd, pattern)):
                         zf.write(file, os.path.basename(file))
@@ -71,3 +83,4 @@ class Package(Item):
         else:
             for delivery in self.deliveries: 
                 self.unpack(os.path.join(dir, delivery), repo, flatten=True)
+          

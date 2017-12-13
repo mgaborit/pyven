@@ -13,12 +13,19 @@ class PackagesParser(ItemsParser):
         packages = node.xpath('extend')
         for package in packages:
             members['extensions'].append(package.text)
+        members['directories'] = []
+        dirs = node.xpath('directory')
+        for d in dirs:
+            members['directories'].append(d.text)
         members['patterns'] = []
         patterns = node.xpath('pattern')
         for pattern in patterns:
             members['patterns'].append(pattern.text)
         items = node.xpath('item')
-        if not members['to_retrieve'] and len(items) == 0 and len(members['extensions']) == 0 and len(members['patterns']) == 0:
+        if not members['to_retrieve'] and len(items) == 0\
+            and len(members['extensions']) == 0\
+            and len(members['patterns']) == 0\
+            and len(members['directories']) == 0:
             raise ParserException('Missing package items information')
         members['items'] = []
         for item in items:
@@ -47,5 +54,6 @@ class PackagesParser(ItemsParser):
                         members['delivery'],\
                         members['extensions'],\
                         self.path,\
-                        members['patterns'])
+                        members['patterns'],\
+                        members['directories'])
         
