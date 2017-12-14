@@ -36,18 +36,18 @@ class Package(Item):
                 errors.append('Package item not found --> ' + os.path.join(item.location(repo.url), item.basename()))
                 ok = False
         for d in self.directories:
-            if not os.path.isdir(d):
-                errors.append('Directory not found --> ' + d)
+            if not os.path.isdir(os.path.join(self.cwd, d)):
+                errors.append('Directory not found --> ' + os.path.join(self.cwd, d))
                 ok = False
         if ok:
             zf = zipfile.ZipFile(os.path.join(self.location(repo.url), self.basename()), mode='w')
             try:
                 for d in self.directories:
                     Logger.get().info('Package ' + self.format_name() + ' --> Adding directory ' + d)
-                    root = os.path.basename(os.path.normpath(d))
-                    for current_dir, dirs, files in os.walk(d):
+                    root = os.path.basename(os.path.normpath(os.path.join(self.cwd, d)))
+                    for current_dir, dirs, files in os.walk(os.path.join(self.cwd, d)):
                         for f in [os.path.join(current_dir, f) for f in files]:
-                            zf.write(f, f[f.find(root):])
+                            zf.write(os.path.join(self.cwd, f), f[f.find(root):])
                             Logger.get().info('Package ' + self.format_name() + ' --> Added file : ' + f)
                     Logger.get().info('Package ' + self.format_name() + ' --> Added directory ' + d)
                 for pattern in self.patterns:
