@@ -44,9 +44,10 @@ class Package(Item):
             try:
                 for d in self.directories:
                     Logger.get().info('Package ' + self.format_name() + ' --> Adding directory ' + d)
-                    for root, dirs, files in os.walk(d):
-                        for f in [os.path.join(root, f) for f in files]:
-                            zf.write(f)
+                    root = os.path.basename(os.path.normpath(d))
+                    for current_dir, dirs, files in os.walk(d):
+                        for f in [os.path.join(current_dir, f) for f in files]:
+                            zf.write(f, f[f.find(root):])
                             Logger.get().info('Package ' + self.format_name() + ' --> Added file : ' + f)
                     Logger.get().info('Package ' + self.format_name() + ' --> Added directory ' + d)
                 for pattern in self.patterns:
