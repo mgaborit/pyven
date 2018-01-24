@@ -2,13 +2,13 @@ import sys, time, argparse
 
 from pyven.exceptions.exception import PyvenException
 
-import pyven.constants
+import pyven.constants as cst
 from pyven.pyven import Pyven
 from pyven.logging.logger import Logger
 
 def main(args):
     tic = time.time()
-    Logger.get().info('Pyven ' + pyven.constants.VERSION)
+    Logger.get().info('Pyven ' + cst.VERSION)
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', action='version', version='1.0.0')

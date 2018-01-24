@@ -1,6 +1,6 @@
-import os, time
+import time
 
-import pyven.constants
+import pyven.constants as cst
 from pyven.reporting.content.reportable import ReportableListing
 from pyven.reporting.content.lines import Lines
 from pyven.reporting.content.error import Error
@@ -21,7 +21,7 @@ class Process(object):
         self.cwd = cwd
         self.name = name
         self.type = None
-        self.status = pyven.constants.STATUS[2]
+        self.status = cst.STATUS[2]
         self.errors = []
         self.warnings = []
     
@@ -36,7 +36,7 @@ class Process(object):
             except PyvenException as e:
                 Logger.get().error(e.args)
                 self.errors.append(e.args)
-                self.status = pyven.constants.STATUS[1]
+                self.status = cst.STATUS[1]
                 ok = False
             return ok
         return _intern
@@ -75,9 +75,9 @@ class Process(object):
         raise NotImplementedError('Invalid call to ' + type(self).__name__ + ' abstract method "report_properties"')
         
     def report_status(self):
-        if self.status == pyven.constants.STATUS[0]:
+        if self.status == cst.STATUS[0]:
             return Success()
-        elif self.status == pyven.constants.STATUS[1]:
+        elif self.status == cst.STATUS[1]:
             return Failure()
         else:
             return Unknown()
