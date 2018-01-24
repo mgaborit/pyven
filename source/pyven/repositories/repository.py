@@ -1,6 +1,3 @@
-import os, shutil
-
-from pyven.exceptions.exception import PyvenException
 
 class Repository(object):
 	AVAILABLE_TYPES = ['file']
