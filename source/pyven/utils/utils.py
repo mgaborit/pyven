@@ -1,4 +1,5 @@
-import hashlib, os, codecs
+import hashlib
+import codecs
 
 def hash(str, hash='ripemd160', encoding='utf-8'):
 	h = hashlib.new(hash)

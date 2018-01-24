@@ -1,6 +1,5 @@
-import os, shutil
-
-from pyven.exceptions.exception import PyvenException
+import os
+import shutil
 
 from pyven.repositories.repository import Repository
 from pyven.exceptions.repository_exception import RepositoryException

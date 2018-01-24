@@ -1,9 +1,14 @@
-import zipfile, os, glob
+import zipfile
+import os
+import glob
+import lxml
 
 from pyven.exceptions.exception import PyvenException
 from pyven.items.item import Item
 
 from pyven.logging.logger import Logger
+
+import pyven.utils.utils as utils
 
 class Package(Item):
     EXTENSION = '.zip'
@@ -54,12 +59,10 @@ class Package(Item):
                     for file in glob.glob(os.path.join(self.cwd, pattern)):
                         zf.write(file, os.path.basename(file))
                         Logger.get().info('Package ' + self.format_name() + ' --> Added file from pattern : ' + os.path.basename(file))
-                for item in self.items:
-                    zf.write(os.path.join(item.location(repo.url), item.basename()), item.basename())
-                    Logger.get().info('Package ' + self.format_name() + ' --> Added artifact ' + item.format_name())
             finally:
                 zf.close()
                 Logger.get().info('Package ' + self.format_name() + ' --> Created archive ' + self.basename())
+                utils.str_to_file(self.to_xml(), os.path.join(self.location(repo.url), self.format_name('_') + '.xml'))
         else:
             e = PyvenException('')
             e.args = tuple(errors)
@@ -85,3 +88,20 @@ class Package(Item):
             for delivery in self.deliveries: 
                 self.unpack(os.path.join(dir, delivery), repo, flatten=True)
           
+    def to_xml(self, pretty_print=True):
+        root_node = lxml.etree.Element("package")
+        for i in self.items:
+            i_node = lxml.etree.SubElement(root_node, "item")
+            i_node.text = i.format_name()
+        for pattern in self.patterns:
+            for file in glob.glob(os.path.join(self.cwd, pattern)):
+                p_node = lxml.etree.SubElement(root_node, "pattern")
+                p_node.text = os.path.basename(file)
+        for d in self.directories:
+            root = os.path.basename(os.path.normpath(os.path.join(self.cwd, d)))
+            for current_dir, dirs, files in os.walk(os.path.join(self.cwd, d)):
+                for f in [os.path.join(current_dir, f) for f in files]:
+                    d_node = lxml.etree.SubElement(root_node, "directory")
+                    d_node.text = f[f.find(root):]
+        return lxml.etree.tostring(root_node, pretty_print=pretty_print).decode("utf-8")
+        
