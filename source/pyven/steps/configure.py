@@ -11,6 +11,8 @@ from pyven.project import Project
 from pyven.logging.logger import Logger
 from pyven.reporting.content.step import StepListing
 
+from pyven.utils.utils import parse_xml
+
 class Configure(Step):
     def __init__(self, verbose, pym):
         super(Configure, self).__init__(verbose)
@@ -20,6 +22,8 @@ class Configure(Step):
         self.parsers = []
 
     def project_title(self):
+        if len(self.parsers) == 0:
+            return ''
         return self.parsers[0].parse_project_title()
         
     def report_content(self):
@@ -36,8 +40,8 @@ class Configure(Step):
         project = Project(os.getcwd())
         cst_file = os.path.join(os.getcwd(), 'const.xml')
         if os.path.isfile(cst_file):
-            cst_tree = PymParser.parse_xml(cst_file)
-            project.constants = ConstantsParser('/constants/constant', os.getcwd()).parse(cst_tree)
+            cst_tree = parse_xml(cst_file)
+            project.constants = ConstantsParser(os.getcwd()).parse(cst_tree)
         return self._process(project)
      
     @Step.error_checks
