@@ -1,8 +1,6 @@
 import os
 from pyven.logging.logger import Logger
 
-from lxml import etree
-
 import pyven.constants
 
 from pyven.exceptions.parser_exception import ParserException
@@ -15,6 +13,8 @@ from pyven.parser.directory_repo_parser import DirectoryRepoParser
 from pyven.parser.artifacts_parser import ArtifactsParser
 from pyven.parser.packages_parser import PackagesParser
 
+from pyven.utils.utils import parse_xml
+
 class PymParser(object):
     
     def __init__(self, pym='pym.xml', plugins={}):
@@ -24,7 +24,7 @@ class PymParser(object):
         self.plugins_config = 'plugins.xml'
         self.tree = None
         self.checker = Checker('Parser')
-        self.constants_parser = ConstantsParser('/pyven/constants/constant', os.path.dirname(self.pym))
+        self.constants_parser = ConstantsParser(os.path.dirname(self.pym))
         self.directory_repo_parser = DirectoryRepoParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/repositories/repository', os.path.dirname(self.pym))
         self.artifacts_parser = ArtifactsParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/artifacts/artifact', os.path.dirname(self.pym))
         self.packages_parser = PackagesParser('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/packages/package', os.path.dirname(self.pym))
@@ -46,20 +46,7 @@ class PymParser(object):
             raise ParserException('[' + file + '] Invalid Pyven version --> MINOR version number must be equal or greater, expected : ' + '.'.join(expected_pyven_version) + ', actual : ' + pyven.constants.VERSION)
         if int(expected_pyven_version[2]) > pyven.constants.PATCH:
             raise ParserException('[' + file + '] Invalid Pyven version --> PATCH version number must be equal or greater, expected : ' + '.'.join(expected_pyven_version) + ', actual : ' + pyven.constants.VERSION)
-        
-    @staticmethod
-    def parse_xml(file):
-        tree = None
-        if not os.path.isfile(file):
-            raise ParserException('Configuration file not available : ' + file)
-        try:
-            tree = etree.parse(file)
-        except Exception as e:
-            pyven_exception = ParserException('')
-            pyven_exception.args = e.args
-            raise pyven_exception
-        return tree
-    
+       
     def check_errors(function):
         def _intern(self, project=None):
             try:
@@ -81,14 +68,14 @@ class PymParser(object):
     @check_errors
     def parse_pym(self, project=None):
         Logger.get().info('Starting ' + self.pym + ' parsing')
-        self.tree = PymParser.parse_xml(self.pym)
+        self.tree = parse_xml(self.pym)
         PymParser.check_version(self.tree, self.pym)
         return True
         
     @check_errors
     def parse_plugins(self, project=None):
         repo_config = os.path.join(os.environ.get('PVN_HOME'), self.plugins_config)
-        tree = PymParser.parse_xml(repo_config)
+        tree = parse_xml(repo_config)
         PymParser.check_version(tree, repo_config)
         if tree is not None:
             for plugin in tree.xpath('/pyven/platform[@name="'+pyven.constants.PLATFORM+'"]/plugins/plugin'):
@@ -126,7 +113,7 @@ class PymParser(object):
     @check_errors
     def parse_repositories(self, project=None):
         repo_config = os.path.join(os.environ.get('PVN_HOME'), self.repo_config)
-        tree = PymParser.parse_xml(repo_config)
+        tree = parse_xml(repo_config)
         PymParser.check_version(tree, repo_config)
         self.directory_repo_parser.parse_available_repositories(tree)
         return self.directory_repo_parser.parse(self.tree)

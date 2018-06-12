@@ -1,5 +1,10 @@
 import hashlib
 import codecs
+import os
+
+from lxml import etree
+
+from pyven.exceptions.parser_exception import ParserException
 
 def hash(str, hash='ripemd160', encoding='utf-8'):
 	h = hashlib.new(hash)
@@ -17,3 +22,15 @@ def file_to_str(filename):
 	file.close()
 	return str
 		
+def parse_xml(file):
+    tree = None
+    if not os.path.isfile(file):
+        raise ParserException('File not found : ' + file)
+    try:
+        tree = etree.parse(file)
+    except Exception as e:
+        pyven_exception = ParserException('')
+        pyven_exception.args = e.args
+        raise pyven_exception
+    return tree
+    
